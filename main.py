@@ -6,6 +6,7 @@ from tinydb import TinyDB, where
 import json
 import os
 from sys import stderr
+from random import randint
 
 tokens = {}
 
@@ -205,9 +206,32 @@ async def on_message(message):
                       '**!out:** Tell me you\'re out for the weekend\n' \
                       '**!trump:** I\'ll show you Trump\'s latest Yuge ' \
                       'success!\n' \
-                      '**!text-brandon:** Tempt fate\n'
+                      '**!text-brandon:** Tempt fate\n' \
+                      '**!shot-lottery:** Run a shot lottery.'
 
         await client.send_message(message.channel, help_string)
+
+    elif message.content.startswith('!shot-lottery'):
+        start_string = "Alright everyone, its time for the SHOT LOTTERY!"
+        await client.send_message(message.channel, start_string)
+
+        players = []
+        for m in client.get_all_members():
+            if str(m.status) == 'online' and \
+               str(m.display_name) != 'brochat-bot':
+                players.append(m.display_name)
+        list_string = "{} have been entered in the SHOT LOTTERY " \
+                      "good luck!".format(players)
+        await client.send_message(message.channel, list_string)
+        random_string = "Selecting a random number between 0 and {}".format(
+            len(players)-1)
+        await client.send_message(message.channel, random_string)
+        winner = randint(0, len(players)-1)
+        finish_string = "The winning number is {}, Congrats {} you WIN!\n" \
+                        " Take your shot!".format(winner, players[winner])
+        await client.send_message(message.channel, finish_string)
+
+
 
 client.run(token)
 
