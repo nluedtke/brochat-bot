@@ -3,12 +3,23 @@ import asyncio
 from twython import Twython
 import time
 from tinydb import TinyDB, where
+import json
+import os
+
+tokens = {}
+
+if not os.path.exists('tokens.config'):
+    print("No config file found.")
+    exit(-1)
+else:
+    with open('tokens.config') as t_file:
+        tokens = json.load(t_file)
+
+token = tokens['token']
+twitter_api_key = tokens['twitter_api_key']
+twitter_api_secret = tokens['twitter_api_secret']
 
 db = TinyDB('db.json')
-
-token = '***REMOVED***'
-twitter_api_key = '***REMOVED***'
-twitter_api_secret = '***REMOVED***'
 
 twitter = Twython(twitter_api_key, twitter_api_secret)
 auth = twitter.get_authentication_tokens()
