@@ -126,7 +126,8 @@ class WeekendGames(object):
         db['last_shot'] = self.last_shot
         db['consecutive_shot_wins'] = self.consecutive_shot_wins
         with open(db_file, 'w') as datafile:
-            json.dump(db, datafile)
+            json.dump(db, datafile, sort_keys=True, indent=4,
+                      ensure_ascii=False)
 
     def add_shot_win(self, name):
         """
