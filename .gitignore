@@ -90,3 +90,6 @@ ENV/
 
 # Pycharm settings
 .idea/
+
+#Config files
+*.config
