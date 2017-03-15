@@ -320,7 +320,7 @@ async def on_message(message):
             consecutive = whos_in.add_shot_win(players[winner])
             await client.send_message(message.channel, finish_string)
             if consecutive > 1:
-                total_string = "Thats {} in a row!".format(consecutive)
+                total_string = "That's {} in a row!".format(consecutive)
                 await client.send_message(message.channel, total_string)
             whos_in.log_lottery_time()
 
