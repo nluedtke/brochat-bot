@@ -155,7 +155,7 @@ async def on_message(message):
         await asyncio.sleep(5)
         await client.send_message(message.channel, 'Done sleeping')
 
-    elif message.content.startswith('!ham'):
+    elif message.content == '!ham':
         await client.send_message(message.channel,
                                   '@here Let\'s get retarded, {}'.format(
                                       message.author))
