@@ -282,8 +282,9 @@ async def on_message(message):
                         " Take your shot!".format(winner, players[winner])
         consecutive = whos_in.add_shot_win(players[winner])
         await client.send_message(message.channel, finish_string)
-        total_string = "Thats {} in a row!".format(consecutive)
-        await client.send_message(message.channel, total_string)
+        if consecutive > 1:
+            total_string = "Thats {} in a row!".format(consecutive)
+            await client.send_message(message.channel, total_string)
 
 
 client.run(token)
