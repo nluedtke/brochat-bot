@@ -6,6 +6,7 @@ import json
 import os
 from sys import stderr
 from random import randint
+from twilio.rest import TwilioRestClient
 
 tokens = {}
 db_file = 'db.json'
@@ -20,6 +21,10 @@ else:
 token = tokens['token']
 twitter_api_key = tokens['twitter_api_key']
 twitter_api_secret = tokens['twitter_api_secret']
+
+account_sid = tokens['twilio_account_sid']
+auth_token = tokens['twilio_auth_token']
+twilio_client = TwilioRestClient(account_sid, auth_token)
 
 db = {}
 
@@ -260,6 +265,10 @@ async def on_message(message):
 
     elif message.content.startswith('!text-brandon'):
         await client.send_message(message.channel, '#TODO: Twilio integration')
+        message = twilio_client.messages.create(to="+12174155978", from_="+16088880320",
+                                     body="Hello there! Wait, you're not Brandon...")
+        message = twilio_client.messages.create(to="+16082173743", from_="+16088880320",
+                                     body="Hello there!")
 
     elif message.content.startswith('!trump'):
         trumps_last_tweet = twitter.get_user_timeline(
