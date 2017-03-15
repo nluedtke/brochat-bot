@@ -265,10 +265,11 @@ async def on_message(message):
 
     elif message.content.startswith('!text-brandon'):
         await client.send_message(message.channel, '#TODO: Twilio integration')
-        message = twilio_client.messages.create(to="+12174155978", from_="+16088880320",
-                                     body="Hello there! Wait, you're not Brandon...")
-        message = twilio_client.messages.create(to="+16082173743", from_="+16088880320",
-                                     body="Hello there!")
+        message = twilio_client.messages.create(
+            to="+12174155978", from_="+16088880320",
+            body="Hello there! Wait, you're not Brandon...")
+        message = twilio_client.messages.create(
+            to="+16082173743", from_="+16088880320", body="Hello there!")
 
     elif message.content.startswith('!trump'):
         trumps_last_tweet = twitter.get_user_timeline(
