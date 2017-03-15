@@ -2,26 +2,35 @@ import discord
 import asyncio
 from twython import Twython
 import time
-from tinydb import TinyDB, where
 import json
 import os
 from sys import stderr
 from random import randint
 
 tokens = {}
+db_file = 'db.json'
 
 if not os.path.exists('tokens.config'):
     print("No config file found.", file=stderr)
     exit(-1)
 else:
-    with open('tokens.config') as t_file:
+    with open('tokens.config', 'r') as t_file:
         tokens = json.load(t_file)
 
 token = tokens['token']
 twitter_api_key = tokens['twitter_api_key']
 twitter_api_secret = tokens['twitter_api_secret']
 
-db = TinyDB('db.json')
+db = {}
+
+if not os.path.exists(db_file):
+    print("Starting DB from scratch")
+    with open(db_file, 'w') as datafile:
+        json.dump(db, datafile)
+else:
+    print("Loading the DB")
+    with open(db_file, 'r') as datafile:
+        db = json.load(datafile)
 
 twitter = Twython(twitter_api_key, twitter_api_secret)
 auth = twitter.get_authentication_tokens()
@@ -43,7 +52,15 @@ class WeekendGames(object):
         """
 
         self.people = []
+        if 'people' in db:
+            self.people = db['people']
         self.day = 'Sunday'
+        self.last_shot = "Unknown"
+        if 'last_shot' in db:
+            self.last_shot = db['last_shot']
+        self.consecutive_shot_wins = 1
+        if 'consecutive_shot_wins' in db:
+            self.consecutive_shot_wins = db['consecutive_shot_wins']
 
     def whos_in(self):
         """
@@ -78,6 +95,7 @@ class WeekendGames(object):
             return
         else:
             self.people.append(remove_formatting(person))
+            self.update_db()
 
     def remove(self, person):
         """
@@ -90,11 +108,42 @@ class WeekendGames(object):
 
         if remove_formatting(person) in self.people:
             self.people.remove(remove_formatting(person))
+            self.update_db()
             return '{} is out for this weekend. What a ***REMOVED***.'.format(
                 remove_formatting(person))
         else:
             return '{} was never in anyway. Deceptive!'.format(
                 remove_formatting(person))
+
+    def update_db(self):
+        """
+        Updates the database to disk
+
+        :return: None
+        """
+
+        db['people'] = self.people
+        db['last_shot'] = self.last_shot
+        db['consecutive_shot_wins'] = self.consecutive_shot_wins
+        with open(db_file, 'w') as datafile:
+            json.dump(db, datafile)
+
+    def add_shot_win(self, name):
+        """
+        Adds a shot lottery win to the weekend games
+
+        :param name: str Name of winner
+        :rtype int
+        :return: int: Number in a row
+        """
+
+        if self.last_shot == name:
+            self.consecutive_shot_wins += 1
+        else:
+            self.last_shot = name
+            self.consecutive_shot_wins = 1
+        self.update_db()
+        return self.consecutive_shot_wins
 
 
 whos_in = WeekendGames()
@@ -212,7 +261,8 @@ async def on_message(message):
         await client.send_message(message.channel, help_string)
 
     elif message.content.startswith('!shot-lottery'):
-        start_string = "Alright everyone, its time for the SHOT LOTTERY!"
+        start_string = "Alright everyone, its time for the SHOT LOTTERY!\n" \
+                       "{} won the last lottery!".format(whos_in.last_shot)
         await client.send_message(message.channel, start_string)
 
         players = []
@@ -229,8 +279,10 @@ async def on_message(message):
         winner = randint(0, len(players)-1)
         finish_string = "The winning number is {}, Congrats {} you WIN!\n" \
                         " Take your shot!".format(winner, players[winner])
+        consecutive = whos_in.add_shot_win(players[winner])
         await client.send_message(message.channel, finish_string)
-
+        total_string = "Thats {} in a row!".format(consecutive)
+        await client.send_message(message.channel, total_string)
 
 
 client.run(token)
