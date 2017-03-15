@@ -273,7 +273,6 @@ async def on_message(message):
     elif message.content.startswith('!trump'):
         trumps_last_tweet = twitter.get_user_timeline(
             screen_name='realdonaldtrump', count=1, include_retweets=False)
-        print(trumps_last_tweet[0])
         await client.send_message(
             message.channel,
             'Trump has been saying things, as usual...\n\n'
