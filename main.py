@@ -1,7 +1,7 @@
 import discord
 import asyncio
 from twython import Twython
-import time
+from time import time
 import json
 import os
 from sys import stderr
@@ -61,6 +61,9 @@ class WeekendGames(object):
         self.consecutive_shot_wins = 1
         if 'consecutive_shot_wins' in db:
             self.consecutive_shot_wins = db['consecutive_shot_wins']
+        self.last_lottery = 0
+        if 'last_lottery_time' in db:
+            self.last_lottery = db['last_lottery_time']
 
     def whos_in(self):
         """
@@ -125,6 +128,7 @@ class WeekendGames(object):
         db['people'] = self.people
         db['last_shot'] = self.last_shot
         db['consecutive_shot_wins'] = self.consecutive_shot_wins
+        db['last_lottery_time'] = self.last_lottery
         with open(db_file, 'w') as datafile:
             json.dump(db, datafile, sort_keys=True, indent=4,
                       ensure_ascii=False)
@@ -146,6 +150,26 @@ class WeekendGames(object):
         self.update_db()
         return self.consecutive_shot_wins
 
+    def log_lottery_time(self):
+        """
+        Logs the last time a lottery was run, in order to insure its not ran too
+        often.
+
+        :return: None
+        """
+
+        self.last_lottery = time()
+        self.update_db()
+
+    def is_lottery_time(self):
+        """
+        Determines if its time for a lottery
+
+        :rtype bool
+        :return: True if more than 10 mins has passed
+        """
+
+        return time() - self.last_lottery > 600
 
 whos_in = WeekendGames()
 
@@ -262,29 +286,34 @@ async def on_message(message):
         await client.send_message(message.channel, help_string)
 
     elif message.content.startswith('!shot-lottery'):
-        start_string = "Alright everyone, its time for the SHOT LOTTERY!\n" \
-                       "{} won the last lottery!".format(whos_in.last_shot)
-        await client.send_message(message.channel, start_string)
+        if not whos_in.is_lottery_time():
+            await client.send_message(message.channel, "Too soon for shots...")
+        else:
+            start_string = "Alright everyone, its time for the SHOT LOTTERY!" \
+                           "\n{} won the last lottery!".format(
+                            whos_in.last_shot)
+            await client.send_message(message.channel, start_string)
 
-        players = []
-        for m in client.get_all_members():
-            if str(m.status) == 'online' and \
-               str(m.display_name) != 'brochat-bot':
-                players.append(m.display_name)
-        list_string = "{} have been entered in the SHOT LOTTERY " \
-                      "good luck!".format(players)
-        await client.send_message(message.channel, list_string)
-        random_string = "Selecting a random number between 0 and {}".format(
-            len(players)-1)
-        await client.send_message(message.channel, random_string)
-        winner = randint(0, len(players)-1)
-        finish_string = "The winning number is {}, Congrats {} you WIN!\n" \
-                        " Take your shot!".format(winner, players[winner])
-        consecutive = whos_in.add_shot_win(players[winner])
-        await client.send_message(message.channel, finish_string)
-        if consecutive > 1:
-            total_string = "Thats {} in a row!".format(consecutive)
-            await client.send_message(message.channel, total_string)
+            players = []
+            for m in client.get_all_members():
+                if str(m.status) == 'online' and \
+                   str(m.display_name) != 'brochat-bot':
+                    players.append(m.display_name)
+            list_string = "{} have been entered in the SHOT LOTTERY " \
+                          "good luck!".format(players)
+            await client.send_message(message.channel, list_string)
+            random_string = "Selecting a random number between 0 and {}".format(
+                len(players)-1)
+            await client.send_message(message.channel, random_string)
+            winner = randint(0, len(players)-1)
+            finish_string = "The winning number is {}, Congrats {} you WIN!\n" \
+                            " Take your shot!".format(winner, players[winner])
+            consecutive = whos_in.add_shot_win(players[winner])
+            await client.send_message(message.channel, finish_string)
+            if consecutive > 1:
+                total_string = "Thats {} in a row!".format(consecutive)
+                await client.send_message(message.channel, total_string)
+            whos_in.log_lottery_time()
 
 
 client.run(token)
