@@ -8,5 +8,5 @@ setup(
     license='MIT',
     author='quietcorey',
     author_email='shelton.ca@gmail.com',
-    description='A bot for bros.', requires=['twython']
+    description='A bot for bros.', requires=['twython', 'twilio']
 )
