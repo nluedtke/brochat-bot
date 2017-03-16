@@ -214,18 +214,6 @@ class WeekendGames(object):
 
         return "{0} - {1} - {2}".format(self.wins, self.losses, self.draws)
 
-
-def update_users():
-    """
-    Updates the users.config to disk
-
-    :return: None
-    """
-
-    with open(user_file, 'w') as datafile:
-        json.dump(users, datafile, sort_keys=True, indent=4,
-                  ensure_ascii=False)
-
 # Handle tokens from local file
 tokens = {}
 if not os.path.exists('tokens.config'):
