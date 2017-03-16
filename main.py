@@ -7,6 +7,7 @@ import os
 from sys import stderr
 from random import randint
 from twilio.rest import TwilioRestClient
+import socket
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 6
@@ -308,6 +309,21 @@ def print_help():
     return help_string
 
 
+def print_version():
+    """
+    Returns the version string
+
+    :rtype str
+    :return: str: Version string
+    """
+    version_string = "Version: {0}.{1}\n" \
+                     "Running on: {2}".format(VERSION_MAJOR,
+                                              VERSION_MINOR,
+                                              socket.gethostname())
+    return version_string
+
+
+
 @client.event
 async def on_message(message):
     """
@@ -444,7 +460,7 @@ async def on_message(message):
         await client.send_message(message.channel, record_string)
     elif message.content.startswith('!version'):
         version_string = "Version: {0}.{1}".format(VERSION_MAJOR, VERSION_MINOR)
-        await client.send_message(message.channel, version_string)
+        await client.send_message(message.channel, print_version())
 
 
 client.run(token)
