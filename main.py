@@ -518,7 +518,6 @@ async def on_message(message):
         whos_in.update_db()
 
     elif message.content.startswith('!version'):
-        version_string = "Version: {0}.{1}".format(VERSION_MAJOR, VERSION_MINOR)
         await client.send_message(message.channel, print_version())
 
 
