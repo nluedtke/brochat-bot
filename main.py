@@ -344,7 +344,7 @@ async def on_message(message):
                       'success!\n' \
                       '**!text-brandon:** Tempt fate\n' \
                       '**!shot-lottery:** Run a shot lottery.\n' \
-                      '**!win/!loss/!draw:** Update session record' \
+                      '**!win/!loss/!draw:** Update session record ' \
                       'appropriately\n' \
                       '**!clear-record:** Clear the session record\n' \
                       '**!get-record:** Print the session record\n' \
