@@ -284,6 +284,30 @@ async def on_ready():
     # await client.send_message('#general', 'Hi I\'m online :)')
 
 
+def print_help():
+    """
+    Returns the help string
+
+    :rtype str
+    :return: str: Help Message
+    """
+    help_string = 'Here are some things I can help you with:\n\n' \
+                  '**!ham:** I\'ll tell you what we\'re gonna get\n' \
+                  '**!in:** Tell me you\'re in for the weekend\n' \
+                  '**!whosin:** See who\'s in for the weekend\n' \
+                  '**!out:** Tell me you\'re out for the weekend\n' \
+                  '**!trump:** I\'ll show you Trump\'s latest Yuge ' \
+                  'success!\n' \
+                  '**!text-brandon:** Tempt fate\n' \
+                  '**!shot-lottery:** Run a shot lottery.\n' \
+                  '**!win/!loss/!draw:** Update session record ' \
+                  'appropriately\n' \
+                  '**!clear-record:** Clear the session record\n' \
+                  '**!get-record:** Print the session record\n' \
+                  '**!version:** Print the version of brochat-bot\n'
+    return help_string
+
+
 @client.event
 async def on_message(message):
     """
@@ -359,22 +383,7 @@ async def on_message(message):
                 str(trumps_last_tweet[0]['id'])))
 
     elif message.content.startswith('!help'):
-        help_string = 'Here are some things I can help you with:\n\n' \
-                      '**!ham:** I\'ll tell you what we\'re gonna get\n' \
-                      '**!in:** Tell me you\'re in for the weekend\n' \
-                      '**!whosin:** See who\'s in for the weekend\n' \
-                      '**!out:** Tell me you\'re out for the weekend\n' \
-                      '**!trump:** I\'ll show you Trump\'s latest Yuge ' \
-                      'success!\n' \
-                      '**!text-brandon:** Tempt fate\n' \
-                      '**!shot-lottery:** Run a shot lottery.\n' \
-                      '**!win/!loss/!draw:** Update session record ' \
-                      'appropriately\n' \
-                      '**!clear-record:** Clear the session record\n' \
-                      '**!get-record:** Print the session record\n' \
-                      '**!version:** Print the version of brochat-bot\n'
-
-        await client.send_message(message.channel, help_string)
+        await client.send_message(message.channel, print_help())
 
     elif message.content.startswith('!shot-lottery'):
         if not whos_in.is_lottery_time():
