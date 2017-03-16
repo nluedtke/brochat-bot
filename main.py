@@ -475,7 +475,7 @@ async def on_message(message):
         record_string = "Current record: {}".format(whos_in.get_record())
         await client.send_message(message.channel, record_string)
     elif message.content.startswith('!battletag'):
-        author = remove_formatting(message.author)
+        author = str(message.author.display_name)
         if author in users:
             if "battletag" in users[author]:
                 await client.send_message(message.channel, "Your battletag is: {}".format(users[author]["battletag"]))
@@ -484,7 +484,7 @@ async def on_message(message):
         else:
             await client.send_message(message.channel, "I couldn\'t find your user info!")
     elif message.content.startswith('!set'):
-        author = remove_formatting(message.author)
+        author = str(message.author.display_name)
         arguments = argument_parser(message.content)
         print(arguments)
         #TODO error handling for arg length
