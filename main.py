@@ -489,32 +489,22 @@ async def on_message(message):
         if author not in users:
             users[author] = {}
 
+        valid_arguments = {'name': "Okay, I'll call you {} now.",
+                           'battletag':  "Okay, your battletag is {} from here"
+                                         " on out.",
+                           'mobile': "Got your digits: {}."}
         if len(arguments) != 2:
             await client.send_message(message.channel,
                                       "To !set information about yourself, "
                                       "please use:\n\n"
                                       "**!set** <name/battletag/mobile> "
                                       "<value>")
-        elif arguments[0] == 'name':
-            if author in users:
-                users[author]['name'] = arguments[1]
-                await client.send_message(message.channel,
-                                          "Okay, I'll call you {} now.".format(
-                                              users[author]["name"]))
-        elif arguments[0] == 'battletag':
-            if author in users:
-                users[author]['battletag'] = arguments[1]
-                await client.send_message(message.channel,
-                                          "Okay, your battletag is {} from here"
-                                          " on out.".format(
-                                              users[author]["battletag"]))
-        elif arguments[0] == 'mobile':
-            if author in users:
-                users[author]['mobile'] = arguments[1]
-                await client.send_message(message.channel,
-                                          "Got your digits: {}.".format(
-                                              users[author]["mobile"]))
-        # Update the database
+        elif arguments[0] in valid_arguments:
+            users[author][arguments[0]] = arguments[1]
+            await client.send_message(message.channel,
+                                      valid_arguments[arguments[0]].format(
+                                          users[author][arguments[0]]))
+        # Update database
         whos_in.update_db()
 
     elif message.content.startswith('!version'):
