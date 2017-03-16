@@ -11,50 +11,30 @@ from twilio.rest import TwilioRestClient
 VERSION_MAJOR = 0
 VERSION_MINOR = 6
 
-tokens = {}
-users = {}
-db_file = 'db.json'
 
-if not os.path.exists('tokens.config'):
-    print("No tokens config file found.", file=stderr)
-    exit(-1)
-else:
-    with open('tokens.config', 'r') as t_file:
-        tokens = json.load(t_file)
+def remove_formatting(username):
+    """
+    Removes the hashtag id from a person's discord name, this is for
+    readability.
 
-if not os.path.exists('users.config'):
-    print("No users config file found.", file=stderr)
-    exit(-1)
-else:
-    with open('users.config', 'r') as t_file:
-        users = json.load(t_file)
+    :param username: Full username to clean
+    :rtype str
+    :return: str: Clean user name (striped # from username)
+    """
 
-token = tokens['token']
-twitter_api_key = tokens['twitter_api_key']
-twitter_api_secret = tokens['twitter_api_secret']
+    if '#' in str(username):
+        return str(username)[:str(username).index('#')]
+    else:
+        return str(username)
 
-account_sid = tokens['twilio_account_sid']
-auth_token = tokens['twilio_auth_token']
-twilio_client = TwilioRestClient(account_sid, auth_token)
 
-db = {}
+def shot_lottery():
+    """
+    Run a shot lottery
 
-if not os.path.exists(db_file):
-    print("Starting DB from scratch")
-    with open(db_file, 'w') as datafile:
-        json.dump(db, datafile)
-else:
-    print("Loading the DB")
-    with open(db_file, 'r') as datafile:
-        db = json.load(datafile)
-
-twitter = Twython(twitter_api_key, twitter_api_secret)
-auth = twitter.get_authentication_tokens()
-
-OAUTH_TOKEN = auth['oauth_token']
-OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
-
-client = discord.Client()
+    :return: None
+    """
+    pass
 
 
 class WeekendGames(object):
@@ -240,32 +220,59 @@ class WeekendGames(object):
         return "{0} - {1} - {2}".format(self.wins, self.losses, self.draws)
 
 
+# Handle tokens from local file
+tokens = {}
+if not os.path.exists('tokens.config'):
+    print("No tokens config file found.", file=stderr)
+    exit(-1)
+else:
+    with open('tokens.config', 'r') as t_file:
+        tokens = json.load(t_file)
+
+# Discord Bot Token
+token = tokens['token']
+
+# Twitter tokens
+twitter_api_key = tokens['twitter_api_key']
+twitter_api_secret = tokens['twitter_api_secret']
+twitter = Twython(twitter_api_key, twitter_api_secret)
+auth = twitter.get_authentication_tokens()
+OAUTH_TOKEN = auth['oauth_token']
+OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
+
+# Twilio Tokens
+account_sid = tokens['twilio_account_sid']
+auth_token = tokens['twilio_auth_token']
+twilio_client = TwilioRestClient(account_sid, auth_token)
+
+
+# Handle users from local file
+users = {}
+if not os.path.exists('users.config'):
+    print("No users config file found.", file=stderr)
+    exit(-1)
+else:
+    with open('users.config', 'r') as t_file:
+        users = json.load(t_file)
+
+# Create/Load Local Database
+db_file = 'db.json'
+db = {}
+if not os.path.exists(db_file):
+    print("Starting DB from scratch")
+    with open(db_file, 'w') as datafile:
+        json.dump(db, datafile)
+else:
+    print("Loading the DB")
+    with open(db_file, 'r') as datafile:
+        db = json.load(datafile)
+
+
+client = discord.Client()
+
+
 whos_in = WeekendGames()
 
-
-def remove_formatting(username):
-    """
-    Removes the hashtag id from a person's discord name, this is for
-    readability.
-
-    :param username: Full username to clean
-    :rtype str
-    :return: str: Clean user name (striped # from username)
-    """
-
-    if '#' in str(username):
-        return str(username)[:str(username).index('#')]
-    else:
-        return str(username)
-
-
-def shot_lottery():
-    """
-    Run a shot lottery
-
-    :return: None
-    """
-    pass
 
 @client.event
 async def on_ready():
@@ -282,6 +289,7 @@ async def on_ready():
         print(channel)
 
     # await client.send_message('#general', 'Hi I\'m online :)')
+
 
 @client.event
 async def on_message(message):
