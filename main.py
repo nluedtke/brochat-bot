@@ -335,13 +335,15 @@ async def on_message(message):
         print(message)
 
     elif message.content.startswith('!text-brandon'):
-        # There seems to be an issue here if I move the await statement after the if statement.
-        # Probably has to do with a concept of async that I don't understand.
-        await client.send_message(message.channel, 'Message sent, if possible!')
-        target_user = 'csh'
-        if users[target_user]['mobile']:
-            message = twilio_client.messages.create(
+
+        target_user = 'taco'
+        try:
+            message_recipient = users[target_user]['mobile']
+            twilio_message = twilio_client.messages.create(
                 to=users[target_user]['mobile'], from_="+16088880320", body="Hey u :)")
+            await client.send_message(message.channel, 'Text message sent!')
+        except:
+            await client.send_message(message.channel, 'Could not send text message!')
 
     elif message.content.startswith('!trump'):
         trumps_last_tweet = twitter.get_user_timeline(
