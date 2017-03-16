@@ -124,6 +124,7 @@ class WeekendGames(object):
         db['last_shot'] = self.last_shot
         db['consecutive_shot_wins'] = self.consecutive_shot_wins
         db['last_lottery_time'] = self.last_lottery
+        db['users'] = users
         with open(db_file, 'w') as datafile:
             json.dump(db, datafile, sort_keys=True, indent=4,
                       ensure_ascii=False)
@@ -251,21 +252,9 @@ auth_token = tokens['twilio_auth_token']
 twilio_client = TwilioRestClient(account_sid, auth_token)
 
 
-# Handle users from local file
-users = {}
-if not os.path.exists('users.config'):
-    print("No users config file found.", file=stderr)
-    exit(-1)
-else:
-    with open('users.config', 'r') as t_file:
-        users = json.load(t_file)
-
 # Create/Load Local Database
 db_file = 'db.json'
 db = {}
-
-# Create/Load User Config
-user_file = 'users.config'
 
 if not os.path.exists(db_file):
     print("Starting DB from scratch")
@@ -276,10 +265,14 @@ else:
     with open(db_file, 'r') as datafile:
         db = json.load(datafile)
 
+# Create users from DB
+try:
+    users = db['users']
+except:
+    users = {}
 
+# Instantiate Discord client and Weekend Games
 client = discord.Client()
-
-
 whos_in = WeekendGames()
 
 
@@ -517,14 +510,12 @@ async def on_message(message):
         elif arguments[0] == 'name':
             if author in users:
                 users[author]['name'] = arguments[1]
-                update_users()
                 await client.send_message(message.channel,
                                           "Okay, I'll call you {} now.".format(
                                               users[author]["name"]))
         elif arguments[0] == 'battletag':
             if author in users:
                 users[author]['battletag'] = arguments[1]
-                update_users()
                 await client.send_message(message.channel,
                                           "Okay, your battletag is {} from here"
                                           " on out.".format(
@@ -532,10 +523,11 @@ async def on_message(message):
         elif arguments[0] == 'mobile':
             if author in users:
                 users[author]['mobile'] = arguments[1]
-                update_users()
                 await client.send_message(message.channel,
                                           "Got your digits: {}.".format(
                                               users[author]["mobile"]))
+        # Update the database
+        whos_in.update_db()
 
     elif message.content.startswith('!version'):
         version_string = "Version: {0}.{1}".format(VERSION_MAJOR, VERSION_MINOR)
