@@ -12,22 +12,6 @@ VERSION_MAJOR = 0
 VERSION_MINOR = 6
 
 
-def remove_formatting(username):
-    """
-    Removes the hashtag id from a person's discord name, this is for
-    readability.
-
-    :param username: Full username to clean
-    :rtype str
-    :return: str: Clean user name (striped # from username)
-    """
-
-    if '#' in str(username):
-        return str(username)[:str(username).index('#')]
-    else:
-        return str(username)
-
-
 def shot_lottery():
     """
     Run a shot lottery
@@ -94,11 +78,15 @@ class WeekendGames(object):
         :param person: Person to add
         :return: None
         """
+        if type(person) is str:
+            person_to_add = person
+        else:
+            person_to_add = str(person.display_name)
 
-        if self.people.count(remove_formatting(person)) > 0:
+        if self.people.count(person_to_add) > 0:
             return
         else:
-            self.people.append(remove_formatting(person))
+            self.people.append(person_to_add)
             self.update_db()
 
     def remove(self, person):
@@ -110,14 +98,19 @@ class WeekendGames(object):
         :return: str: Formatted string indicating whether a person was removed.
         """
 
-        if remove_formatting(person) in self.people:
-            self.people.remove(remove_formatting(person))
+        if type(person) is str:
+            person_to_rem = person
+        else:
+            person_to_rem = str(person.display_name)
+
+        if person_to_rem in self.people:
+            self.people.remove(person_to_rem)
             self.update_db()
             return '{} is out for this weekend. What a ***REMOVED***.'.format(
-                remove_formatting(person))
+                person_to_rem)
         else:
             return '{} was never in anyway. Deceptive!'.format(
-                remove_formatting(person))
+                person_to_rem)
 
     def update_db(self):
         """
@@ -328,7 +321,7 @@ async def on_message(message):
             whos_in.add(message.author)
             await client.send_message(message.channel,
                                       '{} is in for this weekend.'.format(
-                                          remove_formatting(message.author)))
+                                          message.author.display_name))
         await client.send_message(message.channel, whos_in.whos_in())
 
     elif message.content.startswith('!out'):
