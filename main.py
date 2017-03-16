@@ -445,7 +445,7 @@ async def on_message(message):
             await client.send_message(message.channel, random_string)
             winner = randint(0, len(players)-1)
             finish_string = "The winning number is {}, Congrats {} you WIN!\n" \
-                            " Take your shot!".format(winner, players[winner])
+                            ":beers: Take your shot!".format(winner, players[winner])
             consecutive = whos_in.add_shot_win(players[winner])
             await client.send_message(message.channel, finish_string)
             if consecutive > 1:
