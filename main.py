@@ -12,14 +12,22 @@ VERSION_MAJOR = 0
 VERSION_MINOR = 6
 
 tokens = {}
+users = {}
 db_file = 'db.json'
 
 if not os.path.exists('tokens.config'):
-    print("No config file found.", file=stderr)
+    print("No tokens config file found.", file=stderr)
     exit(-1)
 else:
     with open('tokens.config', 'r') as t_file:
         tokens = json.load(t_file)
+
+if not os.path.exists('users.config'):
+    print("No users config file found.", file=stderr)
+    exit(-1)
+else:
+    with open('users.config', 'r') as t_file:
+        users = json.load(t_file)
 
 token = tokens['token']
 twitter_api_key = tokens['twitter_api_key']
@@ -251,6 +259,14 @@ def remove_formatting(username):
         return str(username)
 
 
+def shot_lottery():
+    """
+    Run a shot lottery
+
+    :return: None
+    """
+    pass
+
 @client.event
 async def on_ready():
     """
@@ -266,7 +282,6 @@ async def on_ready():
         print(channel)
 
     # await client.send_message('#general', 'Hi I\'m online :)')
-
 
 @client.event
 async def on_message(message):
@@ -320,9 +335,13 @@ async def on_message(message):
         print(message)
 
     elif message.content.startswith('!text-brandon'):
-        await client.send_message(message.channel, '#TODO: Twilio integration')
-        message = twilio_client.messages.create(
-            to="+16082173743", from_="+16088880320", body="Hey u :)")
+        # There seems to be an issue here if I move the await statement after the if statement.
+        # Probably has to do with a concept of async that I don't understand.
+        await client.send_message(message.channel, 'Message sent, if possible!')
+        target_user = 'csh'
+        if users[target_user]['mobile']:
+            message = twilio_client.messages.create(
+                to=users[target_user]['mobile'], from_="+16088880320", body="Hey u :)")
 
     elif message.content.startswith('!trump'):
         trumps_last_tweet = twitter.get_user_timeline(
@@ -413,5 +432,7 @@ client.run(token)
 
 
 #TODO weekend gaming session management
-#TODO !shots
-#TODO !in
+#TODO Active Twilio account
+#TODO !snapshot to get stats at the beginning of the session via OWAPI
+#TODO dict of contact info
+#TODO command handler
