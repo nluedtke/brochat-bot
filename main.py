@@ -333,11 +333,11 @@ async def on_message(message):
 
     elif message.content.startswith('!out'):
         person_is_out = whos_in.remove(message.author)
-        await client.send_message(message.channel,person_is_out)
+        await client.send_message(message.channel, person_is_out)
         await client.send_message(message.channel, whos_in.whos_in())
 
     elif message.content.startswith('!whosin'):
-        await client.send_message(message.channel,whos_in.whos_in())
+        await client.send_message(message.channel, whos_in.whos_in())
 
     elif message.content.startswith('@brochat-bot'):
         print(message)
@@ -348,10 +348,12 @@ async def on_message(message):
         try:
             send_message_to = users[target_user]['mobile']
             twilio_message = twilio_client.messages.create(
-                to=users[send_message_to]['mobile'], from_="+16088880320", body="Hey u :)")
+                to=users[send_message_to]['mobile'], from_="+16088880320",
+                body="Hey u :)")
             await client.send_message(message.channel, 'Text message sent!')
         except:
-            await client.send_message(message.channel, 'Could not send text message!')
+            await client.send_message(message.channel,
+                                      'Could not send text message!')
 
     elif message.content.startswith('!trump'):
         trumps_last_tweet = twitter.get_user_timeline(
