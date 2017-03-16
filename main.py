@@ -8,6 +8,9 @@ from sys import stderr
 from random import randint
 from twilio.rest import TwilioRestClient
 
+VERSION_MAJOR = 0
+VERSION_MINOR = 5
+
 tokens = {}
 db_file = 'db.json'
 
@@ -344,7 +347,8 @@ async def on_message(message):
                       '**!win/!loss/!draw:** Update session record' \
                       'appropriately\n' \
                       '**!clear-record:** Clear the session record\n' \
-                      '**!get-record:** Print the session record\n'
+                      '**!get-record:** Print the session record\n' \
+                      '**!version:** Print the version of brochat-bot\n'
 
         await client.send_message(message.channel, help_string)
 
@@ -400,6 +404,9 @@ async def on_message(message):
     elif message.content.startswith('!get-record'):
         record_string = "Current record: {}".format(whos_in.get_record())
         await client.send_message(message.channel, record_string)
+    elif message.content.startswith('!version'):
+        version_string = "Version: {0}.{1}".format(VERSION_MAJOR, VERSION_MINOR)
+        await client.send_message(message.channel, version_string)
 
 
 client.run(token)
