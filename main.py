@@ -339,7 +339,6 @@ def print_version():
     return version_string
 
 
-
 @client.event
 async def on_message(message):
     """
@@ -478,32 +477,46 @@ async def on_message(message):
         author = str(message.author.display_name)
         if author in users:
             if "battletag" in users[author]:
-                await client.send_message(message.channel, "Your battletag is: {}".format(users[author]["battletag"]))
+                await client.send_message(message.channel,
+                                          "Your battletag is: {}".format(
+                                              users[author]["battletag"]))
             else:
-                await client.send_message(message.channel, "I couldn\'t find your battletag!")
+                await client.send_message(message.channel,
+                                          "I couldn\'t find your battletag!")
         else:
-            await client.send_message(message.channel, "I couldn\'t find your user info!")
+            await client.send_message(message.channel,
+                                      "I couldn\'t find your user info!")
     elif message.content.startswith('!set'):
         author = str(message.author.display_name)
         arguments = argument_parser(message.content)
         print(arguments)
-        #TODO error handling for arg length
+        # TODO error handling for arg length
 
         if len(arguments) != 2:
-            await client.send_message(message.channel, "To !set information about yourself, please use:\n\n"
-                                                       "**!set** <name/battletag/mobile> <value>")
+            await client.send_message(message.channel,
+                                      "To !set information about yourself, "
+                                      "please use:\n\n"
+                                      "**!set** <name/battletag/mobile> "
+                                      "<value>")
         elif arguments[0] == 'name':
             if author in users:
                 users[author]['name'] = arguments[1]
-                await client.send_message(message.channel, "Okay, I'll call you {} now.".format(users[author]["name"]))
+                await client.send_message(message.channel,
+                                          "Okay, I'll call you {} now.".format(
+                                              users[author]["name"]))
         elif arguments[0] == 'battletag':
             if author in users:
                 users[author]['battletag'] = arguments[1]
-                await client.send_message(message.channel, "Okay, your battletag is {} from here on out.".format(users[author]["battletag"]))
+                await client.send_message(message.channel,
+                                          "Okay, your battletag is {} from here"
+                                          " on out.".format(
+                                              users[author]["battletag"]))
         elif arguments[0] == 'mobile':
             if author in users:
                 users[author]['mobile'] = arguments[1]
-                await client.send_message(message.channel, "Got your digits: {}.".format(users[author]["mobile"]))
+                await client.send_message(message.channel,
+                                          "Got your digits: {}.".format(
+                                              users[author]["mobile"]))
 
     elif message.content.startswith('!version'):
         version_string = "Version: {0}.{1}".format(VERSION_MAJOR, VERSION_MINOR)
@@ -513,8 +526,8 @@ async def on_message(message):
 client.run(token)
 
 
-#TODO weekend gaming session management
-#TODO Active Twilio account
-#TODO !snapshot to get stats at the beginning of the session via OWAPI
-#TODO dict of contact info
-#TODO command handler
+# TODO weekend gaming session management
+# TODO Active Twilio account
+# TODO !snapshot to get stats at the beginning of the session via OWAPI
+# TODO dict of contact info
+# TODO command handler
