@@ -338,9 +338,9 @@ async def on_message(message):
 
         target_user = 'taco'
         try:
-            message_recipient = users[target_user]['mobile']
+            send_message_to = users[target_user]['mobile']
             twilio_message = twilio_client.messages.create(
-                to=users[target_user]['mobile'], from_="+16088880320", body="Hey u :)")
+                to=users[send_message_to]['mobile'], from_="+16088880320", body="Hey u :)")
             await client.send_message(message.channel, 'Text message sent!')
         except:
             await client.send_message(message.channel, 'Could not send text message!')
