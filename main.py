@@ -267,6 +267,20 @@ def shot_lottery():
     """
     pass
 
+def argument_parser(input):
+    """
+    Returns a list of tokens for a given argument
+    :param input: input string
+    :return: argument list
+    """
+
+    arguments = input.split(' ')
+    if len(arguments) > 1:
+        return arguments[1:]
+    else:
+        return arguments
+
+
 @client.event
 async def on_ready():
     """
@@ -364,11 +378,13 @@ async def on_message(message):
                       '**!trump:** I\'ll show you Trump\'s latest Yuge ' \
                       'success!\n' \
                       '**!text-brandon:** Tempt fate\n' \
-                      '**!shot-lottery:** Run a shot lottery.\n' \
+                      '**!shot-lottery:** Run a shot lottery\n' \
                       '**!win/!loss/!draw:** Update session record ' \
                       'appropriately\n' \
                       '**!clear-record:** Clear the session record\n' \
                       '**!get-record:** Print the session record\n' \
+                      '**!set:** Tell Brochat-Bot some info about you\n' \
+                      '**!battletag:** I\'ll tell you your battletag\n' \
                       '**!version:** Print the version of brochat-bot\n'
 
         await client.send_message(message.channel, help_string)
@@ -425,6 +441,37 @@ async def on_message(message):
     elif message.content.startswith('!get-record'):
         record_string = "Current record: {}".format(whos_in.get_record())
         await client.send_message(message.channel, record_string)
+    elif message.content.startswith('!battletag'):
+        author = remove_formatting(message.author)
+        if author in users:
+            if "battletag" in users[author]:
+                await client.send_message(message.channel, "Your battletag is: {}".format(users[author]["battletag"]))
+            else:
+                await client.send_message(message.channel, "I couldn\'t find your battletag!")
+        else:
+            await client.send_message(message.channel, "I couldn\'t find your user info!")
+    elif message.content.startswith('!set'):
+        author = remove_formatting(message.author)
+        arguments = argument_parser(message.content)
+        print(arguments)
+        #TODO error handling for arg length
+
+        if len(arguments) != 2:
+            await client.send_message(message.channel, "To !set information about yourself, please use:\n\n"
+                                                       "**!set** <name/battletag/mobile> <value>")
+        elif arguments[0] == 'name':
+            if author in users:
+                users[author]['name'] = arguments[1]
+                await client.send_message(message.channel, "Okay, I'll call you {} now.".format(users[author]["name"]))
+        elif arguments[0] == 'battletag':
+            if author in users:
+                users[author]['battletag'] = arguments[1]
+                await client.send_message(message.channel, "Okay, your battletag is {} from here on out.".format(users[author]["battletag"]))
+        elif arguments[0] == 'mobile':
+            if author in users:
+                users[author]['mobile'] = arguments[1]
+                await client.send_message(message.channel, "Got your digits: {}.".format(users[author]["mobile"]))
+
     elif message.content.startswith('!version'):
         version_string = "Version: {0}.{1}".format(VERSION_MAJOR, VERSION_MINOR)
         await client.send_message(message.channel, version_string)
