@@ -317,6 +317,7 @@ def print_help():
                   '**!get-record:** Print the session record\n' \
                   '**!set:** Tell Brochat-Bot some info about you\n' \
                   '**!battletag:** I\'ll tell you your battletag\n' \
+                  '**!whoami:** I\'ll tell you what I know about you\n' \
                   '**!version:** Print the version of brochat-bot\n'
     return help_string
 
@@ -409,7 +410,7 @@ async def on_message(message):
         else:
             await client.send_message(
                 message.channel,
-                'Trump has been saying things, as usual...\n\n'
+                ':pen_ballpoint::monkey: Trump has been saying things, as usual...\n\n'
                 'https://twitter.com/{}/status/{}'.format(
                     trumps_last_tweet[0]['user']['screen_name'],
                     str(trumps_last_tweet[0]['id'])))
@@ -512,6 +513,16 @@ async def on_message(message):
                                           users[author][arguments[0]]))
         # Update database
         whos_in.update_db()
+
+    elif message.content.startswith('!whoami'):
+        author = str(message.author.display_name)
+        await client.send_message(message.channel, "Well, I don't know you that well, but from what I've been hearing on the streets...")
+        if author in users:
+            if users[author] != {}:
+                for k,v in users[author].items():
+                    await client.send_message(message.channel, "Your {} is {}.".format(k,v))
+            else:
+                await client.send_message(message.channel, "You're {}, but that all I know about you.")
 
     elif message.content.startswith('!version'):
         await client.send_message(message.channel, print_version())
