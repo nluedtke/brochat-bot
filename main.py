@@ -214,6 +214,17 @@ class WeekendGames(object):
         return "{0} - {1} - {2}".format(self.wins, self.losses, self.draws)
 
 
+def update_users():
+    """
+    Updates the users.config to disk
+
+    :return: None
+    """
+
+    with open(user_file, 'w') as datafile:
+        json.dump(users, datafile, sort_keys=True, indent=4,
+                  ensure_ascii=False)
+
 # Handle tokens from local file
 tokens = {}
 if not os.path.exists('tokens.config'):
@@ -252,6 +263,10 @@ else:
 # Create/Load Local Database
 db_file = 'db.json'
 db = {}
+
+# Create/Load User Config
+user_file = 'users.config'
+
 if not os.path.exists(db_file):
     print("Starting DB from scratch")
     with open(db_file, 'w') as datafile:
@@ -489,8 +504,9 @@ async def on_message(message):
     elif message.content.startswith('!set'):
         author = str(message.author.display_name)
         arguments = argument_parser(message.content)
-        print(arguments)
-        # TODO error handling for arg length
+
+        if author not in users:
+            users[author] = {}
 
         if len(arguments) != 2:
             await client.send_message(message.channel,
@@ -501,12 +517,14 @@ async def on_message(message):
         elif arguments[0] == 'name':
             if author in users:
                 users[author]['name'] = arguments[1]
+                update_users()
                 await client.send_message(message.channel,
                                           "Okay, I'll call you {} now.".format(
                                               users[author]["name"]))
         elif arguments[0] == 'battletag':
             if author in users:
                 users[author]['battletag'] = arguments[1]
+                update_users()
                 await client.send_message(message.channel,
                                           "Okay, your battletag is {} from here"
                                           " on out.".format(
@@ -514,6 +532,7 @@ async def on_message(message):
         elif arguments[0] == 'mobile':
             if author in users:
                 users[author]['mobile'] = arguments[1]
+                update_users()
                 await client.send_message(message.channel,
                                           "Got your digits: {}.".format(
                                               users[author]["mobile"]))
@@ -529,5 +548,4 @@ client.run(token)
 # TODO weekend gaming session management
 # TODO Active Twilio account
 # TODO !snapshot to get stats at the beginning of the session via OWAPI
-# TODO dict of contact info
 # TODO command handler
