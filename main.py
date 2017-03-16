@@ -507,22 +507,29 @@ async def on_message(message):
                                       "**!set** <name/battletag/mobile> "
                                       "<value>")
         elif arguments[0] in valid_arguments:
-            users[author][arguments[0]] = arguments[1]
-            await client.send_message(message.channel,
-                                      valid_arguments[arguments[0]].format(
-                                          users[author][arguments[0]]))
+            # Added format check for mobile
+            if arguments[0] == 'mobile' and (len(arguments[1]) != 12 or arguments[1][0] != '+'
+                                             or not isinstance(int(arguments[1][1:]),int)):
+                await client.send_message(message.channel,"You'll need to use the format **+14148888888**"
+                                                          " for your mobile number.")
+            else:
+                users[author][arguments[0]] = arguments[1]
+                await client.send_message(message.channel,
+                                          valid_arguments[arguments[0]].format(
+                                              users[author][arguments[0]]))
         # Update database
         whos_in.update_db()
 
     elif message.content.startswith('!whoami'):
         author = str(message.author.display_name)
-        await client.send_message(message.channel, "Well, I don't know you that well, but from what I've been hearing on the streets...")
-        if author in users:
-            if users[author] != {}:
+        if author in users and users[author] != {}:
+                await client.send_message(message.channel, "Well, I don't know you that well, but "
+                                                           "from what I've been hearing on the streets...")
                 for k,v in users[author].items():
                     await client.send_message(message.channel, "Your {} is {}.".format(k,v))
-            else:
-                await client.send_message(message.channel, "You're {}, but that all I know about you.")
+        else:
+            await client.send_message(message.channel, "You're {}, but that all I know about you.".format(
+                                                        author))
 
     elif message.content.startswith('!version'):
         await client.send_message(message.channel, print_version())
