@@ -9,7 +9,7 @@ from random import randint
 from twilio.rest import TwilioRestClient
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 5
+VERSION_MINOR = 6
 
 tokens = {}
 db_file = 'db.json'
