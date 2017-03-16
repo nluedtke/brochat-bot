@@ -1,6 +1,6 @@
 import discord
 import asyncio
-from twython import Twython
+from twython import Twython, TwythonError
 from time import time
 import json
 import os
@@ -373,14 +373,19 @@ async def on_message(message):
                                       'Could not send text message!')
 
     elif message.content.startswith('!trump'):
-        trumps_last_tweet = twitter.get_user_timeline(
-            screen_name='realdonaldtrump', count=1, include_retweets=False)
-        await client.send_message(
-            message.channel,
-            'Trump has been saying things, as usual...\n\n'
-            'https://twitter.com/{}/status/{}'.format(
-                trumps_last_tweet[0]['user']['screen_name'],
-                str(trumps_last_tweet[0]['id'])))
+        try:
+            trumps_last_tweet = twitter.get_user_timeline(
+                screen_name='realdonaldtrump', count=1, include_retweets=False)
+        except TwythonError:
+            await client.send_message(message.channel,
+                                      "Twitter is acting up, try again later.")
+        else:
+            await client.send_message(
+                message.channel,
+                'Trump has been saying things, as usual...\n\n'
+                'https://twitter.com/{}/status/{}'.format(
+                    trumps_last_tweet[0]['user']['screen_name'],
+                    str(trumps_last_tweet[0]['id'])))
 
     elif message.content.startswith('!help'):
         await client.send_message(message.channel, print_help())
