@@ -70,6 +70,11 @@ class WeekendGames(object):
         if 'last_lottery_time' in db:
             self.last_lottery = db['last_lottery_time']
 
+        # non persistent variables
+        self.wins = 0
+        self.draws = 0
+        self.losses = 0
+
     def whos_in(self):
         """
         Prints who is currently in for the weekend games.
@@ -175,6 +180,54 @@ class WeekendGames(object):
         """
 
         return time() - self.last_lottery > 600
+
+    def add_win(self):
+        """
+        Adds a win
+
+        :return: None
+        """
+
+        self.wins += 1
+
+    def add_loss(self):
+        """
+        Adds a loss
+
+        :return: None
+        """
+
+        self.losses += 1
+
+    def add_draw(self):
+        """
+        Adds a draw
+
+        :return: None
+        """
+
+        self.draws += 1
+
+    def clear_record(self):
+        """
+        Adds a draw
+
+        :return: None
+        """
+
+        self.draws = 0
+        self.wins = 0
+        self.losses = 0
+
+    def get_record(self):
+        """
+        Gets the record of a session
+
+        :return: str: With record formatting
+        """
+
+        return "{0} - {1} - {2}".format(self.wins, self.losses, self.draws)
+
 
 whos_in = WeekendGames()
 
@@ -290,7 +343,11 @@ async def on_message(message):
                       '**!trump:** I\'ll show you Trump\'s latest Yuge ' \
                       'success!\n' \
                       '**!text-brandon:** Tempt fate\n' \
-                      '**!shot-lottery:** Run a shot lottery.'
+                      '**!shot-lottery:** Run a shot lottery.' \
+                      '**!win/!loss/!draw:** Update session record ' \
+                      'appropriately' \
+                      '**!clear-record:** Clear the session record' \
+                      '**!get-record:** Print the session record'
 
         await client.send_message(message.channel, help_string)
 
@@ -323,6 +380,29 @@ async def on_message(message):
                 total_string = "That's {} in a row!".format(consecutive)
                 await client.send_message(message.channel, total_string)
             whos_in.log_lottery_time()
+    elif message.content.startswith('!win'):
+        whos_in.add_win()
+        await client.send_message(message.channel, "Congrats on the win!")
+        record_string = "Current record: {}".format(whos_in.get_record())
+        await client.send_message(message.channel, record_string)
+    elif message.content.startswith('!loss'):
+        whos_in.add_loss()
+        await client.send_message(message.channel, "You guys are bad!")
+        record_string = "Current record: {}".format(whos_in.get_record())
+        await client.send_message(message.channel, record_string)
+    elif message.content.startswith('!draw'):
+        whos_in.add_draw()
+        await client.send_message(message.channel, "What a waste!")
+        record_string = "Current record: {}".format(whos_in.get_record())
+        await client.send_message(message.channel, record_string)
+    elif message.content.startswith('!clear-record'):
+        record_string = "You went: {}".format(whos_in.get_record())
+        await client.send_message(message.channel, record_string)
+        whos_in.clear_record()
+        await client.send_message(message.channel, "Record Cleared!")
+    elif message.content.startswith('!get-record'):
+        record_string = "Current record: {}".format(whos_in.get_record())
+        await client.send_message(message.channel, record_string)
 
 
 client.run(token)
