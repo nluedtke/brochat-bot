@@ -433,9 +433,15 @@ async def on_message(message):
                     players.append(m.display_name)
             list_string = "{} have been entered in the SHOT LOTTERY " \
                           "good luck!".format(players)
+            await asyncio.sleep(3)
+            await client.send_message(message.channel, "...The tension is rising...")
+            await asyncio.sleep(2)
             await client.send_message(message.channel, list_string)
             random_string = "Selecting a random number between 0 and {}".format(
                 len(players)-1)
+            await asyncio.sleep(4)
+            await client.send_message(message.channel, "...Who will it be!?!?")
+            await asyncio.sleep(4)
             await client.send_message(message.channel, random_string)
             winner = randint(0, len(players)-1)
             finish_string = "The winning number is {}, Congrats {} you WIN!\n" \
