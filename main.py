@@ -331,7 +331,7 @@ def print_help():
                   '**!out:** Tell me you\'re out for the weekend\n' \
                   '**!trump:** I\'ll show you Trump\'s latest Yuge ' \
                   'success!\n' \
-                  '**!dankmeme:** I\'ll fetch you a succulent dank may-may\n ' \
+                  '**!dankmeme:** I\'ll fetch you a succulent dank may-may\n' \
                   '**!text <name>:** Get that fool in the loop\n' \
                   '**!shot-lottery:** Run a shot lottery.\n' \
                   '**!win/!loss/!draw:** Update session record ' \
@@ -340,6 +340,7 @@ def print_help():
                   '**!get-record:** Print the session record\n' \
                   '**!set:** Tell Brochat-Bot some info about you\n' \
                   '**!battletag:** I\'ll tell you your battletag\n' \
+                  '**!owstats:** I\'ll assess your Overwatch performance\n' \
                   '**!whoami:** I\'ll tell you what I know about you\n' \
                   '**!version:** Print the version of brochat-bot\n'
 
