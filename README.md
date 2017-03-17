@@ -10,7 +10,7 @@ A bot to enable friendship (and at times enforce it).
 Below are instructions to set up and run your own brochat-bot.
 
   1) Get the source code by either cloning this repo or downloading the 
-  latest stable release at [Releases](/releases/latest).
+  latest stable release at [Releases](../../releases/latest).
   2) Acquire a tokens.config file from the developers or create your own
    tokens. Currently brochat-bot uses tokens from Twitter, Twilio, and 
    Discord. This file should be placed in the same directory to which 
