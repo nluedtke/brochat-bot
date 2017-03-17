@@ -12,6 +12,7 @@ import requests
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 8
+VERSION_PATCH = 0
 
 
 def shot_lottery():
@@ -331,9 +332,10 @@ def print_version():
     :rtype str
     :return: str: Version string
     """
-    version_string = "Version: {0}.{1}\n" \
-                     "Running on: {2}".format(VERSION_MAJOR,
+    version_string = "Version: {0}.{1}.{2}\n" \
+                     "Running on: {3}".format(VERSION_MAJOR,
                                               VERSION_MINOR,
+                                              VERSION_PATCH,
                                               socket.gethostname())
     return version_string
 
