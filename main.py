@@ -410,7 +410,7 @@ async def on_message(message):
             for entry in response_json['data']['children']:
                 if entry['data']['stickied'] is True \
                         or (entry['data']['url'][-4:] != '.png'
-                            or entry['data']['url'][-4:] != '.jpg'):
+                            and entry['data']['url'][-4:] != '.jpg'):
                     response_json['data']['children'].remove(entry)
             print(str(len(response_json['data']['children'])))
             seed = randint(0, len(response_json['data']['children'])-1)
