@@ -11,7 +11,8 @@ import socket
 import requests
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 7
+VERSION_MINOR = 9
+VERSION_PATCH = 0
 
 
 def shot_lottery():
@@ -235,6 +236,7 @@ class WeekendGames(object):
 
         return "{0} - {1} - {2}".format(self.wins, self.losses, self.draws)
 
+
 # Handle tokens from local file
 tokens = {}
 if not os.path.exists('tokens.config'):
@@ -260,7 +262,6 @@ account_sid = tokens['twilio_account_sid']
 auth_token = tokens['twilio_auth_token']
 twilio_client = TwilioRestClient(account_sid, auth_token)
 
-
 # Create/Load Local Database
 db_file = 'db.json'
 db = {}
@@ -275,9 +276,9 @@ else:
         db = json.load(datafile)
 
 # Create users from DB
-try:
+if 'users' in db:
     users = db['users']
-except:
+else:
     users = {}
 
 # Instantiate Discord client and Weekend Games
@@ -313,7 +314,7 @@ async def on_ready():
     for channel in client.get_all_channels():
         print(channel)
 
-    # await client.send_message('#general', 'Hi I\'m online :)')
+        # await client.send_message('#general', 'Hi I\'m online :)')
 
 
 def print_help():
@@ -341,6 +342,7 @@ def print_help():
                   '**!battletag:** I\'ll tell you your battletag\n' \
                   '**!whoami:** I\'ll tell you what I know about you\n' \
                   '**!version:** Print the version of brochat-bot\n'
+
     return help_string
 
 
@@ -351,9 +353,10 @@ def print_version():
     :rtype str
     :return: str: Version string
     """
-    version_string = "Version: {0}.{1}\n" \
-                     "Running on: {2}".format(VERSION_MAJOR,
+    version_string = "Version: {0}.{1}.{2}\n" \
+                     "Running on: {3}".format(VERSION_MAJOR,
                                               VERSION_MINOR,
+                                              VERSION_PATCH,
                                               socket.gethostname())
     return version_string
 
@@ -383,10 +386,14 @@ async def on_message(message):
     elif message.content == '!ham':
         await client.send_message(message.channel,
                                   '@here Let\'s get retarded, {}'.format(
+<<<<<<< HEAD
                                       message.author))
     elif message.content.startswith('!dankmeme'):
         number_to_fetch = 100
         url = 'https://www.reddit.com/r/dankmemes.json?limit=' + str(number_to_fetch)
+=======
+                                      message.author.display_name))
+>>>>>>> origin/master
 
         if not whos_in.is_reddit_time():
             await client.send_message(message.channel, ":tiger: **Easy, tiger.** Wait 20 seconds between"
@@ -468,7 +475,8 @@ async def on_message(message):
         else:
             await client.send_message(
                 message.channel,
-                ':pen_ballpoint::monkey: Trump has been saying things, as usual...\n\n'
+                ':pen_ballpoint::monkey: Trump has been saying things, as '
+                'usual...\n\n'
                 'https://twitter.com/{}/status/{}'.format(
                     trumps_last_tweet[0]['user']['screen_name'],
                     str(trumps_last_tweet[0]['id'])))
@@ -482,29 +490,31 @@ async def on_message(message):
         else:
             start_string = "Alright everyone, its time for the SHOT LOTTERY!" \
                            "\n{} won the last lottery!".format(
-                            whos_in.last_shot)
+                whos_in.last_shot)
             await client.send_message(message.channel, start_string)
 
             players = []
             for m in client.get_all_members():
                 if str(m.status) == 'online' and \
-                   str(m.display_name) != 'brochat-bot':
+                                str(m.display_name) != 'brochat-bot':
                     players.append(m.display_name)
             list_string = "{} have been entered in the SHOT LOTTERY " \
                           "good luck!".format(players)
             await asyncio.sleep(3)
-            await client.send_message(message.channel, "...The tension is rising...")
+            await client.send_message(message.channel, "...The tension is "
+                                                       "rising...")
             await asyncio.sleep(2)
             await client.send_message(message.channel, list_string)
             random_string = "Selecting a random number between 0 and {}".format(
-                len(players)-1)
+                len(players) - 1)
             await asyncio.sleep(4)
             await client.send_message(message.channel, "...Who will it be!?!?")
             await asyncio.sleep(4)
             await client.send_message(message.channel, random_string)
-            winner = randint(0, len(players)-1)
+            winner = randint(0, len(players) - 1)
             finish_string = "The winning number is {}, Congrats {} you WIN!\n" \
-                            ":beers: Take your shot!".format(winner, players[winner])
+                            ":beers: Take your shot!".format(winner,
+                                                             players[winner])
             consecutive = whos_in.add_shot_win(players[winner])
             await client.send_message(message.channel, finish_string)
             if consecutive > 1:
@@ -555,8 +565,8 @@ async def on_message(message):
             users[author] = {}
 
         valid_arguments = {'name': "Okay, I'll call you {} now.",
-                           'battletag':  "Okay, your battletag is {} from here"
-                                         " on out.",
+                           'battletag': "Okay, your battletag is {} from here"
+                                        " on out.",
                            'mobile': "Got your digits: {}."}
         if len(arguments) != 2:
             await client.send_message(message.channel,
@@ -566,10 +576,13 @@ async def on_message(message):
                                       "<value>")
         elif arguments[0] in valid_arguments:
             # Added format check for mobile
-            if arguments[0] == 'mobile' and (len(arguments[1]) != 12 or arguments[1][0] != '+'
-                                             or not isinstance(int(arguments[1][1:]),int)):
-                await client.send_message(message.channel,"You'll need to use the format **+14148888888**"
-                                                          " for your mobile number.")
+            if arguments[0] == 'mobile' and \
+                    (len(arguments[1]) != 12 or arguments[1][0] != '+'
+                     or not isinstance(int(arguments[1][1:]), int)):
+                await client.send_message(message.channel,
+                                          "You'll need to use the format "
+                                          "**+14148888888**"
+                                          " for your mobile number.")
             else:
                 users[author][arguments[0]] = arguments[1]
                 await client.send_message(message.channel,
@@ -581,24 +594,32 @@ async def on_message(message):
     elif message.content.startswith('!whoami'):
         author = str(message.author.display_name)
         if author in users and users[author] != {}:
-                await client.send_message(message.channel, "Well, I don't know you that well, but "
-                                                           "from what I've been hearing on the streets...")
-                for k,v in users[author].items():
-                    await client.send_message(message.channel, "Your {} is {}.".format(k,v))
+            await client.send_message(message.channel,
+                                      "Well, I don't know you that well, but "
+                                      "from what I've been hearing on the "
+                                      "streets...")
+            for k, v in users[author].items():
+                await client.send_message(message.channel,
+                                          "Your {} is {}.".format(k, v))
         else:
-            await client.send_message(message.channel, "You're {}, but that all I know about you.".format(
-                                                        author))
+            await client.send_message(message.channel,
+                                      "You're {}, but that all I know about "
+                                      "you.".format(author))
 
     elif message.content.startswith('!owstats'):
         author = str(message.author.display_name)
         if author in users and 'battletag' in users[author]:
-            await client.send_message(message.channel, "Hold on, let me check the webs...")
-            profile_url = 'https://api.lootbox.eu/pc/us/{}/profile'.format(users[author]['battletag'])
-            heroes_url = 'https://api.lootbox.eu/pc/us/{}/competitive/allHeroes/'.format(users[author]['battletag'])
+            await client.send_message(message.channel,
+                                      "Hold on, let me check the webs...")
+            profile_url = 'https://api.lootbox.eu/pc/us/{}/profile'.format(
+                users[author]['battletag'])
+            heroes_url = 'https://api.lootbox.eu/pc/us/{}/competitive/' \
+                         'allHeroes/'.format(users[author]['battletag'])
             headers = {'user-agent': 'brochat-bot/0.0.1'}
             response_profile = requests.get(profile_url)
             response_heroes = requests.get(heroes_url)
-            print("Overwatch API returned a response code of {}".format(response_profile.status_code))
+            print("Overwatch API returned a response code of {}".format(
+                response_profile.status_code))
             if response_profile.status_code == 200:
                 rating = response_profile.json()['data']['competitive']['rank']
                 wins = response_heroes.json()['GamesWon']
@@ -607,20 +628,28 @@ async def on_message(message):
                 gold = int(response_heroes.json()['Medals-Gold'])
                 silver = int(response_heroes.json()['Medals-Silver'])
                 bronze = int(response_heroes.json()['Medals-Bronze'])
-                await client.send_message(message.channel, "Here's the current outlook for {0}:\n\n"
-                                                           "**Rating:** {1}\n"
-                                                           "**Record:** {2} / {3} / {4}\n"
-                                                           "**:first_place::** {5}\n"
-                                                           "**:second_place::** {6}\n"
-                                                           "**:third_place::** {7}".format(
-                    author, rating, wins, losses, ties, gold, silver, bronze
-                ))
+                await client.send_message(message.channel,
+                                          "Here's the current outlook for {0}:"
+                                          "\n\n**Rating:** {1}\n"
+                                          "**Record:** {2} / {3} / {4}\n"
+                                          "**:first_place::** {5}\n"
+                                          "**:second_place::** {6}\n"
+                                          "**:third_place::** {7}".format(
+                                              author, rating, wins, losses,
+                                              ties, gold, silver, bronze
+                                          ))
             elif response_profile.status_code == 429:
-                await client.send_message(message.channel, "You're being ratelimited, chill out bruh.")
+                await client.send_message(message.channel,
+                                          "You're being ratelimited, chill out "
+                                          "bruh.")
             else:
-                await client.send_message(message.channel, "Sorry, but the Overwatch API knows I did bad stuff...")
+                await client.send_message(message.channel,
+                                          "Sorry, but the Overwatch API knows "
+                                          "I did bad stuff...")
         else:
-            await client.send_message(message.channel, "Sorry, but you didn't !set your battletag.")
+            await client.send_message(message.channel,
+                                      "Sorry, but you didn't !set your"
+                                      " battletag.")
 
     elif message.content.startswith('!version'):
         await client.send_message(message.channel, print_version())
