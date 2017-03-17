@@ -41,6 +41,8 @@ insure the code is usable, readable, and sound nature.
   - Comment all input/output code with at least basic information
   - Avoid dropping into shells as much as possible
   - Code should be able to released on the current license
+  - Individual commits do not have to be signed. Stable releases/tags 
+  **should be** signed.
 #### Bug Reporting and Feature Requests
 All bug reporting and requests for features should be done on the 
 [issues](../../issues/) page.
