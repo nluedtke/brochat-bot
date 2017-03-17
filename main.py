@@ -386,18 +386,16 @@ async def on_message(message):
     elif message.content == '!ham':
         await client.send_message(message.channel,
                                   '@here Let\'s get retarded, {}'.format(
-<<<<<<< HEAD
-                                      message.author))
+                                      message.author.display_name))
     elif message.content.startswith('!dankmeme'):
         number_to_fetch = 100
-        url = 'https://www.reddit.com/r/dankmemes.json?limit=' + str(number_to_fetch)
-=======
-                                      message.author.display_name))
->>>>>>> origin/master
-
+        url = 'https://www.reddit.com/r/dankmemes.json?limit=' \
+              + str(number_to_fetch)
         if not whos_in.is_reddit_time():
-            await client.send_message(message.channel, ":tiger: **Easy, tiger.** Wait 20 seconds between"
-                                                       " reddit requests so they don't get mad.")
+            await client.send_message(message.channel,
+                                      ":tiger: **Easy, tiger.** Wait 20 seconds"
+                                      " between reddit requests so they don't "
+                                      "get mad.")
             return
 
         response = requests.get(url)
@@ -406,7 +404,9 @@ async def on_message(message):
 
         if 'data' in response_json:
             for entry in response_json['data']['children']:
-                if entry['data']['stickied'] == True or (entry['data']['url'][-4:] != '.png' or entry['data']['url'][-4:] != '.jpg'):
+                if entry['data']['stickied'] is True \
+                        or (entry['data']['url'][-4:] != '.png'
+                            or entry['data']['url'][-4:] != '.jpg'):
                     response_json['data']['children'].remove(entry)
             print(str(len(response_json['data']['children'])))
             seed = randint(0, len(response_json['data']['children'])-1)
@@ -416,8 +416,12 @@ async def on_message(message):
                                       '{}'.format(link))
         else:
             print('Error, response code: {}'.format(response.status_code))
-            await client.send_message(message.channel, "Looks like an adversary developer pwned us...")
-            await client.send_message(message.channel,'https://cdn.meme.am/cache/instances/folder861/20989861.jpg')
+            await client.send_message(message.channel,
+                                      "Looks like an adversary developer pwned "
+                                      "us...")
+            await client.send_message(message.channel,
+                                      'https://cdn.meme.am/cache/instances/'
+                                      'folder861/20989861.jpg')
     elif message.content.startswith('!in'):
         arguments = message.content.split(' ')
         if len(arguments) > 1:
@@ -454,12 +458,14 @@ async def on_message(message):
                                       'That\'s not a real name...')
         elif 'mobile' not in users[arguments[0]]:
             await client.send_message(message.channel,
-                                      'That person doesn\'t have a mobile. So poor!')
+                                      'That person doesn\'t have a mobile. So '
+                                      'poor!')
         else:
             try:
                 twilio_message = twilio_client.messages.create(
                     to=users[arguments[0]]['mobile'], from_="+16088880320",
-                    body="@brochat-bot is always watching you, {}. Just watching, waiting for games.".format(arguments[0]))
+                    body="@brochat-bot is always watching you, {}. Just "
+                         "watching, waiting for games.".format(arguments[0]))
                 await client.send_message(message.channel, 'Text message sent!')
             except:
                 await client.send_message(message.channel,
@@ -490,7 +496,7 @@ async def on_message(message):
         else:
             start_string = "Alright everyone, its time for the SHOT LOTTERY!" \
                            "\n{} won the last lottery!".format(
-                whos_in.last_shot)
+                            whos_in.last_shot)
             await client.send_message(message.channel, start_string)
 
             players = []
