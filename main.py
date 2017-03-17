@@ -10,8 +10,8 @@ from twilio.rest import TwilioRestClient
 import socket
 import requests
 
-VERSION_MAJOR = 0
-VERSION_MINOR = 9
+VERSION_MAJOR = 1
+VERSION_MINOR = 0
 VERSION_PATCH = 0
 
 
