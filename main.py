@@ -310,7 +310,7 @@ def print_help():
                   '**!out:** Tell me you\'re out for the weekend\n' \
                   '**!trump:** I\'ll show you Trump\'s latest Yuge ' \
                   'success!\n' \
-                  '**!text-brandon:** Tempt fate\n' \
+                  '**!text <name>:** Get that fool in the loop\n' \
                   '**!shot-lottery:** Run a shot lottery.\n' \
                   '**!win/!loss/!draw:** Update session record ' \
                   'appropriately\n' \
@@ -388,18 +388,28 @@ async def on_message(message):
     elif message.content.startswith('@brochat-bot'):
         print(message)
 
-    elif message.content.startswith('!text-brandon'):
+    elif message.content.startswith('!text'):
 
-        target_user = 'taco'
-        try:
-            send_message_to = users[target_user]['mobile']
-            twilio_message = twilio_client.messages.create(
-                to=users[send_message_to]['mobile'], from_="+16088880320",
-                body="Hey u :)")
-            await client.send_message(message.channel, 'Text message sent!')
-        except:
+        arguments = argument_parser(message.content)
+
+        if len(arguments) != 1:
             await client.send_message(message.channel,
-                                      'Could not send text message!')
+                                      'Just give me a name, I\'ll do the rest!')
+        elif arguments[0] not in users:
+            await client.send_message(message.channel,
+                                      'That\'s not a real name...')
+        elif 'mobile' not in users[arguments[0]]:
+            await client.send_message(message.channel,
+                                      'That person doesn\'t have a mobile. So poor!')
+        else:
+            try:
+                twilio_message = twilio_client.messages.create(
+                    to=users[arguments[0]]['mobile'], from_="+16088880320",
+                    body="@brochat-bot is always watching you, {}. Just watching, waiting for games.".format(arguments[0]))
+                await client.send_message(message.channel, 'Text message sent!')
+            except:
+                await client.send_message(message.channel,
+                                          'Could not send text message!')
 
     elif message.content.startswith('!trump'):
         try:
