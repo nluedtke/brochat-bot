@@ -11,7 +11,7 @@ import socket
 import requests
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 7
+VERSION_MINOR = 8
 
 
 def shot_lottery():
