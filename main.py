@@ -8,6 +8,7 @@ from sys import stderr
 from random import randint
 from twilio.rest import TwilioRestClient
 import socket
+import requests
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 7
@@ -530,6 +531,39 @@ async def on_message(message):
         else:
             await client.send_message(message.channel, "You're {}, but that all I know about you.".format(
                                                         author))
+
+    elif message.content.startswith('!owstats'):
+        author = str(message.author.display_name)
+        if author in users and 'battletag' in users[author]:
+            await client.send_message(message.channel, "Hold on, let me check the webs...")
+            profile_url = 'https://api.lootbox.eu/pc/us/{}/profile'.format(users[author]['battletag'])
+            heroes_url = 'https://api.lootbox.eu/pc/us/{}/competitive/allHeroes/'.format(users[author]['battletag'])
+            headers = {'user-agent': 'brochat-bot/0.0.1'}
+            response_profile = requests.get(profile_url)
+            response_heroes = requests.get(heroes_url)
+            print("Overwatch API returned a response code of {}".format(response_profile.status_code))
+            if response_profile.status_code == 200:
+                rating = response_profile.json()['data']['competitive']['rank']
+                wins = response_heroes.json()['GamesWon']
+                losses = response_heroes.json()['GamesLost']
+                ties = response_heroes.json()['GamesTied']
+                gold = int(response_heroes.json()['Medals-Gold'])
+                silver = int(response_heroes.json()['Medals-Silver'])
+                bronze = int(response_heroes.json()['Medals-Bronze'])
+                await client.send_message(message.channel, "Here's the current outlook for {0}:\n\n"
+                                                           "**Rating:** {1}\n"
+                                                           "**Record:** {2} / {3} / {4}\n"
+                                                           "**:first_place::** {5}\n"
+                                                           "**:second_place::** {6}\n"
+                                                           "**:third_place::** {7}".format(
+                    author, rating, wins, losses, ties, gold, silver, bronze
+                ))
+            elif response_profile.status_code == 429:
+                await client.send_message(message.channel, "You're being ratelimited, chill out bruh.")
+            else:
+                await client.send_message(message.channel, "Sorry, but the Overwatch API knows I did bad stuff...")
+        else:
+            await client.send_message(message.channel, "Sorry, but you didn't !set your battletag.")
 
     elif message.content.startswith('!version'):
         await client.send_message(message.channel, print_version())
