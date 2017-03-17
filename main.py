@@ -44,6 +44,7 @@ class WeekendGames(object):
         if 'consecutive_shot_wins' in db:
             self.consecutive_shot_wins = db['consecutive_shot_wins']
         self.last_lottery = 0
+        self.last_reddit_request = 0
         if 'last_lottery_time' in db:
             self.last_lottery = db['last_lottery_time']
 
@@ -167,6 +168,25 @@ class WeekendGames(object):
         """
 
         return time() - self.last_lottery > 600
+
+    def log_reddit_time(self):
+        """
+        Logs the last time a reddit request was run to avoid ratelimit
+
+        :return: None
+        """
+
+        self.last_reddit_request = time()
+
+    def is_reddit_time(self):
+        """
+        Determines if its time for a reddit request
+
+        :rtype bool
+        :return: True if more than 30 seconds has passed
+        """
+
+        return time() - self.last_reddit_request > 30
 
     def add_win(self):
         """
@@ -368,7 +388,13 @@ async def on_message(message):
         number_to_fetch = 100
         url = 'https://www.reddit.com/r/dankmemes.json?limit=' + str(number_to_fetch)
 
+        if not whos_in.is_reddit_time():
+            await client.send_message(message.channel, ":tiger: **Easy, tiger.** Wait 20 seconds between"
+                                                       " reddit requests so they don't get mad.")
+            return
+
         response = requests.get(url)
+        whos_in.log_reddit_time()
         response_json = response.json()
 
         if 'data' in response_json:
