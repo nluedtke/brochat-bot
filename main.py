@@ -310,6 +310,7 @@ def print_help():
                   '**!out:** Tell me you\'re out for the weekend\n' \
                   '**!trump:** I\'ll show you Trump\'s latest Yuge ' \
                   'success!\n' \
+                  '**!dankmeme:** I\'ll fetch you a succulent dank may-may\n ' \
                   '**!text <name>:** Get that fool in the loop\n' \
                   '**!shot-lottery:** Run a shot lottery.\n' \
                   '**!win/!loss/!draw:** Update session record ' \
@@ -363,7 +364,27 @@ async def on_message(message):
         await client.send_message(message.channel,
                                   '@here Let\'s get retarded, {}'.format(
                                       message.author))
+    elif message.content.startswith('!dankmeme'):
+        number_to_fetch = 100
+        url = 'https://www.reddit.com/r/dankmemes.json?limit=' + str(number_to_fetch)
 
+        response = requests.get(url)
+        response_json = response.json()
+
+        if 'data' in response_json:
+            for entry in response_json['data']['children']:
+                if entry['data']['stickied'] == True or (entry['data']['url'][-4:] != '.png' or entry['data']['url'][-4:] != '.jpg'):
+                    response_json['data']['children'].remove(entry)
+            print(str(len(response_json['data']['children'])))
+            seed = randint(0, len(response_json['data']['children'])-1)
+            link = response_json['data']['children'][seed]['data']['url']
+
+            await client.send_message(message.channel,
+                                      '{}'.format(link))
+        else:
+            print('Error, response code: {}'.format(response.status_code))
+            await client.send_message(message.channel, "Looks like an adversary developer pwned us...")
+            await client.send_message(message.channel,'https://cdn.meme.am/cache/instances/folder861/20989861.jpg')
     elif message.content.startswith('!in'):
         arguments = message.content.split(' ')
         if len(arguments) > 1:
