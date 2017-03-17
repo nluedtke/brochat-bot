@@ -184,10 +184,10 @@ class WeekendGames(object):
         Determines if its time for a reddit request
 
         :rtype bool
-        :return: True if more than 30 seconds has passed
+        :return: True if more than 10 seconds has passed
         """
 
-        return time() - self.last_reddit_request > 30
+        return time() - self.last_reddit_request > 10
 
     def add_win(self):
         """
@@ -392,14 +392,17 @@ async def on_message(message):
         number_to_fetch = 100
         url = 'https://www.reddit.com/r/dankmemes.json?limit=' \
               + str(number_to_fetch)
+        headers = {
+            'User-Agent': 'Brochat-Bot {}.{}'.format(VERSION_MAJOR, VERSION_MINOR),
+        }
         if not whos_in.is_reddit_time():
             await client.send_message(message.channel,
-                                      ":tiger: **Easy, tiger.** Wait 20 seconds"
+                                      ":tiger: **Easy, tiger.** Wait 10 seconds"
                                       " between reddit requests so they don't "
                                       "get mad.")
             return
 
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         whos_in.log_reddit_time()
         response_json = response.json()
 
