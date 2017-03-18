@@ -410,8 +410,11 @@ def get_smmry(message):
     :return: a string summarizing the URL
     """
     arguments = argument_parser(message)
-    if len(arguments) != 1:
-        return "Just use **!summarize <url>**, and I'll fetch you something."
+
+    if len(arguments) != 1 or arguments[0] == "!summary":
+        return "Just use **!summarize <url>**, and I'll fetch you something." \
+               "\n\n_And remember, we only get 100 of these a day, " \
+               "so use them wisely!_"
     response = requests.get("http://api.smmry.com/"
                             "&SM_API_KEY={}"
                             "&SM_LENGTH=3"
@@ -423,7 +426,6 @@ def get_smmry(message):
                                    response_json["sm_api_content"])
     else:
         return "Something went wrong... I'm sorry for letting you down, bro."
-
 
 
 @client.event
