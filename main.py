@@ -361,6 +361,41 @@ def print_version():
                                               socket.gethostname())
     return version_string
 
+def get_dankmeme(message):
+    """
+    Function that fetches dank memes.
+    :param message:
+    :return: a string to send the client
+    """
+    number_to_fetch = str(100)
+    url = 'https://www.reddit.com/r/dankmemes.json?limit={}'.format(number_to_fetch)
+    headers = {
+        'User-Agent': 'Brochat-Bot {}.{}'.format(VERSION_MAJOR, VERSION_MINOR)
+    }
+    if not whos_in.is_reddit_time():
+        return ":tiger: **Easy, tiger.** Wait 10 seconds between reddit " \
+               "requests so they don't get mad."
+
+    response = requests.get(url, headers=headers)
+    whos_in.log_reddit_time()
+    response_json = response.json()
+
+    if 'data' in response_json:
+        for entry in response_json['data']['children']:
+            if entry['data']['stickied'] is True \
+                    or (entry['data']['url'][-4:] != '.png'
+                        and entry['data']['url'][-4:] != '.jpg'):
+                response_json['data']['children'].remove(entry)
+        print(str(len(response_json['data']['children'])))
+        seed = randint(0, len(response_json['data']['children'])-1)
+        link = response_json['data']['children'][seed]['data']['url']
+
+        return '{}'.format(link)
+    else:
+        print('Error, response code: {}'.format(response.status_code))
+        return "Looks like an adversary developer pwned " \
+               "us...\nhttps://cdn.meme.am/cache/instances/" \
+               "folder861/20989861.jpg"
 
 @client.event
 async def on_message(message):
@@ -389,43 +424,7 @@ async def on_message(message):
                                   '@here Let\'s get retarded, {}'.format(
                                       message.author.display_name))
     elif message.content.startswith('!dankmeme'):
-        number_to_fetch = 100
-        url = 'https://www.reddit.com/r/dankmemes.json?limit=' \
-              + str(number_to_fetch)
-        headers = {
-            'User-Agent': 'Brochat-Bot {}.{}'.format(VERSION_MAJOR, VERSION_MINOR),
-        }
-        if not whos_in.is_reddit_time():
-            await client.send_message(message.channel,
-                                      ":tiger: **Easy, tiger.** Wait 10 seconds"
-                                      " between reddit requests so they don't "
-                                      "get mad.")
-            return
-
-        response = requests.get(url, headers=headers)
-        whos_in.log_reddit_time()
-        response_json = response.json()
-
-        if 'data' in response_json:
-            for entry in response_json['data']['children']:
-                if entry['data']['stickied'] is True \
-                        or (entry['data']['url'][-4:] != '.png'
-                            and entry['data']['url'][-4:] != '.jpg'):
-                    response_json['data']['children'].remove(entry)
-            print(str(len(response_json['data']['children'])))
-            seed = randint(0, len(response_json['data']['children'])-1)
-            link = response_json['data']['children'][seed]['data']['url']
-
-            await client.send_message(message.channel,
-                                      '{}'.format(link))
-        else:
-            print('Error, response code: {}'.format(response.status_code))
-            await client.send_message(message.channel,
-                                      "Looks like an adversary developer pwned "
-                                      "us...")
-            await client.send_message(message.channel,
-                                      'https://cdn.meme.am/cache/instances/'
-                                      'folder861/20989861.jpg')
+        await client.send_message(message.channel, get_dankmeme(message))
     elif message.content.startswith('!in'):
         arguments = message.content.split(' ')
         if len(arguments) > 1:
