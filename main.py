@@ -9,11 +9,21 @@ from random import randint
 from twilio.rest import TwilioRestClient
 import socket
 import requests
+from gametime import Gametime
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION_PATCH = 1
 
+DAYS_IN_WEEK = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+]
 
 def shot_lottery():
     """
@@ -23,7 +33,15 @@ def shot_lottery():
     """
     pass
 
-
+def pretty_date(datetime):
+    """
+    Takes a datetime and makes it a pretty string.
+    :param datetime:
+    :return: string
+    """
+    return datetime.strftime("%a, %b %d")
+    # this version has the time, for the future:
+    # return datetime.strftime("%a, %b %d at %I:%M %p")
 class WeekendGames(object):
     """
     Defines the WeekendGames class
@@ -49,10 +67,62 @@ class WeekendGames(object):
         if 'last_lottery_time' in db:
             self.last_lottery = db['last_lottery_time']
 
+        # store our games
+        self.gametimes = []
+        if 'gametimes' in db:
+            self.gametimes = db['gametimes']
+
+
         # non persistent variables
         self.wins = 0
         self.draws = 0
         self.losses = 0
+
+    # TODO: Sort gametimes by date, ascending
+    def get_gametimes(self):
+        """
+        Get upcoming gametimes.
+        :return:
+        """
+        upcoming_days = "**Exciting f-ing news, boys:**\n\n"
+        if len(self.gametimes) == 0:
+            return "No games coming up, friendship outlook bleak."
+        id = 0
+        for gametime in self.gametimes:
+            id += 1
+            upcoming_days += "{}: There is a gaming session coming up on {}\n".format(
+                id,
+                pretty_date(gametime.get_date()))
+            if len(gametime.players) == 0:
+                upcoming_days += "    Nobody's in for this day.\n"
+            else:
+                for player in gametime.players:
+                    upcoming_days += "    - {} is in.\n".format(player.name)
+        return upcoming_days
+
+    def gametime_actions(self, message):
+        arguments = argument_parser(message)
+        VALID_COMMANDS = {
+            "add": self.create_gametime
+        }
+        if arguments[0] in VALID_COMMANDS:
+            return VALID_COMMANDS[arguments[0]](arguments[1])
+        else:
+            return "That's not a valid command for **!gametime**\n" \
+                   "Please use: !gametime <add> <day of the week>"
+
+    def create_gametime(self, day):
+        """
+        Creates a new gametime.
+        :return:
+        """
+        if day in DAYS_IN_WEEK:
+            self.gametimes.append(Gametime(day=DAYS_IN_WEEK.index(day)))
+            print(self.gametimes)
+            return "Gametime created for {}.".format(day)
+        else:
+            return "Please use the full name of a day of the week."
+
 
     def whos_in(self):
         """
@@ -76,24 +146,32 @@ class WeekendGames(object):
             person_list += ', and %s' % self.people[-1]
             return 'Good news: {} are in for this weekend.'.format(person_list)
 
-    def add(self, person):
+    def add(self, person, id):
         """
         Adds a person to the weekend games list
         :param person: Person to add
         :return: None
         """
+        try:
+            id = int(id) - 1
+        except(ValueError):
+            return "That's not a valid gametime."
+        if id not in range(len(self.gametimes)):
+            return "There's no gametime then."
         if type(person) is str:
             person_to_add = person
         else:
             person_to_add = str(person.display_name)
 
-        if self.people.count(person_to_add) > 0:
-            return
+        if self.gametimes[id].find_player_by_name(person_to_add):
+            return "You're already in for that day."
         else:
-            self.people.append(person_to_add)
+            self.gametimes[id].register_player(person_to_add)
             self.update_db()
+            return '{} is in for {}.'.format(person_to_add,
+                                     pretty_date(self.gametimes[id].get_date()))
 
-    def remove(self, person):
+    def remove(self, person, id):
         """
         Removes a person from the weekend games list
 
@@ -101,20 +179,25 @@ class WeekendGames(object):
         :rtype str
         :return: str: Formatted string indicating whether a person was removed.
         """
-
+        try:
+            id = int(id) - 1
+        except(ValueError):
+            return "That's not a valid gametime."
+        if id not in range(len(self.gametimes)):
+            return "There's no gametime then."
         if type(person) is str:
-            person_to_rem = person
+            person_to_remove = person
         else:
-            person_to_rem = str(person.display_name)
+            person_to_remove = str(person.display_name)
 
-        if person_to_rem in self.people:
-            self.people.remove(person_to_rem)
+        if self.gametimes[id].find_player_by_name(person_to_remove):
+            self.gametimes[id].unregister_player(person_to_remove)
             self.update_db()
-            return '{} is out for this weekend. What a ***REMOVED***.'.format(
-                person_to_rem)
+            return '{} is out for {}.'.format(person_to_remove,
+                                     pretty_date(self.gametimes[id].get_date()))
         else:
-            return '{} was never in anyway. Deceptive!'.format(
-                person_to_rem)
+            return '{} was never in for {}.'.format(person_to_remove,
+                                     pretty_date(self.gametimes[id].get_date()))
 
     def update_db(self):
         """
@@ -463,23 +546,42 @@ async def on_message(message):
         await client.send_message(message.channel, get_reddit("bertstrips", message))
     elif message.content.startswith('!summary'):
         await client.send_message(message.channel, get_smmry(message.content))
+    # GAMETIME commands
+    elif message.content.startswith('!gametimes'):
+        await client.send_message(message.channel, whos_in.get_gametimes())
+    elif message.content.startswith('!gametime '):
+        await client.send_message(message.channel, whos_in.gametime_actions(message.content))
     elif message.content.startswith('!in'):
+        """
         arguments = message.content.split(' ')
         if len(arguments) > 1:
             arguments.remove('!in')
             for arg in arguments:
                 whos_in.add(arg)
+        """
+        arguments = argument_parser(message.content)
+        if len(arguments) != 1 or arguments[0] == "!in":
+            await client.send_message(message.channel, "When are you in for,"
+                                                       " though?\n\n{}".format(
+                whos_in.get_gametimes()
+            ))
+        elif len(arguments) == 1:
+            await client.send_message(message.channel, whos_in.add(message.author, arguments[0]))
         else:
-            whos_in.add(message.author)
-            await client.send_message(message.channel,
-                                      '{} is in for this weekend.'.format(
-                                          message.author.display_name))
-        await client.send_message(message.channel, whos_in.whos_in())
+            await client.send_message(message.channel, "You'll need to be more specific :smile:")
 
+#        await client.send_message(message.channel, whos_in.whos_in())
     elif message.content.startswith('!out'):
-        person_is_out = whos_in.remove(message.author)
-        await client.send_message(message.channel, person_is_out)
-        await client.send_message(message.channel, whos_in.whos_in())
+        arguments = argument_parser(message.content)
+        if len(arguments) != 1 or arguments[0] == "!out":
+            await client.send_message(message.channel, "When are you out for,"
+                                                       " though?\n\n{}".format(
+                whos_in.get_gametimes()
+            ))
+        elif len(arguments) == 1:
+            await client.send_message(message.channel, whos_in.remove(message.author, arguments[0]))
+        else:
+            await client.send_message(message.channel, "You'll need to be more specific :smile:")
 
     elif message.content.startswith('!whosin'):
         await client.send_message(message.channel, whos_in.whos_in())
