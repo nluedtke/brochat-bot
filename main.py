@@ -257,6 +257,9 @@ auth = twitter.get_authentication_tokens()
 OAUTH_TOKEN = auth['oauth_token']
 OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
 
+# SMMRY tokens
+smmry_api_key = tokens['smmry_api_key']
+
 # Twilio Tokens
 account_sid = tokens['twilio_account_sid']
 auth_token = tokens['twilio_auth_token']
@@ -331,6 +334,7 @@ def print_help():
                   '**!out:** Tell me you\'re out for the weekend\n' \
                   '**!trump:** I\'ll show you Trump\'s latest Yuge ' \
                   'success!\n' \
+                  '**!summary: <url>** I\'ll summarize a link for you\n' \
                   '**!dankmeme:** I\'ll fetch you a succulent dank may-may\n' \
                   '**!text <name>:** Get that fool in the loop\n' \
                   '**!shot-lottery:** Run a shot lottery.\n' \
@@ -397,6 +401,31 @@ def get_dankmeme(message):
                "us...\nhttps://cdn.meme.am/cache/instances/" \
                "folder861/20989861.jpg"
 
+#TODO - url validation
+#TODO - cache recent summaries to avoid going through our 100 requests per day
+def get_smmry(message):
+    """
+    Returns a summary of a url from the SMMRY.com API
+    :param message:
+    :return: a string summarizing the URL
+    """
+    arguments = argument_parser(message)
+    if len(arguments) != 1:
+        return "Just use **!summarize <url>**, and I'll fetch you something."
+    response = requests.get("http://api.smmry.com/"
+                            "&SM_API_KEY={}"
+                            "&SM_LENGTH=3"
+                            "&SM_URL={}".format(smmry_api_key, arguments[0]))
+    response_json = response.json()
+    if response.status_code == 200:
+        return "I got you bro. I'll read this so you don't have to:\n\n" \
+               "**{}**\n\n{}".format(response_json["sm_api_title"],
+                                   response_json["sm_api_content"])
+    else:
+        return "Something went wrong... I'm sorry for letting you down, bro."
+
+
+
 @client.event
 async def on_message(message):
     """
@@ -425,6 +454,8 @@ async def on_message(message):
                                       message.author.display_name))
     elif message.content.startswith('!dankmeme'):
         await client.send_message(message.channel, get_dankmeme(message))
+    elif message.content.startswith('!summary'):
+        await client.send_message(message.channel, get_smmry(message.content))
     elif message.content.startswith('!in'):
         arguments = message.content.split(' ')
         if len(arguments) > 1:
