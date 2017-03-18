@@ -418,7 +418,7 @@ def get_smmry(message):
                             "&SM_URL={}".format(smmry_api_key, arguments[0]))
     response_json = response.json()
     if response.status_code == 200:
-        return "I got you bro. I'll read this so you don't have to:\n\n" \
+        return ":books: I got you bro. I'll read this so you don't have to:\n\n" \
                "**{}**\n\n{}".format(response_json["sm_api_title"],
                                    response_json["sm_api_content"])
     else:
