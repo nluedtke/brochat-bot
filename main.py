@@ -310,14 +310,14 @@ async def on_ready():
 
     :return: None
     """
-    print('Logged in as')
-    print(client.user.name)
+    print('Logged in as {}'.format(client.user.name))
     print(client.user.id)
     print('------')
     for channel in client.get_all_channels():
-        print(channel)
-
-        # await client.send_message('#general', 'Hi I\'m online :)')
+        if channel.name == 'general':
+            await client.send_message(channel,
+                                      'I have returned to enforce...I mean '
+                                      'encourage friendship.')
 
 
 def print_help():
