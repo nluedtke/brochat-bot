@@ -667,7 +667,15 @@ async def on_message(message):
             response_heroes = requests.get(heroes_url)
             print("Overwatch API returned a response code of {}".format(
                 response_profile.status_code))
-            if response_profile.status_code == 200:
+            if 'statusCode' in response_profile.json() or 'statusCode' in response_heroes.json():
+                await client.send_message(message.channel,
+                                          "Something went wrong. Make sure your battletag is"
+                                          "set up like this: **name-1234**")
+            elif response_profile.status_code == 429:
+                await client.send_message(message.channel,
+                                          "You're being ratelimited, chill out "
+                                          "bruh.")
+            else:
                 rating = response_profile.json()['data']['competitive']['rank']
                 wins = response_heroes.json()['GamesWon']
                 losses = response_heroes.json()['GamesLost']
@@ -685,14 +693,6 @@ async def on_message(message):
                                               author, rating, wins, losses,
                                               ties, gold, silver, bronze
                                           ))
-            elif response_profile.status_code == 429:
-                await client.send_message(message.channel,
-                                          "You're being ratelimited, chill out "
-                                          "bruh.")
-            else:
-                await client.send_message(message.channel,
-                                          "Sorry, but the Overwatch API knows "
-                                          "I did bad stuff...")
         else:
             await client.send_message(message.channel,
                                       "Sorry, but you didn't !set your"
