@@ -372,7 +372,8 @@ def get_dankmeme(message):
     :return: a string to send the client
     """
     number_to_fetch = str(100)
-    url = 'https://www.reddit.com/r/dankmemes.json?limit={}'.format(number_to_fetch)
+    url = 'https://www.reddit.com/r/dankmemes.json?limit={}'.format(
+        number_to_fetch)
     headers = {
         'User-Agent': 'Brochat-Bot {}.{}'.format(VERSION_MAJOR, VERSION_MINOR)
     }
@@ -421,8 +422,8 @@ def get_smmry(message):
                             "&SM_URL={}".format(smmry_api_key, arguments[0]))
     response_json = response.json()
     if response.status_code == 200:
-        return ":books: I got you bro. I'll read this so you don't have to:\n\n" \
-               "**{}**\n\n{}".format(response_json["sm_api_title"],
+        return ":books: I got you bro. I'll read this so you don't have to:\n" \
+               "\n**{}**\n\n{}".format(response_json["sm_api_title"],
                                    response_json["sm_api_content"])
     else:
         return "Something went wrong... I'm sorry for letting you down, bro."
