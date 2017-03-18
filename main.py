@@ -336,6 +336,7 @@ def print_help():
                   'success!\n' \
                   '**!summary: <url>** I\'ll summarize a link for you\n' \
                   '**!dankmeme:** I\'ll fetch you a succulent dank may-may\n' \
+                  '**!bertstrip:** I\'ll ruin your childhood\n' \
                   '**!text <name>:** Get that fool in the loop\n' \
                   '**!shot-lottery:** Run a shot lottery.\n' \
                   '**!win/!loss/!draw:** Update session record ' \
@@ -365,14 +366,15 @@ def print_version():
                                               socket.gethostname())
     return version_string
 
-def get_dankmeme(message):
+def get_reddit(subreddit, message):
     """
     Function that fetches dank memes.
     :param message:
     :return: a string to send the client
     """
     number_to_fetch = str(100)
-    url = 'https://www.reddit.com/r/dankmemes.json?limit={}'.format(
+    url = 'https://www.reddit.com/r/{}.json?limit={}'.format(
+        subreddit,
         number_to_fetch)
     headers = {
         'User-Agent': 'Brochat-Bot {}.{}'.format(VERSION_MAJOR, VERSION_MINOR)
@@ -456,7 +458,9 @@ async def on_message(message):
                                   '@here Let\'s get retarded, {}'.format(
                                       message.author.display_name))
     elif message.content.startswith('!dankmeme'):
-        await client.send_message(message.channel, get_dankmeme(message))
+        await client.send_message(message.channel, get_reddit("dankmemes", message))
+    elif message.content.startswith('!bertstrip'):
+        await client.send_message(message.channel, get_reddit("bertstrips", message))
     elif message.content.startswith('!summary'):
         await client.send_message(message.channel, get_smmry(message.content))
     elif message.content.startswith('!in'):
