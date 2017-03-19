@@ -7,17 +7,30 @@ class Gametime(object):
     Defines the Gametime class
     """
 
-    def __init__(self):
+    DAYS_IN_WEEK = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+    ]
+
+    def __init__(self, day=None):
         """
-        Gametime constructor
+        Creates a gametime on the next given day of the week.
+        :param day:
         """
         self.timezone = pytz.timezone('US/Eastern')
         self.created = datetime.datetime.now(self.timezone)
         self.game = None
-        self.time = None
+        """ Sets the time on the next available date for a given weekday. """
+        self.time = self.next_date_for_day(self.created, day)
         self.snapshot = None
         self.players = []
         self.players_attended = []
+        print("Gametime is: {}".format(self.time))
 
     class Player(object):
         """
@@ -41,6 +54,24 @@ class Gametime(object):
 
         def set_record(self, record):
             pass
+
+    def next_date_for_day(self, created, day):
+        """
+        Finds the next datetime date for a given int day
+        :param day:
+        :return: datetime
+        """
+        for increment in range(7):
+            if created.weekday() == int(day):
+                return created
+            created += datetime.timedelta(days=1)
+
+    def get_date(self):
+        """
+        Gets time of a gametime.
+        :return: datetime object
+        """
+        return self.time
 
     def start(self):
         pass
@@ -85,11 +116,11 @@ class Gametime(object):
                 player_found = player
         return player_found
 
-    def register_player(self, name, time):
+    def register_player(self, name, time=None):
         """
-        Registers a player
+        Registers a player, if applicable.
         :param name: string name
-        :param time: datetime time of arrival
+        :param time: datetime time of arrival, None is "sometime"
         :return: None
         """
         search_result = self.find_player_by_name(name)
@@ -98,6 +129,15 @@ class Gametime(object):
         else:
             search_result.set_registered_time(time)
 
+    def unregister_player(self, name):
+        """
+        Unregisters a player
+        :param name: string name
+        :return: None
+        """
+        search_result = self.find_player_by_name(name)
+        if search_result:
+            self.players.remove(search_result)
 
     def check_in_player(self, name):
         """
