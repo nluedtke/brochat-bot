@@ -591,7 +591,7 @@ async def on_message(message):
 
         arguments = argument_parser(message.content)
 
-        if len(arguments) != 1:
+        if len(arguments) != 1 or arguments[0] == '!text':
             await client.send_message(message.channel,
                                       'Just give me a name, I\'ll do the rest!')
         elif arguments[0] not in users:
