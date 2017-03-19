@@ -15,16 +15,6 @@ VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION_PATCH = 1
 
-DAYS_IN_WEEK = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday"
-]
-
 def shot_lottery():
     """
     Run a shot lottery
@@ -82,7 +72,7 @@ class WeekendGames(object):
     def get_gametimes(self):
         """
         Get upcoming gametimes.
-        :return:
+        :return: string response to print to chat.
         """
         upcoming_days = "**Exciting f-ing news, boys:**\n\n"
         if len(self.gametimes) == 0:
@@ -101,6 +91,12 @@ class WeekendGames(object):
         return upcoming_days
 
     def gametime_actions(self, message):
+        """
+        Routes a gametime action, specified in the second
+        argument, ex !gametime <add> Sunday
+        :param message:
+        :return: string response to print to chat.
+        """
         arguments = argument_parser(message)
         VALID_COMMANDS = {
             "add": self.create_gametime
@@ -113,11 +109,12 @@ class WeekendGames(object):
 
     def create_gametime(self, day):
         """
-        Creates a new gametime.
-        :return:
+        Create a gametime, given a full name of a day of the week.
+        :param day: string of a proper case day of the week.
+        :return: string response to send to chat.
         """
-        if day in DAYS_IN_WEEK:
-            self.gametimes.append(Gametime(day=DAYS_IN_WEEK.index(day)))
+        if day in Gametime.DAYS_IN_WEEK:
+            self.gametimes.append(Gametime(day=Gametime.DAYS_IN_WEEK.index(day)))
             print(self.gametimes)
             return "Gametime created for {}.".format(day)
         else:
@@ -148,9 +145,10 @@ class WeekendGames(object):
 
     def add(self, person, id):
         """
-        Adds a person to the weekend games list
-        :param person: Person to add
-        :return: None
+        Adds a person to the specified gametime
+        :param person: person to add
+        :param id: list id of the gametime in gametimes
+        :return: string to print to chat
         """
         try:
             id = int(id) - 1

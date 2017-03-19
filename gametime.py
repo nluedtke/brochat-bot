@@ -7,13 +7,25 @@ class Gametime(object):
     Defines the Gametime class
     """
 
+    DAYS_IN_WEEK = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+    ]
+
     def __init__(self, day=None):
         """
-        Gametime constructor
+        Creates a gametime on the next given day of the week.
+        :param day:
         """
         self.timezone = pytz.timezone('US/Eastern')
         self.created = datetime.datetime.now(self.timezone)
         self.game = None
+        """ Sets the time on the next available date for a given weekday. """
         self.time = self.next_date_for_day(self.created, day)
         self.snapshot = None
         self.players = []
@@ -106,9 +118,9 @@ class Gametime(object):
 
     def register_player(self, name, time=None):
         """
-        Registers a player
+        Registers a player, if applicable.
         :param name: string name
-        :param time: datetime time of arrival
+        :param time: datetime time of arrival, None is "sometime"
         :return: None
         """
         search_result = self.find_player_by_name(name)
