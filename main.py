@@ -173,13 +173,14 @@ class WeekendGames(object):
             self.update_db()
             return '{} is in for {}.' \
                 .format(person_to_add, pretty_date(
-                self.gametimes[game_id].get_date()))
+                        self.gametimes[game_id].get_date()))
 
     def remove(self, person, game_id):
         """
         Removes a person from the weekend games list
 
         :param person: Person to remove
+        :param game_id: The id of the game session
         :rtype str
         :return: str: Formatted string indicating whether a person was removed.
         """
@@ -458,10 +459,11 @@ def print_version():
     return version_string
 
 
-def get_reddit(subreddit, message):
+def get_reddit(subreddit):
     """
     Function that fetches dank memes.
-    :param message:
+
+    :param subreddit: Subreddit to use for the reddit fetch
     :return: a string to send the client
     """
     number_to_fetch = str(100)
@@ -482,8 +484,8 @@ def get_reddit(subreddit, message):
     if 'data' in response_json:
         for entry in response_json['data']['children']:
             if entry['data']['stickied'] is True \
-                    or (entry['data']['url'][-4:] != '.png'
-                        and entry['data']['url'][-4:] != '.jpg'):
+                    or (entry['data']['url'][-4:] != '.png' and
+                        entry['data']['url'][-4:] != '.jpg'):
                 response_json['data']['children'].remove(entry)
         print(str(len(response_json['data']['children'])))
         seed = randint(0, len(response_json['data']['children']) - 1)
@@ -552,10 +554,10 @@ async def on_message(message):
                                       message.author.display_name))
     elif message.content.startswith('!dankmeme'):
         await client.send_message(message.channel,
-                                  get_reddit("dankmemes", message))
+                                  get_reddit("dankmemes"))
     elif message.content.startswith('!bertstrip'):
         await client.send_message(message.channel,
-                                  get_reddit("bertstrips", message))
+                                  get_reddit("bertstrips"))
     elif message.content.startswith('!summary'):
         await client.send_message(message.channel, get_smmry(message.content))
     # GAMETIME commands
@@ -584,7 +586,7 @@ async def on_message(message):
             await client.send_message(message.channel,
                                       "You'll need to be more specific :smile:")
 
-            #        await client.send_message(message.channel, whos_in.whos_in())
+            # await client.send_message(message.channel, whos_in.whos_in())
     elif message.content.startswith('!out'):
         arguments = argument_parser(message.content)
         if len(arguments) != 1 or arguments[0] == "!out":
