@@ -1,13 +1,16 @@
-import discord
-import asyncio
-from twython import Twython, TwythonError
+# Standard imports
 from time import time
 import json
 import os
 from sys import stderr
 from random import randint
-from twilio.rest import TwilioRestClient
 import socket
+
+# NonStandard Imports
+import discord
+import asyncio
+from twython import Twython, TwythonError
+from twilio.rest import TwilioRestClient
 import requests
 from gametime import Gametime
 
@@ -555,6 +558,22 @@ def get_smmry(message):
         return "Something went wrong... I'm sorry for letting you down, bro."
 
 
+def get_uptime():
+    """
+    Returns the uptime
+
+    :rtype str
+    :return: str: Time between start and now
+    """
+    total_time = time() - startTime
+    mins, secs = divmod(total_time, 60)
+    hours, mins = divmod(mins, 60)
+    days, hours = divmod(mins, 24)
+
+    return "{:.0f} days, {:.0f} hours, {:.0f} minutes, {:.0f} " \
+           "seconds".format(days, hours, mins, secs)
+
+
 @client.event
 async def on_message(message):
     """
@@ -573,6 +592,9 @@ async def on_message(message):
                 counter += 1
 
         await client.edit_message(tmp, 'You have {} messages.'.format(counter))
+    elif message.content == '!uptime':
+        await client.send_message(message.channel, 'Uptime: {}'
+                                  .format(get_uptime()))
     elif message.content.startswith('!sleep'):
         await asyncio.sleep(5)
         await client.send_message(message.channel, 'Done sleeping')
@@ -841,6 +863,7 @@ async def on_message(message):
         await client.send_message(message.channel, print_version())
 
 
+startTime = time()
 client.run(token)
 
 
