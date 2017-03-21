@@ -69,28 +69,6 @@ class WeekendGames(object):
         self.draws = 0
         self.losses = 0
 
-    # TODO: Sort gametimes by date, ascending
-    def get_gametimes(self):
-        """
-        Get upcoming gametimes.
-        :return: string response to print to chat.
-        """
-        upcoming_days = "**Exciting f-ing news, boys:**\n\n"
-        if len(self.gametimes) == 0:
-            return "No games coming up, friendship outlook bleak."
-        id = 0
-        for gametime in self.gametimes:
-            id += 1
-            upcoming_days += "{}: There is a gaming session coming up on {}\n".format(
-                id,
-                pretty_date(gametime.get_date()))
-            if len(gametime.players) == 0:
-                upcoming_days += "    Nobody's in for this day.\n"
-            else:
-                for player in gametime.players:
-                    upcoming_days += "    - {} is in.\n".format(player['name'])
-        return upcoming_days
-
     def gametime_actions(self, message):
         """
         Routes a gametime action, specified in the second
@@ -129,6 +107,28 @@ class WeekendGames(object):
                 except(TypeError):
                     return gametime_help_string
         return gametime_help_string
+
+    # TODO: Sort gametimes by date, ascending
+    def get_gametimes(self):
+        """
+        Get upcoming gametimes.
+        :return: string response to print to chat.
+        """
+        upcoming_days = "**Exciting f-ing news, boys:**\n\n"
+        if len(self.gametimes) == 0:
+            return "No games coming up, friendship outlook bleak."
+        id = 0
+        for gametime in self.gametimes:
+            id += 1
+            upcoming_days += "{}: There is a gaming session coming up on {}\n".format(
+                id,
+                pretty_date(gametime.get_date()))
+            if len(gametime.players) == 0:
+                upcoming_days += "    Nobody's in for this day.\n"
+            else:
+                for player in gametime.players:
+                    upcoming_days += "    - {} is in.\n".format(player['name'])
+        return upcoming_days
 
     def create_gametime(self, day, time=None):
         """
@@ -560,6 +560,11 @@ async def on_message(message):
     """
 
     global whos_in
+
+    if "Jim" in message.content and "brochat-bot" not in str(message.author):
+        print(message.author)
+        await client.send_message(message.channel, 'Jim, you mean fat ***REMOVED*** boy?')
+
     if message.content.startswith('!test'):
         counter = 0
         tmp = await client.send_message(message.channel,
