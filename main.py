@@ -16,13 +16,35 @@ VERSION_MINOR = 0
 VERSION_PATCH = 3
 
 
-def shot_lottery():
+def shot_lottery(client_obj, wg_games):
     """
     Run a shot lottery
 
-    :return: None
+    :param client_obj: client object to use
+    :param wg_games: WeekendGames object to use
+    :rtype: list
+    :return: Array of strings for the shot lottery
     """
-    pass
+    output = ["Alright everyone, its time for the SHOT LOTTERY!"
+              "\n{} won the last lottery!".format(whos_in.last_shot),
+              "...The tension is rising..."]
+    players = []
+    for m in client_obj.get_all_members():
+        if str(m.status) == 'online' and str(m.display_name) != 'brochat-bot':
+            players.append(m.display_name)
+    output.append("{} have been entered in the SHOT LOTTERY good luck!"
+                  .format(players))
+    output.append("...Who will it be!?!?")
+    output.append("Selecting a random number between 0 and {}"
+                  .format(len(players) - 1))
+    winner = randint(0, len(players) - 1)
+    output.append("The winning number is {}, Congrats {} you WIN!\n"
+                  ":beers: Take your shot!".format(winner, players[winner]))
+    consecutive = wg_games.add_shot_win(players[winner])
+    if consecutive > 1:
+        output.append("That's {} in a row!".format(consecutive))
+    wg_games.log_lottery_time()
+    return output
 
 
 def pretty_date(datetime):
@@ -655,39 +677,27 @@ async def on_message(message):
         if not whos_in.is_lottery_time():
             await client.send_message(message.channel, "Too soon for shots...")
         else:
-            start_string = "Alright everyone, its time for the SHOT LOTTERY!" \
-                           "\n{} won the last lottery!" \
-                .format(whos_in.last_shot)
-            await client.send_message(message.channel, start_string)
-
-            players = []
-            for m in client.get_all_members():
-                if str(m.status) == 'online' and \
-                                str(m.display_name) != 'brochat-bot':
-                    players.append(m.display_name)
-            list_string = "{} have been entered in the SHOT LOTTERY " \
-                          "good luck!".format(players)
+            shot_lottery_string = shot_lottery(client, whos_in)
+            await client.send_message(message.channel,
+                                      shot_lottery_string.pop(0))
             await asyncio.sleep(3)
-            await client.send_message(message.channel, "...The tension is "
-                                                       "rising...")
+            await client.send_message(message.channel,
+                                      shot_lottery_string.pop(0))
             await asyncio.sleep(2)
-            await client.send_message(message.channel, list_string)
-            random_string = "Selecting a random number between 0 and {}".format(
-                len(players) - 1)
+            await client.send_message(message.channel,
+                                      shot_lottery_string.pop(0))
             await asyncio.sleep(4)
-            await client.send_message(message.channel, "...Who will it be!?!?")
+            await client.send_message(message.channel,
+                                      shot_lottery_string.pop(0))
             await asyncio.sleep(4)
-            await client.send_message(message.channel, random_string)
-            winner = randint(0, len(players) - 1)
-            finish_string = "The winning number is {}, Congrats {} you WIN!\n" \
-                            ":beers: Take your shot!".format(winner,
-                                                             players[winner])
-            consecutive = whos_in.add_shot_win(players[winner])
-            await client.send_message(message.channel, finish_string)
-            if consecutive > 1:
-                total_string = "That's {} in a row!".format(consecutive)
-                await client.send_message(message.channel, total_string)
-            whos_in.log_lottery_time()
+            await client.send_message(message.channel,
+                                      shot_lottery_string.pop(0))
+            await client.send_message(message.channel,
+                                      shot_lottery_string.pop(0))
+            if len(shot_lottery_string) > 0:
+                await client.send_message(message.channel,
+                                          shot_lottery_string.pop(0))
+
     elif message.content.startswith('!win'):
         whos_in.add_win()
         await client.send_message(message.channel, "Congrats on the win!")
