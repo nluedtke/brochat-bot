@@ -562,7 +562,6 @@ async def on_message(message):
     global whos_in
 
     if "Jim" in message.content and "brochat-bot" not in str(message.author):
-        print(message.author)
         await client.send_message(message.channel, 'Jim, you mean fat ***REMOVED*** boy?')
 
     if message.content.startswith('!test'):
