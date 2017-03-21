@@ -471,7 +471,8 @@ def print_help():
                   "**!battletag:** I'll tell you your battletag\n" \
                   "**!owstats:** I'll assess your Overwatch performance\n" \
                   "**!whoami:** I'll tell you what I know about you\n" \
-                  "**!version:** Print the version of brochat-bot\n"
+                  "**!version:** Print the version of brochat-bot\n" \
+                  "**!uptime:** Print how long the bot has been running for\n"
 
     return help_string
 
