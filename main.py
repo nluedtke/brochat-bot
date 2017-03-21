@@ -25,6 +25,7 @@ def shot_lottery(client_obj, wg_games):
     :rtype: list
     :return: Array of strings for the shot lottery
     """
+    glass = ":tumbler_glass:"
     output = ["Alright everyone, its time for the SHOT LOTTERY!"
               "\n{} won the last lottery!".format(whos_in.last_shot),
               "...The tension is rising..."]
@@ -34,15 +35,21 @@ def shot_lottery(client_obj, wg_games):
             players.append(m.display_name)
     output.append("{} have been entered in the SHOT LOTTERY good luck!"
                   .format(players))
+    players.append('SOCIAL!')
     output.append("...Who will it be!?!?")
     output.append("Selecting a random number between 0 and {}"
                   .format(len(players) - 1))
     winner = randint(0, len(players) - 1)
-    output.append("The winning number is {}, Congrats {} you WIN!\n"
-                  ":beers: Take your shot!".format(winner, players[winner]))
-    consecutive = wg_games.add_shot_win(players[winner])
-    if consecutive > 1:
-        output.append("That's {} in a row!".format(consecutive))
+    if players[winner] != 'SOCIAL!':
+        output.append("The winning number is {}, Congrats {} you WIN!\n"
+                      ":beers: Take your shot!".format(winner, players[winner]))
+        consecutive = wg_games.add_shot_win(players[winner])
+        if consecutive > 1:
+            output.append("That's {} in a row!".format(consecutive))
+    else:
+        output.append("The winning number is {}".format(winner))
+        output.append("Ah shit! ITS A SOCIAL! SHOTS! SHOTS! SHOTS!")
+        output.append("{}{}{}".format(glass, glass, glass))
     wg_games.log_lottery_time()
     return output
 
@@ -692,9 +699,7 @@ async def on_message(message):
             await asyncio.sleep(4)
             await client.send_message(message.channel,
                                       shot_lottery_string.pop(0))
-            await client.send_message(message.channel,
-                                      shot_lottery_string.pop(0))
-            if len(shot_lottery_string) > 0:
+            while len(shot_lottery_string) > 0:
                 await client.send_message(message.channel,
                                           shot_lottery_string.pop(0))
 
