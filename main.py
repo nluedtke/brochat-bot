@@ -618,13 +618,6 @@ async def on_message(message):
         await client.send_message(message.channel,
                                   whos_in.gametime_actions(message.content))
     elif message.content.startswith('!in'):
-        """
-        arguments = message.content.split(' ')
-        if len(arguments) > 1:
-            arguments.remove('!in')
-            for arg in arguments:
-                whos_in.add(arg)
-        """
         arguments = argument_parser(message.content)
         if len(arguments) != 1 or arguments[0] == "!in":
             await client.send_message(message.channel,
