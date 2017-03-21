@@ -29,7 +29,7 @@ def pretty_date(datetime):
     :param datetime:
     :return: string
     """
-    return datetime.strftime("%a, %b %d")
+    return datetime.strftime("%a, %b %d at %I:%M EST")
     # this version has the time, for the future:
     # return datetime.strftime("%a, %b %d at %I:%M %p")
 class WeekendGames(object):
@@ -60,7 +60,8 @@ class WeekendGames(object):
         # store our games
         self.gametimes = []
         if 'gametimes' in db:
-            self.gametimes = db['gametimes']
+            for gametime in db['gametimes']:
+                self.gametimes.append(Gametime(json_create=gametime))
 
 
         # non persistent variables
@@ -87,7 +88,7 @@ class WeekendGames(object):
                 upcoming_days += "    Nobody's in for this day.\n"
             else:
                 for player in gametime.players:
-                    upcoming_days += "    - {} is in.\n".format(player.name)
+                    upcoming_days += "    - {} is in.\n".format(player['name'])
         return upcoming_days
 
     def gametime_actions(self, message):
@@ -99,27 +100,51 @@ class WeekendGames(object):
         """
         arguments = argument_parser(message)
         VALID_COMMANDS = {
-            "add": self.create_gametime
+            "add": self.create_gametime,
+            "remove": self.remove_gametime
         }
         if arguments[0] in VALID_COMMANDS:
-            return VALID_COMMANDS[arguments[0]](arguments[1])
-        else:
-            return "That's not a valid command for **!gametime**\n" \
-                   "Please use: !gametime <add> <day of the week>"
+            if len(arguments) == 3:
+                try:
+                    return VALID_COMMANDS[arguments[0]](arguments[1],
+                                                    arguments[2])
+                except(TypeError):
+                    return "You should use a valid command!"
+            elif len(arguments) == 2:
+                try:
+                    return VALID_COMMANDS[arguments[0]](arguments[1])
+                except(TypeError):
+                    return "You should use a valid command!"
+        return "That's not a valid command for **!gametime**\n" \
+               "Please use: !gametime <add> <day of the week>" \
+               "<_optional_: military time, HH:MM>\nor\n" \
+               "!gametime <remove> <index>"
 
-    def create_gametime(self, day):
+    def create_gametime(self, day, time=None):
         """
         Create a gametime, given a full name of a day of the week.
         :param day: string of a proper case day of the week.
         :return: string response to send to chat.
         """
         if day in Gametime.DAYS_IN_WEEK:
-            self.gametimes.append(Gametime(day=Gametime.DAYS_IN_WEEK.index(day)))
-            print(self.gametimes)
-            return "Gametime created for {}.".format(day)
+            new_gametime = Gametime(day=Gametime.DAYS_IN_WEEK.index(day), time=time)
+            self.gametimes.append(new_gametime)
+            self.update_db()
+            return "Gametime created for {}.".format(pretty_date(new_gametime.get_date()))
         else:
             return "Please use the full name of a day of the week."
 
+    def remove_gametime(self, index):
+        try:
+            index = int(index)
+        except(ValueError):
+            return "Your index should be a number, silly."
+        if index > 0 and index <= len(self.gametimes):
+            self.gametimes.pop(index-1)
+            self.update_db()
+            return "Gametime removed."
+        else:
+            return "There's no gametime with that number."
 
     def whos_in(self):
         """
@@ -208,6 +233,9 @@ class WeekendGames(object):
         db['last_shot'] = self.last_shot
         db['consecutive_shot_wins'] = self.consecutive_shot_wins
         db['last_lottery_time'] = self.last_lottery
+        db['gametimes'] = []
+        for gametime in self.gametimes:
+            db['gametimes'].append(gametime.to_json())
         db['users'] = users
         with open(db_file, 'w') as datafile:
             json.dump(db, datafile, sort_keys=True, indent=4,
@@ -547,7 +575,7 @@ async def on_message(message):
     # GAMETIME commands
     elif message.content.startswith('!gametimes'):
         await client.send_message(message.channel, whos_in.get_gametimes())
-    elif message.content.startswith('!gametime '):
+    elif message.content.startswith('!gametime'):
         await client.send_message(message.channel, whos_in.gametime_actions(message.content))
     elif message.content.startswith('!in'):
         """
