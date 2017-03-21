@@ -99,9 +99,17 @@ class WeekendGames(object):
         :return: string response to print to chat.
         """
         arguments = argument_parser(message)
+        gametime_help_string = "" \
+               "That's not a valid command for **!gametime**\n\n" \
+               "Please use:\n" \
+               "!gametime <add> <day of the week>" \
+               "<_optional_: military time, HH:MM> to **add a gametime**\n" \
+               "!gametime <remove> <index> to **delete a gametime**\n" \
+               "!gametime <list> to **list current gametimes**"
         VALID_COMMANDS = {
             "add": self.create_gametime,
-            "remove": self.remove_gametime
+            "remove": self.remove_gametime,
+            "list": self.get_gametimes
         }
         if arguments[0] in VALID_COMMANDS:
             if len(arguments) == 3:
@@ -109,16 +117,18 @@ class WeekendGames(object):
                     return VALID_COMMANDS[arguments[0]](arguments[1],
                                                     arguments[2])
                 except(TypeError):
-                    return "You should use a valid command!"
+                    return gametime_help_string
             elif len(arguments) == 2:
                 try:
                     return VALID_COMMANDS[arguments[0]](arguments[1])
                 except(TypeError):
-                    return "You should use a valid command!"
-        return "That's not a valid command for **!gametime**\n" \
-               "Please use: !gametime <add> <day of the week>" \
-               "<_optional_: military time, HH:MM>\nor\n" \
-               "!gametime <remove> <index>"
+                    return gametime_help_string
+            elif len(arguments) == 1:
+                try:
+                    return VALID_COMMANDS[arguments[0]]()
+                except(TypeError):
+                    return gametime_help_string
+        return gametime_help_string
 
     def create_gametime(self, day, time=None):
         """
@@ -438,6 +448,7 @@ def print_help():
     """
     help_string = 'Here are some things I can help you with:\n\n' \
                   '**!ham:** I\'ll tell you what we\'re gonna get\n' \
+                  "**!gametime: I'll add, list, and manage gametimes!\n" \
                   '**!in:** Tell me you\'re in for the weekend\n' \
                   '**!whosin:** See who\'s in for the weekend\n' \
                   '**!out:** Tell me you\'re out for the weekend\n' \
@@ -573,8 +584,6 @@ async def on_message(message):
     elif message.content.startswith('!summary'):
         await client.send_message(message.channel, get_smmry(message.content))
     # GAMETIME commands
-    elif message.content.startswith('!gametimes'):
-        await client.send_message(message.channel, whos_in.get_gametimes())
     elif message.content.startswith('!gametime'):
         await client.send_message(message.channel, whos_in.gametime_actions(message.content))
     elif message.content.startswith('!in'):
