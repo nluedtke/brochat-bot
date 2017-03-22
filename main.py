@@ -131,46 +131,49 @@ class WeekendGames(object):
         """
         arguments = argument_parser(message)
         valid_commands = {
-            "add": self.create_gametime
+            "add": self.create_gametime,
             "remove": self.remove_gametime
         }
         if arguments[0] in valid_commands:
             if len(arguments) == 3:
                 try:
                     return valid_commands[arguments[0]](arguments[1],
-                                                    arguments[2])
-                except(TypeError):
+                                                        arguments[2])
+                except TypeError:
                     return "You should use a valid command!"
             elif len(arguments) == 2:
                 try:
                     return valid_commands[arguments[0]](arguments[1])
-                except(TypeError):
+                except TypeError:
                     return "You should use a valid command!"
         return "That's not a valid command for **!gametime**\n" \
                "Please use: !gametime <add> <day of the week>" \
                "<_optional_: military time, HH:MM>\nor\n" \
                "!gametime <remove> <index>"
 
-    def create_gametime(self, day, time=None):
+    def create_gametime(self, day, start_time=None):
         """
         Create a gametime, given a full name of a day of the week.
+        :param start_time: Time of the game
         :param day: string of a proper case day of the week.
         :return: string response to send to chat.
         """
         if day in Gametime.DAYS_IN_WEEK:
-            new_gametime = Gametime(day=Gametime.DAYS_IN_WEEK.index(day), time=time)
+            new_gametime = Gametime(day=Gametime.DAYS_IN_WEEK.index(day),
+                                    time=start_time)
             self.gametimes.append(new_gametime)
             self.update_db()
-            return "Gametime created for {}.".format(pretty_date(new_gametime.get_date()))
+            return "Gametime created for {}.".format(
+                pretty_date(new_gametime.get_date()))
         else:
             return "Please use the full name of a day of the week."
 
     def remove_gametime(self, index):
         try:
             index = int(index)
-        except(ValueError):
+        except ValueError:
             return "Your index should be a number, silly."
-        if index > 0 and index <= len(self.gametimes):
+        if 0 < index <= len(self.gametimes):
             self.gametimes.pop(index-1)
             self.update_db()
             return "Gametime removed."
@@ -621,7 +624,8 @@ async def on_message(message):
     elif message.content.startswith('!gametimes'):
         await client.send_message(message.channel, whos_in.get_gametimes())
     elif message.content.startswith('!gametime'):
-        await client.send_message(message.channel, whos_in.gametime_actions(message.content))
+        await client.send_message(message.channel, whos_in.gametime_actions(
+            message.content))
     elif message.content.startswith('!in'):
         """
         arguments = message.content.split(' ')
