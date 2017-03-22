@@ -2,7 +2,7 @@
 import datetime
 import pytz
 import re
-import json
+
 
 class Gametime(object):
     """
@@ -28,7 +28,8 @@ class Gametime(object):
         """
         if json_create:
             self.timezone = pytz.timezone(json_create['timezone'])
-            self.created = datetime.datetime.strptime(json_create['created'], "%c")
+            self.created = datetime.datetime.strptime(json_create['created'],
+                                                      "%c")
             self.game = json_create['game']
             self.date = datetime.datetime.strptime(json_create['date'], "%c")
             self.time = json_create['time']
@@ -38,7 +39,7 @@ class Gametime(object):
             self.timezone = pytz.timezone('US/Eastern')
             self.created = datetime.datetime.now(self.timezone)
             self.game = None
-            """ Sets the time on the next available date for a given weekday. """
+            # Sets the time on the next available date for a given weekday.
             self.date = self.next_date_for_day(self.created, day)
             """ Sets the """
             if time:
@@ -54,7 +55,7 @@ class Gametime(object):
         Dumps the class contents to json.
         :return:
         """
-        json = {
+        json_info = {
             "timezone": str(self.timezone),
             "created": datetime.datetime.strftime(self.created, "%c"),
             "game": self.game,
@@ -63,7 +64,7 @@ class Gametime(object):
             "snapshot": self.snapshot,
             "players": self.players
         }
-        return json
+        return json_info
 
     def next_date_for_day(self, created, day):
         """
@@ -127,12 +128,13 @@ class Gametime(object):
         output_string += "\n- Players Attended:"
         for player in self.players:
             if player['arrived_time']:
-                output_string += "\n  {} showed up at {}".format(player['name'],
-                                                                 player['arrived_time'])
+                output_string += "\n  {} showed up at {}".\
+                    format(player['name'], player['arrived_time'])
         output_string += "\n"
         for player in self.players:
             if player['time'] and not player['arrived_time']:
-                output_string += "\nSorry, but it looks like {} lied about being here".format(player['name'])
+                output_string += "\nSorry, but it looks like {} lied about " \
+                                 "being here".format(player['name'])
 
         return output_string
 
@@ -195,7 +197,7 @@ class Gametime(object):
 if __name__ == "__main__":
     g = Gametime(3)
     print("Started: {}".format(g.created))
-    #time.sleep(20)
+    # time.sleep(20)
     g.register_player("Jim", g.created)
     g.register_player("Jim", g.created)
     g.register_player("Nick", g.created)
