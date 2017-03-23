@@ -1,13 +1,16 @@
-import discord
-import asyncio
-from twython import Twython, TwythonError
+# Standard imports
 from time import time
 import json
 import os
 from sys import stderr
 from random import randint
-from twilio.rest import TwilioRestClient
 import socket
+
+# NonStandard Imports
+import discord
+import asyncio
+from twython import Twython, TwythonError
+from twilio.rest import TwilioRestClient
 import requests
 from gametime import Gametime
 
@@ -534,29 +537,29 @@ def print_help():
     :rtype str
     :return: str: Help Message
     """
-
-    help_string = 'Here are some things I can help you with:\n\n' \
-                  '**!ham:** I\'ll tell you what we\'re gonna get\n' \
+    help_string = "Here are some things I can help you with:\n\n" \
+                  "**!ham:** I'll tell you what we're gonna get\n" \
                   "**!gametime: I'll add, list, and manage gametimes!\n" \
-                  '**!in:** Tell me you\'re in for the weekend\n' \
-                  '**!whosin:** See who\'s in for the weekend\n' \
-                  '**!out:** Tell me you\'re out for the weekend\n' \
-                  '**!trump:** I\'ll show you Trump\'s latest Yuge ' \
-                  'success!\n' \
-                  '**!summary: <url>** I\'ll summarize a link for you\n' \
-                  '**!dankmeme:** I\'ll fetch you a succulent dank may-may\n' \
-                  '**!bertstrip:** I\'ll ruin your childhood\n' \
-                  '**!text <name>:** Get that fool in the loop\n' \
-                  '**!shot-lottery:** Run a shot lottery.\n' \
-                  '**!win/!loss/!draw:** Update session record ' \
-                  'appropriately\n' \
-                  '**!clear-record:** Clear the session record\n' \
-                  '**!get-record:** Print the session record\n' \
-                  '**!set:** Tell Brochat-Bot some info about you\n' \
-                  '**!battletag:** I\'ll tell you your battletag\n' \
-                  '**!owstats:** I\'ll assess your Overwatch performance\n' \
-                  '**!whoami:** I\'ll tell you what I know about you\n' \
-                  '**!version:** Print the version of brochat-bot\n'
+                  "**!in:** Tell me you're in for the weekend\n" \
+                  "**!whosin:** See who's in for the weekend\n" \
+                  "**!out:** Tell me you're out for the weekend\n" \
+                  "**!trump:** I'll show you Trump's latest Yuge " \
+                  "success!\n" \
+                  "**!summary: <url>** I'll summarize a link for you\n" \
+                  "**!dankmeme:** I'll fetch you a succulent dank may-may\n" \
+                  "**!bertstrip:** I'll ruin your childhood\n" \
+                  "**!text <name>:** Get that fool in the loop\n" \
+                  "**!shot-lottery:** Run a shot lottery.\n" \
+                  "**!win/!loss/!draw:** Update session record " \
+                  "appropriately\n" \
+                  "**!clear-record:** Clear the session record\n" \
+                  "**!get-record:** Print the session record\n" \
+                  "**!set:** Tell Brochat-Bot some info about you\n" \
+                  "**!battletag:** I'll tell you your battletag\n" \
+                  "**!owstats:** I'll assess your Overwatch performance\n" \
+                  "**!whoami:** I'll tell you what I know about you\n" \
+                  "**!version:** Print the version of brochat-bot\n" \
+                  "**!uptime:** Print how long the bot has been running for\n"
 
     return help_string
 
@@ -643,6 +646,22 @@ def get_smmry(message):
         return "Something went wrong... I'm sorry for letting you down, bro."
 
 
+def get_uptime():
+    """
+    Returns the uptime
+
+    :rtype str
+    :return: str: Time between start and now
+    """
+    total_time = time() - startTime
+    mins, secs = divmod(total_time, 60)
+    hours, mins = divmod(mins, 60)
+    days, hours = divmod(mins, 24)
+
+    return "{:.0f} days, {:.0f} hours, {:.0f} minutes, {:.0f} " \
+           "seconds".format(days, hours, mins, secs)
+
+
 @client.event
 async def on_message(message):
     """
@@ -665,6 +684,9 @@ async def on_message(message):
                 counter += 1
 
         await client.edit_message(tmp, 'You have {} messages.'.format(counter))
+    elif message.content == '!uptime':
+        await client.send_message(message.channel, 'Uptime: {}'
+                                  .format(get_uptime()))
     elif message.content.startswith('!sleep'):
         await asyncio.sleep(5)
         await client.send_message(message.channel, 'Done sleeping')
@@ -686,13 +708,6 @@ async def on_message(message):
         await client.send_message(message.channel, whos_in.gametime_actions(
             message.content))
     elif message.content.startswith('!in'):
-        """
-        arguments = message.content.split(' ')
-        if len(arguments) > 1:
-            arguments.remove('!in')
-            for arg in arguments:
-                whos_in.add(arg)
-        """
         arguments = argument_parser(message.content)
         if len(arguments) != 1 or arguments[0] == "!in":
             await client.send_message(message.channel,
@@ -931,6 +946,7 @@ async def on_message(message):
         await client.send_message(message.channel, print_version())
 
 
+startTime = time()
 client.run(token)
 
 
