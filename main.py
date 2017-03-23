@@ -134,7 +134,7 @@ class WeekendGames(object):
         """
         arguments = argument_parser(message)
 
-        gametime_help_string = "" \
+        gametime_help_string = \
                "That's not a valid command for **!gametime**\n\n" \
                "Please use:\n" \
                "!gametime <add> <day of the week>" \
@@ -154,42 +154,19 @@ class WeekendGames(object):
                 try:
                     return valid_commands[arguments[0]](arguments[1],
                                                     arguments[2])
-                except(TypeError):
+                except TypeError:
                     return gametime_help_string
             elif len(arguments) == 2:
                 try:
                     return valid_commands[arguments[0]](arguments[1])
-                except(TypeError):
+                except TypeError:
                     return gametime_help_string
             elif len(arguments) == 1:
                 try:
                     return valid_commands[arguments[0]]()
-                except(TypeError):
+                except TypeError:
                     return gametime_help_string
         return gametime_help_string
-
-    # TODO: Sort gametimes by date, ascending
-    def get_gametimes(self):
-        """
-        Get upcoming gametimes.
-        :return: string response to print to chat.
-        """
-        upcoming_days = "**Exciting f-ing news, boys:**\n\n"
-        if len(self.gametimes) == 0:
-            return "No games coming up, friendship outlook bleak."
-        id = 0
-        for gametime in self.gametimes:
-            id += 1
-            upcoming_days += "{}: There is a gaming session coming up on {}\n".format(
-                id,
-                pretty_date(gametime.get_date()))
-            if len(gametime.players) == 0:
-                upcoming_days += "    Nobody's in for this day.\n"
-            else:
-                for player in gametime.players:
-                    upcoming_days += "    - {} is in.\n".format(player['name'])
-        return upcoming_days
-
 
     def create_gametime(self, day, start_time=None):
         """
@@ -229,11 +206,9 @@ class WeekendGames(object):
             output_string = ""
             output_string += self.gametimes[index - 1].set_time(new_time)
             self.update_db()
-            return "{}\nGametime {} set to {}.".format(output_string,
-                                                       index,
-                                                       pretty_date(
-                                                       self.gametimes[index - 1]
-                                                           .get_date()))
+            return "{}\nGametime {} set to {}."\
+                .format(output_string, index,
+                        pretty_date(self.gametimes[index - 1].get_date()))
         else:
             return "There's no gametime with that number."
         pass
