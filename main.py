@@ -63,7 +63,7 @@ def pretty_date(datetime):
     :param datetime:
     :return: string
     """
-    return datetime.strftime("%a, %b %d")
+    return datetime.strftime("%a, %b %d at %I:%M EST")
     # this version has the time, for the future:
     # return datetime.strftime("%a, %b %d at %I:%M %p")
 
@@ -96,7 +96,8 @@ class WeekendGames(object):
         # store our games
         self.gametimes = []
         if 'gametimes' in db:
-            self.gametimes = db['gametimes']
+            for gametime in db['gametimes']:
+                self.gametimes.append(Gametime(json_create=gametime))
 
         # non persistent variables
         self.wins = 0
@@ -121,7 +122,7 @@ class WeekendGames(object):
                 upcoming_days += "    Nobody's in for this day.\n"
             else:
                 for player in gametime.players:
-                    upcoming_days += "    - {} is in.\n".format(player.name)
+                    upcoming_days += "    - {} is in.\n".format(player['name'])
         return upcoming_days
 
     def gametime_actions(self, message):
@@ -132,28 +133,110 @@ class WeekendGames(object):
         :return: string response to print to chat.
         """
         arguments = argument_parser(message)
+
+        gametime_help_string = "" \
+               "That's not a valid command for **!gametime**\n\n" \
+               "Please use:\n" \
+               "!gametime <add> <day of the week>" \
+               "<_optional_: military time, HH:MM> to **add a gametime**\n" \
+               "!gametime <remove> <index> to **delete a gametime**\n" \
+               "!gametime <list> to **list current gametimes**\n" \
+               "!gametime <set> <index> <time> to " \
+                               "**set the time of a gametime**"
         valid_commands = {
-            "add": self.create_gametime
+            "add": self.create_gametime,
+            "remove": self.remove_gametime,
+            "list": self.get_gametimes,
+            "set": self.set_gametime
         }
         if arguments[0] in valid_commands:
-            return valid_commands[arguments[0]](arguments[1])
-        else:
-            return "That's not a valid command for **!gametime**\n" \
-                   "Please use: !gametime <add> <day of the week>"
+            if len(arguments) == 3:
+                try:
+                    return valid_commands[arguments[0]](arguments[1],
+                                                    arguments[2])
+                except(TypeError):
+                    return gametime_help_string
+            elif len(arguments) == 2:
+                try:
+                    return valid_commands[arguments[0]](arguments[1])
+                except(TypeError):
+                    return gametime_help_string
+            elif len(arguments) == 1:
+                try:
+                    return valid_commands[arguments[0]]()
+                except(TypeError):
+                    return gametime_help_string
+        return gametime_help_string
 
-    def create_gametime(self, day):
+    # TODO: Sort gametimes by date, ascending
+    def get_gametimes(self):
+        """
+        Get upcoming gametimes.
+        :return: string response to print to chat.
+        """
+        upcoming_days = "**Exciting f-ing news, boys:**\n\n"
+        if len(self.gametimes) == 0:
+            return "No games coming up, friendship outlook bleak."
+        id = 0
+        for gametime in self.gametimes:
+            id += 1
+            upcoming_days += "{}: There is a gaming session coming up on {}\n".format(
+                id,
+                pretty_date(gametime.get_date()))
+            if len(gametime.players) == 0:
+                upcoming_days += "    Nobody's in for this day.\n"
+            else:
+                for player in gametime.players:
+                    upcoming_days += "    - {} is in.\n".format(player['name'])
+        return upcoming_days
+
+
+    def create_gametime(self, day, start_time=None):
         """
         Create a gametime, given a full name of a day of the week.
+        :param start_time: Time of the game
         :param day: string of a proper case day of the week.
         :return: string response to send to chat.
         """
         if day in Gametime.DAYS_IN_WEEK:
-            self.gametimes.append(Gametime(
-                day=Gametime.DAYS_IN_WEEK.index(day)))
-            print(self.gametimes)
-            return "Gametime created for {}.".format(day)
+            new_gametime = Gametime(day=Gametime.DAYS_IN_WEEK.index(day),
+                                    time=start_time)
+            self.gametimes.append(new_gametime)
+            self.update_db()
+            return "Gametime created for {}.".format(
+                pretty_date(new_gametime.get_date()))
         else:
             return "Please use the full name of a day of the week."
+
+    def remove_gametime(self, index):
+        try:
+            index = int(index)
+        except ValueError:
+            return "Your index should be a number, silly."
+        if 0 < index <= len(self.gametimes):
+            self.gametimes.pop(index-1)
+            self.update_db()
+            return "Gametime removed."
+        else:
+            return "There's no gametime with that number."
+
+    def set_gametime(self, index, new_time):
+        try:
+            index = int(index)
+        except ValueError:
+            return "Your index should be a number, silly."
+        if 0 < index <= len(self.gametimes):
+            output_string = ""
+            output_string += self.gametimes[index - 1].set_time(new_time)
+            self.update_db()
+            return "{}\nGametime {} set to {}.".format(output_string,
+                                                       index,
+                                                       pretty_date(
+                                                       self.gametimes[index - 1]
+                                                           .get_date()))
+        else:
+            return "There's no gametime with that number."
+        pass
 
     def whos_in(self):
         """
@@ -251,6 +334,9 @@ class WeekendGames(object):
         db['last_shot'] = self.last_shot
         db['consecutive_shot_wins'] = self.consecutive_shot_wins
         db['last_lottery_time'] = self.last_lottery
+        db['gametimes'] = []
+        for gametime in self.gametimes:
+            db['gametimes'].append(gametime.to_json())
         db['users'] = users
         with open(db_file, 'w') as dbfile:
             json.dump(db, dbfile, sort_keys=True, indent=4,
@@ -453,6 +539,7 @@ def print_help():
     """
     help_string = "Here are some things I can help you with:\n\n" \
                   "**!ham:** I'll tell you what we're gonna get\n" \
+                  "**!gametime: I'll add, list, and manage gametimes!\n" \
                   "**!in:** Tell me you're in for the weekend\n" \
                   "**!whosin:** See who's in for the weekend\n" \
                   "**!out:** Tell me you're out for the weekend\n" \
@@ -584,6 +671,10 @@ async def on_message(message):
     """
 
     global whos_in
+
+    if "Jim" in message.content and "brochat-bot" not in str(message.author):
+        await client.send_message(message.channel, 'Jim, you mean fat ***REMOVED*** boy?')
+
     if message.content.startswith('!test'):
         counter = 0
         tmp = await client.send_message(message.channel,
@@ -613,11 +704,9 @@ async def on_message(message):
     elif message.content.startswith('!summary'):
         await client.send_message(message.channel, get_smmry(message.content))
     # GAMETIME commands
-    elif message.content.startswith('!gametimes'):
-        await client.send_message(message.channel, whos_in.get_gametimes())
-    elif message.content.startswith('!gametime '):
-        await client.send_message(message.channel,
-                                  whos_in.gametime_actions(message.content))
+    elif message.content.startswith('!gametime'):
+        await client.send_message(message.channel, whos_in.gametime_actions(
+            message.content))
     elif message.content.startswith('!in'):
         arguments = argument_parser(message.content)
         if len(arguments) != 1 or arguments[0] == "!in":

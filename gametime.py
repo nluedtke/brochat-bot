@@ -1,6 +1,8 @@
 # the gametime class, which represents an individual gaming session
 import datetime
 import pytz
+import re
+
 
 class Gametime(object):
     """
@@ -17,43 +19,52 @@ class Gametime(object):
         "Sunday"
     ]
 
-    def __init__(self, day=None):
+    DEFAULT_GAMETIME = "12:00"
+
+    def __init__(self, day=None, time=DEFAULT_GAMETIME, json_create=None):
         """
         Creates a gametime on the next given day of the week.
         :param day:
         """
-        self.timezone = pytz.timezone('US/Eastern')
-        self.created = datetime.datetime.now(self.timezone)
-        self.game = None
-        """ Sets the time on the next available date for a given weekday. """
-        self.time = self.next_date_for_day(self.created, day)
-        self.snapshot = None
-        self.players = []
-        self.players_attended = []
-        print("Gametime is: {}".format(self.time))
+        if json_create:
+            self.timezone = pytz.timezone(json_create['timezone'])
+            self.created = datetime.datetime.strptime(json_create['created'],
+                                                      "%c")
+            self.game = json_create['game']
+            self.date = datetime.datetime.strptime(json_create['date'], "%c")
+            self.time = json_create['time']
+            self.snapshot = json_create['snapshot']
+            self.players = json_create['players']
+        else:
+            self.timezone = pytz.timezone('US/Eastern')
+            self.created = datetime.datetime.now(self.timezone)
+            self.game = None
+            # Sets the time on the next available date for a given weekday.
+            self.date = self.next_date_for_day(self.created, day)
+            """ Sets the """
+            if time:
+                self.time = self.set_time(time)
+            else:
+                self.time = self.set_time(Gametime.DEFAULT_GAMETIME)
+            self.snapshot = None
+            self.players = []
+        print("Gametime is: {}".format(self.date))
 
-    class Player(object):
+    def to_json(self):
         """
-        Defines the Gametime.Player class
+        Dumps the class contents to json.
+        :return:
         """
-
-        def __init__(self, name=None, registered=None, arrived=None, record=None):
-            """
-            Gametime.Player constructor
-            """
-            self.name = name
-            self.registered_time = registered
-            self.arrived_time = arrived
-            self.record = record
-
-        def set_registered_time(self, time):
-            self.registered_time = time
-
-        def arrived(self, time):
-            self.arrived_time = time
-
-        def set_record(self, record):
-            pass
+        json_info = {
+            "timezone": str(self.timezone),
+            "created": datetime.datetime.strftime(self.created, "%c"),
+            "game": self.game,
+            "date": datetime.datetime.strftime(self.date, "%c"),
+            "time": self.time,
+            "snapshot": self.snapshot,
+            "players": self.players
+        }
+        return json_info
 
     def next_date_for_day(self, created, day):
         """
@@ -71,7 +82,28 @@ class Gametime(object):
         Gets time of a gametime.
         :return: datetime object
         """
-        return self.time
+        return self.date
+
+    def set_time(self, time_string):
+        """
+        Sets the time of day of a gametime.
+        :param time_string: A string representation of HH:MM or H:MM
+        :return: String of result.
+        """
+        """ Regex match for H:MM or HH:MM time formats. """
+        date_format = re.compile("^\d?\d:\d\d$")
+        if date_format.match(time_string):
+            time_list = time_string.split(":")
+        else:
+            return "Sorry, that's not a valid time format!"
+
+        hour = int(time_list[0])
+        minute = int(time_list[1])
+
+        if hour not in range(24) or minute not in range(60):
+            return "Please use a valid military time, to keep things simple."
+
+        self.date = self.date.replace(hour=hour, minute=minute)
 
     def start(self):
         pass
@@ -88,19 +120,20 @@ class Gametime(object):
 
         output_string += "\n- Players Registered:"
         for player in self.players:
-            if player.registered_time:
+            if player['time']:
                 output_string += "\n  {} shows up at {}"\
-                                        .format(player.name,
-                                                player.registered_time)
+                                        .format(player['name'],
+                                                player['time'])
         output_string += "\n- Players Attended:"
         for player in self.players:
-            if player.arrived_time:
-                output_string += "\n  {} showed up at {}".format(player.name,
-                                                                 player.arrived_time)
+            if player['arrived_time']:
+                output_string += "\n  {} showed up at {}".\
+                    format(player['name'], player['arrived_time'])
         output_string += "\n"
         for player in self.players:
-            if player.registered_time and not player.arrived_time:
-                output_string += "\nSorry, but it looks like {} lied about being here".format(player.name)
+            if player['time'] and not player['arrived_time']:
+                output_string += "\nSorry, but it looks like {} lied about " \
+                                 "being here".format(player['name'])
 
         return output_string
 
@@ -110,11 +143,10 @@ class Gametime(object):
         :param name: string name
         :return: player or None
         """
-        player_found = None
         for player in self.players:
-            if player.name == name:
-                player_found = player
-        return player_found
+            if name == player['name']:
+                return player
+        return None
 
     def register_player(self, name, time=None):
         """
@@ -125,9 +157,13 @@ class Gametime(object):
         """
         search_result = self.find_player_by_name(name)
         if not search_result:
-            self.players.append(self.Player(name=name,registered=time))
+            self.players.append({"name": name,
+                                 "time": time,
+                                 "arrived_time": None})
         else:
-            search_result.set_registered_time(time)
+            for player in self.players:
+                if name in player:
+                    player["time"] = time
 
     def unregister_player(self, name):
         """
@@ -150,16 +186,24 @@ class Gametime(object):
         if not search_result:
             print("player not found")
         else:
-            search_result.arrived(arrival_time)
+            for player in self.players:
+                if player['name'] == name:
+                    player['arrived_time'] = arrival_time
 
     pass
 
 # Tests
 if __name__ == "__main__":
-    g = Gametime()
+    g = Gametime(3)
     print("Started: {}".format(g.created))
-    #time.sleep(20)
+    # time.sleep(20)
+    g.register_player("Jim", g.created)
     g.register_player("Jim", g.created)
     g.register_player("Nick", g.created)
     g.check_in_player("Nick")
     print("Status: {}".format(g.status()))
+
+    g.set_time("12:00")
+    g.set_time("taco")
+
+    print(g.to_json())
