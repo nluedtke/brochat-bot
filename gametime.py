@@ -104,6 +104,7 @@ class Gametime(object):
             return "Please use a valid military time, to keep things simple."
 
         self.date = self.date.replace(hour=hour, minute=minute)
+        return "Time set"
 
     def start(self):
         pass
