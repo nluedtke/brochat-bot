@@ -63,7 +63,7 @@ def pretty_date(datetime):
     :param datetime:
     :return: string
     """
-    return datetime.strftime("%a, %b %d at %I:%M EST")
+    return datetime.strftime("%a, %b %d at %H:%M EST")
     # this version has the time, for the future:
     # return datetime.strftime("%a, %b %d at %I:%M %p")
 
