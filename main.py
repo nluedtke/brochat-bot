@@ -154,17 +154,17 @@ class WeekendGames(object):
                 try:
                     return valid_commands[arguments[0]](arguments[1],
                                                         arguments[2])
-                except TypeError:
+                except KeyError:
                     return gametime_help_string
             elif len(arguments) == 2:
                 try:
                     return valid_commands[arguments[0]](arguments[1])
-                except TypeError:
+                except KeyError:
                     return gametime_help_string
             elif len(arguments) == 1:
                 try:
                     return valid_commands[arguments[0]]()
-                except TypeError:
+                except KeyError:
                     return gametime_help_string
         return gametime_help_string
 
