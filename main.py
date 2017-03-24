@@ -153,7 +153,7 @@ class WeekendGames(object):
             if len(arguments) == 3:
                 try:
                     return valid_commands[arguments[0]](arguments[1],
-                                                    arguments[2])
+                                                        arguments[2])
                 except TypeError:
                     return gametime_help_string
             elif len(arguments) == 2:
@@ -211,7 +211,6 @@ class WeekendGames(object):
                         pretty_date(self.gametimes[index - 1].get_date()))
         else:
             return "There's no gametime with that number."
-        pass
 
     def whos_in(self):
         """
