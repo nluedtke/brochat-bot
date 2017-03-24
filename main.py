@@ -764,20 +764,10 @@ async def on_message(message):
             await client.send_message(message.channel, "Too soon for shots...")
         else:
             shot_lottery_string = shot_lottery(client, whos_in)
-            await client.send_message(message.channel,
-                                      shot_lottery_string.pop(0))
-            await asyncio.sleep(3)
-            await client.send_message(message.channel,
-                                      shot_lottery_string.pop(0))
-            await asyncio.sleep(2)
-            await client.send_message(message.channel,
-                                      shot_lottery_string.pop(0))
-            await asyncio.sleep(4)
-            await client.send_message(message.channel,
-                                      shot_lottery_string.pop(0))
-            await asyncio.sleep(4)
-            await client.send_message(message.channel,
-                                      shot_lottery_string.pop(0))
+            for x in range(4):
+                await client.send_message(message.channel,
+                                          shot_lottery_string.pop(0))
+                await asyncio.sleep(4)
             while len(shot_lottery_string) > 0:
                 await client.send_message(message.channel,
                                           shot_lottery_string.pop(0))
