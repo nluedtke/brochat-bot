@@ -16,7 +16,7 @@ from gametime import Gametime
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 1
-VERSION_PATCH = 0
+VERSION_PATCH = 1~rc1
 
 
 def shot_lottery(client_obj, wg_games):
