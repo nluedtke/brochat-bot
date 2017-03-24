@@ -214,25 +214,14 @@ class WeekendGames(object):
 
     def whos_in(self):
         """
-        Prints who is currently in for the weekend games.
+        Depreciated function, now just calls get_gametimes()
 
         :rtype str
         :return: str: Formatted string for the list of people currently signed
         up for weekend games
         """
 
-        if len(self.people) == 0:
-            return 'Well that sucks, nobody is in...'
-        elif len(self.people) == 1:
-            return 'Good news: {} is in for this weekend.'.format(
-                self.people[0])
-        elif len(self.people) == 2:
-            return 'Good news: {} and {} are in for this weekend.'.format(
-                self.people[0], self.people[1])
-        elif len(self.people) > 2:
-            person_list = ', '.join(self.people[:-1])
-            person_list += ', and %s' % self.people[-1]
-            return 'Good news: {} are in for this weekend.'.format(person_list)
+        return self.get_gametimes()
 
     def add(self, person, game_id):
         """
@@ -514,9 +503,9 @@ def print_help():
     help_string = "Here are some things I can help you with:\n\n" \
                   "**!ham:** I'll tell you what we're gonna get\n" \
                   "**!gametime**: I'll add, list, and manage gametimes!\n" \
-                  "**!in:** Tell me you're in for the weekend\n" \
-                  "**!whosin:** See who's in for the weekend\n" \
-                  "**!out:** Tell me you're out for the weekend\n" \
+                  "**!in:<sessionid>** Sign up for a game session\n" \
+                  "**!whosin:** See who's in for gaming sessions\n" \
+                  "**!out:<sessionid>** Remove yourself from a session\n" \
                   "**!trump:** I'll show you Trump's latest Yuge " \
                   "success!\n" \
                   "**!summary: <url>** I'll summarize a link for you\n" \
