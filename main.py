@@ -514,7 +514,7 @@ def print_help():
     """
     help_string = "Here are some things I can help you with:\n\n" \
                   "**!ham:** I'll tell you what we're gonna get\n" \
-                  "**!gametime: I'll add, list, and manage gametimes!\n" \
+                  "**!gametime**: I'll add, list, and manage gametimes!\n" \
                   "**!in:** Tell me you're in for the weekend\n" \
                   "**!whosin:** See who's in for the weekend\n" \
                   "**!out:** Tell me you're out for the weekend\n" \
