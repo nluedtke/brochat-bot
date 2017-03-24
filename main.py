@@ -630,7 +630,7 @@ def get_uptime():
     total_time = time() - startTime
     mins, secs = divmod(total_time, 60)
     hours, mins = divmod(mins, 60)
-    days, hours = divmod(mins, 24)
+    days, hours = divmod(hours, 24)
 
     return "{:.0f} days, {:.0f} hours, {:.0f} minutes, {:.0f} " \
            "seconds".format(days, hours, mins, secs)
