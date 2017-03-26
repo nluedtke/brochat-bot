@@ -638,6 +638,9 @@ async def on_message(message):
     if "Jim" in message.content and "brochat-bot" not in str(message.author):
         await client.send_message(message.channel, 'Jim, you mean fat ***REMOVED*** boy?')
 
+    if message.content.startswith("!"):
+        message.content = message.content.lower()
+
     if message.content.startswith('!test'):
         counter = 0
         tmp = await client.send_message(message.channel,
