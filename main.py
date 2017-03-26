@@ -722,8 +722,8 @@ async def on_message(message):
             try:
                 twilio_message = twilio_client.messages.create(
                     to=users[arguments[0]]['mobile'], from_="+16088880320",
-                    body="@brochat-bot is always watching you, {}. Just "
-                         "watching, waiting for games.".format(arguments[0]))
+                    body="@brochat-bot: Brochat calls, {}. "
+                         "Friendship and glory await you. Join us!".format(arguments[0]))
                 await client.send_message(message.channel, 'Text message sent!')
             except:
                 await client.send_message(message.channel,
