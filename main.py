@@ -696,6 +696,67 @@ async def summary(client, message):
     """
     await client.send_message(message.channel, get_smmry(message.content))
 
+async def gametime(client, message):
+    """
+    Handles gametime actions
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    await client.send_message(message.channel, whos_in.gametime_actions(
+        message.content))
+
+async def in_command(client, message):
+    """
+    Handles !in actions
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+    if len(arguments) != 1 or arguments[0] == "!in":
+        await client.send_message(message.channel,
+                                  "When are you in for, though?\n\n{}"
+                                  .format(whos_in.get_gametimes()))
+    elif len(arguments) == 1:
+        await client.send_message(message.channel,
+                                  whos_in.add(message.author, arguments[0]))
+    else:
+        await client.send_message(message.channel,
+                                  "You'll need to be more specific :smile:")
+
+async def out_command(client, message):
+    """
+    Handles !out actions
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+    if len(arguments) != 1 or arguments[0] == "!out":
+        await client.send_message(message.channel,
+                                  "When are you out for, though?\n\n{}"
+                                  .format(whos_in.get_gametimes()))
+    elif len(arguments) == 1:
+        await client.send_message(message.channel,
+                                  whos_in.remove(message.author,
+                                                 arguments[0]))
+    else:
+        await client.send_message(message.channel,
+                                  "You'll need to be more specific :smile:")
+
+async def whosin_command(client, message):
+    """
+    Handles !whosin
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    await client.send_message(message.channel, whos_in.whos_in())
 
 @client.event
 async def on_message(message):
@@ -717,7 +778,11 @@ async def on_message(message):
         "ham": go_ham,
         "dankmeme": dankmeme,
         "bertstrip": bertstrip,
-        "summary":
+        "summary": summary,
+        "gametime": gametime,
+        "in": in_command,
+        "out": out_command,
+        "whosin": whosin_command
     }
 
     if message.content.startswith("!"):
@@ -726,45 +791,10 @@ async def on_message(message):
         if cmd in commands:
             await commands[cmd](client, message)
 
-    # GAMETIME commands
-    elif message.content.startswith('!gametime'):
-        await client.send_message(message.channel, whos_in.gametime_actions(
-            message.content))
-    elif message.content.startswith('!in'):
-        arguments = argument_parser(message.content)
-        if len(arguments) != 1 or arguments[0] == "!in":
-            await client.send_message(message.channel,
-                                      "When are you in for, though?\n\n{}"
-                                      .format(whos_in.get_gametimes()))
-        elif len(arguments) == 1:
-            await client.send_message(message.channel,
-                                      whos_in.add(message.author, arguments[0]))
-        else:
-            await client.send_message(message.channel,
-                                      "You'll need to be more specific :smile:")
-
-            # await client.send_message(message.channel, whos_in.whos_in())
-    elif message.content.startswith('!out'):
-        arguments = argument_parser(message.content)
-        if len(arguments) != 1 or arguments[0] == "!out":
-            await client.send_message(message.channel,
-                                      "When are you out for, though?\n\n{}"
-                                      .format(whos_in.get_gametimes()))
-        elif len(arguments) == 1:
-            await client.send_message(message.channel,
-                                      whos_in.remove(message.author,
-                                                     arguments[0]))
-        else:
-            await client.send_message(message.channel,
-                                      "You'll need to be more specific :smile:")
-
-    elif message.content.startswith('!whosin'):
-        await client.send_message(message.channel, whos_in.whos_in())
-
     elif message.content.startswith('@brochat-bot'):
         print(message)
 
-    elif message.content.startswith('!text'):
+    if message.content.startswith('!text'):
 
         arguments = argument_parser(message.content)
 
