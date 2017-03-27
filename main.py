@@ -493,12 +493,13 @@ async def on_ready():
                                       'encourage friendship.')
 
 
-def print_help():
+async def print_help(client, message):
     """
     Returns the help string
 
-    :rtype str
-    :return: str: Help Message
+    :param client: The Client
+    :param message: The message
+    :return: None
     """
     help_string = "Here are some things I can help you with:\n\n" \
                   "**!ham:** I'll tell you what we're gonna get\n" \
@@ -524,22 +525,23 @@ def print_help():
                   "**!version:** Print the version of brochat-bot\n" \
                   "**!uptime:** Print how long the bot has been running for\n"
 
-    return help_string
+    await client.send_message(message.channel, help_string)
 
 
-def print_version():
+async def print_version(client, message):
     """
     Returns the version string
 
-    :rtype str
-    :return: str: Version string
+    :param client: The Client
+    :param message: The message
+    :return: None
     """
     version_string = "Version: {0}.{1}.{2}\n" \
                      "Running on: {3}".format(VERSION_MAJOR,
                                               VERSION_MINOR,
                                               VERSION_PATCH,
                                               socket.gethostname())
-    return version_string
+    await client.send_message(message.channel, version_string)
 
 
 def get_reddit(subreddit):
@@ -758,6 +760,285 @@ async def whosin_command(client, message):
     """
     await client.send_message(message.channel, whos_in.whos_in())
 
+async def send_text(client, message):
+    """
+    Sends a text
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+
+    if len(arguments) != 1 or arguments[0] == '!text':
+        await client.send_message(message.channel,
+                                  'Just give me a name, I\'ll do the rest!')
+    elif arguments[0] not in users:
+        await client.send_message(message.channel,
+                                  'That\'s not a real name...')
+    elif 'mobile' not in users[arguments[0]]:
+        await client.send_message(message.channel,
+                                  'That person doesn\'t have a mobile. So '
+                                  'poor!')
+    else:
+        try:
+            twilio_message = twilio_client.messages.create(
+                to=users[arguments[0]]['mobile'], from_="+16088880320",
+                body="@brochat-bot: Brochat calls, {}. "
+                     "Friendship and glory await you. Join us!".format(
+                    arguments[0]))
+            await client.send_message(message.channel, 'Text message sent!')
+        except:
+            await client.send_message(message.channel,
+                                      'Could not send text message!')
+
+async def get_trump(client, message):
+    """
+    Gets a presidential tweet
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    try:
+        trumps_last_tweet = twitter.get_user_timeline(
+            screen_name='realdonaldtrump', count=1, include_retweets=False)
+    except TwythonError:
+        await client.send_message(message.channel,
+                                  "Twitter is acting up, try again later.")
+    else:
+        await client.send_message(
+            message.channel,
+            ':pen_ballpoint::monkey: Trump has been saying things, as '
+            'usual...\n\n'
+            'https://twitter.com/{}/status/{}'.format(
+                trumps_last_tweet[0]['user']['screen_name'],
+                str(trumps_last_tweet[0]['id'])))
+
+async def run_shot_lottery(client, message):
+    """
+    Runs a shot-lottery
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    if not whos_in.is_lottery_time():
+        await client.send_message(message.channel, "Too soon for shots...")
+    else:
+        shot_lottery_string = shot_lottery(client, whos_in)
+        for x in range(4):
+            await client.send_message(message.channel,
+                                      shot_lottery_string.pop(0))
+            await asyncio.sleep(4)
+        while len(shot_lottery_string) > 0:
+            await client.send_message(message.channel,
+                                      shot_lottery_string.pop(0))
+
+async def record_win(client, message):
+    """
+    Handles !win
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    whos_in.add_win()
+    await client.send_message(message.channel, "Congrats on the win!")
+    record_string = "Current record: {}".format(whos_in.get_record())
+    await client.send_message(message.channel, record_string)
+
+async def record_loss(client, message):
+    """
+    Handles !loss
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    whos_in.add_loss()
+    await client.send_message(message.channel, "You guys are bad!")
+    record_string = "Current record: {}".format(whos_in.get_record())
+    await client.send_message(message.channel, record_string)
+
+async def record_draw(client, message):
+    """print_version()
+    Handles !draw
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    whos_in.add_draw()
+    await client.send_message(message.channel, "What a waste!")
+    record_string = "Current record: {}".format(whos_in.get_record())
+    await client.send_message(message.channel, record_string)
+
+async def record_clear(client, message):
+    """
+    Handles !record-clear
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    record_string = "You went: {}".format(whos_in.get_record())
+    await client.send_message(message.channel, record_string)
+    whos_in.clear_record()
+    await client.send_message(message.channel, "Record Cleared!")
+
+async def record_get(client, message):
+    """
+    Handles !get-record
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    record_string = "Current record: {}".format(whos_in.get_record())
+    await client.send_message(message.channel, record_string)
+
+async def battletag(client, message):
+    """
+    Handles !battletag
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    author = str(message.author.display_name)
+    if author in users:
+        if "battletag" in users[author]:
+            await client.send_message(message.channel,
+                                      "Your battletag is: {}".format(
+                                          users[author]["battletag"]))
+        else:
+            await client.send_message(message.channel,
+                                      "I couldn\'t find your battletag!")
+    else:
+        await client.send_message(message.channel,
+                                  "I couldn\'t find your user info!")
+
+async def set_command(client, message):
+    """
+    Handles !set
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    author = str(message.author.display_name)
+    arguments = argument_parser(message.content)
+
+    if author not in users:
+        users[author] = {}
+
+    valid_arguments = {'name': "Okay, I'll call you {} now.",
+                       'battletag': "Okay, your battletag is {} from here"
+                                    " on out.",
+                       'mobile': "Got your digits: {}."}
+    if len(arguments) != 2:
+        await client.send_message(message.channel,
+                                  "To !set information about yourself, "
+                                  "please use:\n\n"
+                                  "**!set** <name/battletag/mobile> "
+                                  "<value>")
+    elif arguments[0] in valid_arguments:
+        # Added format check for mobile
+        if arguments[0] == 'mobile' and \
+                (len(arguments[1]) != 12 or
+                         arguments[1][0] != '+' or not
+                isinstance(int(arguments[1][1:]), int)):
+            await client.send_message(message.channel,
+                                      "You'll need to use the format "
+                                      "**+14148888888**"
+                                      " for your mobile number.")
+        else:
+            users[author][arguments[0]] = arguments[1]
+            await client.send_message(message.channel,
+                                      valid_arguments[arguments[0]].format(
+                                          users[author][arguments[0]]))
+    # Update database
+    whos_in.update_db()
+
+async def whoami(client, message):
+    """
+    Handles !whoami
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    author = str(message.author.display_name)
+    if author in users and users[author] != {}:
+        await client.send_message(message.channel,
+                                  "Well, I don't know you that well, but "
+                                  "from what I've been hearing on the "
+                                  "streets...")
+        for k, v in users[author].items():
+            await client.send_message(message.channel,
+                                      "Your {} is {}.".format(k, v))
+    else:
+        await client.send_message(message.channel,
+                                  "You're {}, but that all I know about "
+                                  "you.".format(author))
+
+async def owstats(client, message):
+    """
+    Handles !owstats
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    author = str(message.author.display_name)
+    if author in users and 'battletag' in users[author]:
+        await client.send_message(message.channel,
+                                  "Hold on, let me check the webs...")
+        profile_url = 'https://api.lootbox.eu/pc/us/{}/profile'.format(
+            users[author]['battletag'])
+        heroes_url = 'https://api.lootbox.eu/pc/us/{}/competitive/' \
+                     'allHeroes/'.format(users[author]['battletag'])
+        # The following variable is unused
+        # headers = {'user-agent': 'brochat-bot/0.0.1'}
+        response_profile = requests.get(profile_url)
+        response_heroes = requests.get(heroes_url)
+        print("Overwatch API returned a response code of {}".format(
+            response_profile.status_code))
+        if 'statusCode' in response_profile.json() or \
+                        'statusCode' in response_heroes.json():
+            await client.send_message(message.channel,
+                                      "Something went wrong. Make sure "
+                                      "your battletag is set up like "
+                                      "this: **name-1234**")
+        elif response_profile.status_code == 429:
+            await client.send_message(message.channel,
+                                      "You're being ratelimited, chill out "
+                                      "bruh.")
+        else:
+            rating = response_profile.json()['data']['competitive']['rank']
+            wins = response_heroes.json()['GamesWon']
+            losses = response_heroes.json()['GamesLost']
+            ties = response_heroes.json()['GamesTied']
+            gold = int(response_heroes.json()['Medals-Gold'])
+            silver = int(response_heroes.json()['Medals-Silver'])
+            bronze = int(response_heroes.json()['Medals-Bronze'])
+            await client.send_message(message.channel,
+                                      "Here's the current outlook for {0}:"
+                                      "\n\n**Rating:** {1}\n"
+                                      "**Record:** {2} / {3} / {4}\n"
+                                      "**:first_place::** {5}\n"
+                                      "**:second_place::** {6}\n"
+                                      "**:third_place::** {7}".format(
+                                          author, rating, wins, losses,
+                                          ties, gold, silver, bronze
+                                      ))
+    else:
+        await client.send_message(message.channel,
+                                  "Sorry, but you didn't !set your"
+                                  " battletag.")
+
+
 @client.event
 async def on_message(message):
     """
@@ -765,8 +1046,6 @@ async def on_message(message):
 
     :return: None
     """
-
-    global whos_in
 
     if "Jim" in message.content and "brochat-bot" not in str(message.author):
         await client.send_message(message.channel, 'Jim, you mean fat ***REMOVED*** boy?')
@@ -782,7 +1061,21 @@ async def on_message(message):
         "gametime": gametime,
         "in": in_command,
         "out": out_command,
-        "whosin": whosin_command
+        "whosin": whosin_command,
+        "text": send_text,
+        "trump": get_trump,
+        "help": print_help,
+        "shot-lottery": run_shot_lottery,
+        "win": record_win,
+        "loss": record_loss,
+        "draw": record_draw,
+        "clear-record": record_clear,
+        "get-record": record_get,
+        "battletag": battletag,
+        "set": set_command,
+        "whoami": whoami,
+        "owstats": owstats,
+        "version": print_version
     }
 
     if message.content.startswith("!"):
@@ -793,200 +1086,6 @@ async def on_message(message):
 
     elif message.content.startswith('@brochat-bot'):
         print(message)
-
-    if message.content.startswith('!text'):
-
-        arguments = argument_parser(message.content)
-
-        if len(arguments) != 1 or arguments[0] == '!text':
-            await client.send_message(message.channel,
-                                      'Just give me a name, I\'ll do the rest!')
-        elif arguments[0] not in users:
-            await client.send_message(message.channel,
-                                      'That\'s not a real name...')
-        elif 'mobile' not in users[arguments[0]]:
-            await client.send_message(message.channel,
-                                      'That person doesn\'t have a mobile. So '
-                                      'poor!')
-        else:
-            try:
-                twilio_message = twilio_client.messages.create(
-                    to=users[arguments[0]]['mobile'], from_="+16088880320",
-                    body="@brochat-bot: Brochat calls, {}. "
-                         "Friendship and glory await you. Join us!".format(arguments[0]))
-                await client.send_message(message.channel, 'Text message sent!')
-            except:
-                await client.send_message(message.channel,
-                                          'Could not send text message!')
-
-    elif message.content.startswith('!trump'):
-        try:
-            trumps_last_tweet = twitter.get_user_timeline(
-                screen_name='realdonaldtrump', count=1, include_retweets=False)
-        except TwythonError:
-            await client.send_message(message.channel,
-                                      "Twitter is acting up, try again later.")
-        else:
-            await client.send_message(
-                message.channel,
-                ':pen_ballpoint::monkey: Trump has been saying things, as '
-                'usual...\n\n'
-                'https://twitter.com/{}/status/{}'.format(
-                    trumps_last_tweet[0]['user']['screen_name'],
-                    str(trumps_last_tweet[0]['id'])))
-
-    elif message.content.startswith('!help'):
-        await client.send_message(message.channel, print_help())
-
-    elif message.content.startswith('!shot-lottery'):
-        if not whos_in.is_lottery_time():
-            await client.send_message(message.channel, "Too soon for shots...")
-        else:
-            shot_lottery_string = shot_lottery(client, whos_in)
-            for x in range(4):
-                await client.send_message(message.channel,
-                                          shot_lottery_string.pop(0))
-                await asyncio.sleep(4)
-            while len(shot_lottery_string) > 0:
-                await client.send_message(message.channel,
-                                          shot_lottery_string.pop(0))
-
-    elif message.content.startswith('!win'):
-        whos_in.add_win()
-        await client.send_message(message.channel, "Congrats on the win!")
-        record_string = "Current record: {}".format(whos_in.get_record())
-        await client.send_message(message.channel, record_string)
-    elif message.content.startswith('!loss'):
-        whos_in.add_loss()
-        await client.send_message(message.channel, "You guys are bad!")
-        record_string = "Current record: {}".format(whos_in.get_record())
-        await client.send_message(message.channel, record_string)
-    elif message.content.startswith('!draw'):
-        whos_in.add_draw()
-        await client.send_message(message.channel, "What a waste!")
-        record_string = "Current record: {}".format(whos_in.get_record())
-        await client.send_message(message.channel, record_string)
-    elif message.content.startswith('!clear-record'):
-        record_string = "You went: {}".format(whos_in.get_record())
-        await client.send_message(message.channel, record_string)
-        whos_in.clear_record()
-        await client.send_message(message.channel, "Record Cleared!")
-    elif message.content.startswith('!get-record'):
-        record_string = "Current record: {}".format(whos_in.get_record())
-        await client.send_message(message.channel, record_string)
-    elif message.content.startswith('!battletag'):
-        author = str(message.author.display_name)
-        if author in users:
-            if "battletag" in users[author]:
-                await client.send_message(message.channel,
-                                          "Your battletag is: {}".format(
-                                              users[author]["battletag"]))
-            else:
-                await client.send_message(message.channel,
-                                          "I couldn\'t find your battletag!")
-        else:
-            await client.send_message(message.channel,
-                                      "I couldn\'t find your user info!")
-    elif message.content.startswith('!set'):
-        author = str(message.author.display_name)
-        arguments = argument_parser(message.content)
-
-        if author not in users:
-            users[author] = {}
-
-        valid_arguments = {'name': "Okay, I'll call you {} now.",
-                           'battletag': "Okay, your battletag is {} from here"
-                                        " on out.",
-                           'mobile': "Got your digits: {}."}
-        if len(arguments) != 2:
-            await client.send_message(message.channel,
-                                      "To !set information about yourself, "
-                                      "please use:\n\n"
-                                      "**!set** <name/battletag/mobile> "
-                                      "<value>")
-        elif arguments[0] in valid_arguments:
-            # Added format check for mobile
-            if arguments[0] == 'mobile' and \
-                    (len(arguments[1]) != 12 or
-                     arguments[1][0] != '+' or not
-                     isinstance(int(arguments[1][1:]), int)):
-                await client.send_message(message.channel,
-                                          "You'll need to use the format "
-                                          "**+14148888888**"
-                                          " for your mobile number.")
-            else:
-                users[author][arguments[0]] = arguments[1]
-                await client.send_message(message.channel,
-                                          valid_arguments[arguments[0]].format(
-                                              users[author][arguments[0]]))
-        # Update database
-        whos_in.update_db()
-
-    elif message.content.startswith('!whoami'):
-        author = str(message.author.display_name)
-        if author in users and users[author] != {}:
-            await client.send_message(message.channel,
-                                      "Well, I don't know you that well, but "
-                                      "from what I've been hearing on the "
-                                      "streets...")
-            for k, v in users[author].items():
-                await client.send_message(message.channel,
-                                          "Your {} is {}.".format(k, v))
-        else:
-            await client.send_message(message.channel,
-                                      "You're {}, but that all I know about "
-                                      "you.".format(author))
-
-    elif message.content.startswith('!owstats'):
-        author = str(message.author.display_name)
-        if author in users and 'battletag' in users[author]:
-            await client.send_message(message.channel,
-                                      "Hold on, let me check the webs...")
-            profile_url = 'https://api.lootbox.eu/pc/us/{}/profile'.format(
-                users[author]['battletag'])
-            heroes_url = 'https://api.lootbox.eu/pc/us/{}/competitive/' \
-                         'allHeroes/'.format(users[author]['battletag'])
-            # The following variable is unused
-            # headers = {'user-agent': 'brochat-bot/0.0.1'}
-            response_profile = requests.get(profile_url)
-            response_heroes = requests.get(heroes_url)
-            print("Overwatch API returned a response code of {}".format(
-                response_profile.status_code))
-            if 'statusCode' in response_profile.json() or \
-               'statusCode' in response_heroes.json():
-                await client.send_message(message.channel,
-                                          "Something went wrong. Make sure "
-                                          "your battletag is set up like "
-                                          "this: **name-1234**")
-            elif response_profile.status_code == 429:
-                await client.send_message(message.channel,
-                                          "You're being ratelimited, chill out "
-                                          "bruh.")
-            else:
-                rating = response_profile.json()['data']['competitive']['rank']
-                wins = response_heroes.json()['GamesWon']
-                losses = response_heroes.json()['GamesLost']
-                ties = response_heroes.json()['GamesTied']
-                gold = int(response_heroes.json()['Medals-Gold'])
-                silver = int(response_heroes.json()['Medals-Silver'])
-                bronze = int(response_heroes.json()['Medals-Bronze'])
-                await client.send_message(message.channel,
-                                          "Here's the current outlook for {0}:"
-                                          "\n\n**Rating:** {1}\n"
-                                          "**Record:** {2} / {3} / {4}\n"
-                                          "**:first_place::** {5}\n"
-                                          "**:second_place::** {6}\n"
-                                          "**:third_place::** {7}".format(
-                                              author, rating, wins, losses,
-                                              ties, gold, silver, bronze
-                                          ))
-        else:
-            await client.send_message(message.channel,
-                                      "Sorry, but you didn't !set your"
-                                      " battletag.")
-
-    elif message.content.startswith('!version'):
-        await client.send_message(message.channel, print_version())
 
 
 startTime = time()
