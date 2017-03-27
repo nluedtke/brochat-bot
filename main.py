@@ -103,6 +103,8 @@ class WeekendGames(object):
         self.wins = 0
         self.draws = 0
         self.losses = 0
+        self.last = None
+        self.consecutive = 0
 
     # TODO: Sort gametimes by date, ascending
     def get_gametimes(self):
@@ -373,6 +375,11 @@ class WeekendGames(object):
         """
 
         self.wins += 1
+        if self.last == "win":
+            self.consecutive += 1
+        else:
+            self.last = "win"
+            self.consecutive = 1
 
     def add_loss(self):
         """
@@ -382,6 +389,11 @@ class WeekendGames(object):
         """
 
         self.losses += 1
+        if self.last == "loss":
+            self.consecutive += 1
+        else:
+            self.last = "loss"
+            self.consecutive = 1
 
     def add_draw(self):
         """
@@ -391,6 +403,11 @@ class WeekendGames(object):
         """
 
         self.draws += 1
+        if self.last == "draw":
+            self.consecutive += 1
+        else:
+            self.last = "draw"
+            self.consecutive = 1
 
     def clear_record(self):
         """
@@ -402,6 +419,8 @@ class WeekendGames(object):
         self.draws = 0
         self.wins = 0
         self.losses = 0
+        self.last = None
+        self.consecutive = 0
 
     def get_record(self):
         """
@@ -838,6 +857,20 @@ async def run_shot_lottery(client, message):
             await client.send_message(message.channel,
                                       shot_lottery_string.pop(0))
 
+
+async def trigger_social(client, message):
+    """
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    glass = ":tumbler_glass:"
+    await client.send_message(message.channel, "Ah shit that's three in a row! "
+                                               "ITS A SOCIAL! SHOTS! "
+                                               "SHOTS! SHOTS!\n{}{}{}".
+                              format(glass, glass, glass))
+
 async def record_win(client, message):
     """
     Handles !win
@@ -850,6 +883,11 @@ async def record_win(client, message):
     await client.send_message(message.channel, "Congrats on the win!")
     record_string = "Current record: {}".format(whos_in.get_record())
     await client.send_message(message.channel, record_string)
+    if whos_in.consecutive == 3:
+        await trigger_social(client, message)
+        whos_in.consecutive = 0
+    else:
+        await run_shot_lottery(client, message)
 
 async def record_loss(client, message):
     """
@@ -863,6 +901,9 @@ async def record_loss(client, message):
     await client.send_message(message.channel, "You guys are bad!")
     record_string = "Current record: {}".format(whos_in.get_record())
     await client.send_message(message.channel, record_string)
+    if whos_in.consecutive == 3:
+        await trigger_social(client, message)
+        whos_in.consecutive = 0
 
 async def record_draw(client, message):
     """print_version()
@@ -876,6 +917,9 @@ async def record_draw(client, message):
     await client.send_message(message.channel, "What a waste!")
     record_string = "Current record: {}".format(whos_in.get_record())
     await client.send_message(message.channel, record_string)
+    if whos_in.consecutive == 3:
+        await trigger_social(client, message)
+        whos_in.consecutive = 0
 
 async def record_clear(client, message):
     """
