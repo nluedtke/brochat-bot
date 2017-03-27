@@ -609,20 +609,92 @@ def get_smmry(message):
         return "Something went wrong... I'm sorry for letting you down, bro."
 
 
-def get_uptime():
+async def get_uptime(client, message):
     """
-    Returns the uptime
+    Prints the uptime
 
-    :rtype str
-    :return: str: Time between start and now
+    :param client: The Client
+    :param message: The message
+    :return: None
     """
     total_time = time() - startTime
     mins, secs = divmod(total_time, 60)
     hours, mins = divmod(mins, 60)
     days, hours = divmod(hours, 24)
 
-    return "{:.0f} days, {:.0f} hours, {:.0f} minutes, {:.0f} " \
-           "seconds".format(days, hours, mins, secs)
+    ret_str = "{:.0f} days, {:.0f} hours, {:.0f} minutes, {:.0f} " \
+              "seconds".format(days, hours, mins, secs)
+    await client.send_message(message.channel, 'Uptime: {}'
+                              .format(ret_str))
+
+async def run_test(client, message):
+    """
+    Handles the test command
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    counter = 0
+    tmp = await client.send_message(message.channel, 'Calculating messages...')
+    async for log in client.logs_from(message.channel, limit=100):
+        if log.author == message.author:
+            counter += 1
+
+    await client.edit_message(tmp, 'You have {} messages.'.format(counter))
+
+async def sleep(client, message):
+    """
+    Sleeps the bot
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    await asyncio.sleep(10)
+    await client.send_message(message.channel, 'Done sleeping')
+
+async def go_ham(client, message):
+    """
+    goes ham
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    await client.send_message(message.channel,
+                              '@here Let\'s get retarded, {}'.format(
+                                  message.author.display_name))
+
+async def dankmeme(client, message):
+    """
+    Gets a dank meme
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    await client.send_message(message.channel, get_reddit("dankmemes"))
+
+async def bertstrip(client, message):
+    """
+    Gets a bertstrip
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    await client.send_message(message.channel, get_reddit("bertstrips"))
+
+async def summary(client, message):
+    """
+    Gets a summary of a url
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    await client.send_message(message.channel, get_smmry(message.content))
 
 
 @client.event
@@ -638,37 +710,22 @@ async def on_message(message):
     if "Jim" in message.content and "brochat-bot" not in str(message.author):
         await client.send_message(message.channel, 'Jim, you mean fat ***REMOVED*** boy?')
 
+    commands = {
+        "test": run_test,
+        "uptime": get_uptime,
+        "sleep": sleep,
+        "ham": go_ham,
+        "dankmeme": dankmeme,
+        "bertstrip": bertstrip,
+        "summary":
+    }
+
     if message.content.startswith("!"):
         message.content = message.content.lower()
+        cmd = message.content.split()[0][1:]
+        if cmd in commands:
+            await commands[cmd](client, message)
 
-    if message.content.startswith('!test'):
-        counter = 0
-        tmp = await client.send_message(message.channel,
-                                        'Calculating messages...')
-        async for log in client.logs_from(message.channel, limit=100):
-            if log.author == message.author:
-                counter += 1
-
-        await client.edit_message(tmp, 'You have {} messages.'.format(counter))
-    elif message.content == '!uptime':
-        await client.send_message(message.channel, 'Uptime: {}'
-                                  .format(get_uptime()))
-    elif message.content.startswith('!sleep'):
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, 'Done sleeping')
-
-    elif message.content == '!ham':
-        await client.send_message(message.channel,
-                                  '@here Let\'s get retarded, {}'.format(
-                                      message.author.display_name))
-    elif message.content.startswith('!dankmeme'):
-        await client.send_message(message.channel,
-                                  get_reddit("dankmemes"))
-    elif message.content.startswith('!bertstrip'):
-        await client.send_message(message.channel,
-                                  get_reddit("bertstrips"))
-    elif message.content.startswith('!summary'):
-        await client.send_message(message.channel, get_smmry(message.content))
     # GAMETIME commands
     elif message.content.startswith('!gametime'):
         await client.send_message(message.channel, whos_in.gametime_actions(
