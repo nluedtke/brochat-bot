@@ -178,6 +178,9 @@ class WeekendGames(object):
         if day in Gametime.DAYS_IN_WEEK:
             new_gametime = Gametime(day=Gametime.DAYS_IN_WEEK.index(day),
                                     time=start_time)
+            for game_session in self.gametimes:
+                if new_gametime == game_session:
+                    return "There is already a session that time."
             self.gametimes.append(new_gametime)
             self.update_db()
             return "Gametime created for {}.".format(
@@ -718,7 +721,7 @@ async def in_command(client, message):
     :return: None
     """
     arguments = argument_parser(message.content)
-    if len(arguments) != 1 or arguments[0] == "!in":
+    if len(arguments) != 1 or arguments[0].lower() == "!in":
         await client.send_message(message.channel,
                                   "When are you in for, though?\n\n{}"
                                   .format(whos_in.get_gametimes()))
@@ -738,7 +741,7 @@ async def out_command(client, message):
     :return: None
     """
     arguments = argument_parser(message.content)
-    if len(arguments) != 1 or arguments[0] == "!out":
+    if len(arguments) != 1 or arguments[0].lower() == "!out":
         await client.send_message(message.channel,
                                   "When are you out for, though?\n\n{}"
                                   .format(whos_in.get_gametimes()))
@@ -1079,8 +1082,8 @@ async def on_message(message):
     }
 
     if message.content.startswith("!"):
-        message.content = message.content.lower()
-        cmd = message.content.split()[0][1:]
+        cmd = message.content.lower()
+        cmd = cmd.split()[0][1:]
         if cmd in commands:
             await commands[cmd](client, message)
 
