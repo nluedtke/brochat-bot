@@ -24,6 +24,9 @@ class Gametime(object):
     def __init__(self, day=None, time=DEFAULT_GAMETIME, json_create=None):
         """
         Creates a gametime on the next given day of the week.
+
+        :param json_create
+        :param time:
         :param day:
         """
         if json_create:
@@ -53,6 +56,7 @@ class Gametime(object):
     def to_json(self):
         """
         Dumps the class contents to json.
+
         :return:
         """
         json_info = {
@@ -69,6 +73,7 @@ class Gametime(object):
     def next_date_for_day(self, created, day):
         """
         Finds the next datetime date for a given int day
+
         :param day:
         :return: datetime
         """
@@ -80,6 +85,7 @@ class Gametime(object):
     def get_date(self):
         """
         Gets time of a gametime.
+
         :return: datetime object
         """
         return self.date
@@ -87,6 +93,7 @@ class Gametime(object):
     def set_time(self, time_string):
         """
         Sets the time of day of a gametime.
+
         :param time_string: A string representation of HH:MM or H:MM
         :return: String of result.
         """
@@ -107,11 +114,16 @@ class Gametime(object):
         return "Time set"
 
     def start(self):
+        """
+
+        :return:
+        """
         pass
 
     def status(self):
         """
         Returns the status of the Gametime object
+
         :return: A status string
         """
         now = datetime.datetime.now(self.timezone)
@@ -141,6 +153,7 @@ class Gametime(object):
     def find_player_by_name(self, name):
         """
         Finds a player by name, if none found, returns None.
+
         :param name: string name
         :return: player or None
         """
@@ -169,6 +182,7 @@ class Gametime(object):
     def unregister_player(self, name):
         """
         Unregisters a player
+
         :param name: string name
         :return: None
         """
@@ -179,6 +193,7 @@ class Gametime(object):
     def check_in_player(self, name):
         """
         Checks in a player
+
         :param name: string name
         :return: None
         """
@@ -191,7 +206,19 @@ class Gametime(object):
                 if player['name'] == name:
                     player['arrived_time'] = arrival_time
 
-    pass
+    def __eq__(self, other):
+        """
+        Equal to override
+        NOTE: This override == to compare value not pointers.
+        :param other: Right hand side comparison
+        :return: bool indicating whether self equal to other (In value)
+        """
+
+        if self.date.weekday() == other.date.weekday() and \
+                        self.time == other.time:
+            return True
+        else:
+            return False
 
 # Tests
 if __name__ == "__main__":
