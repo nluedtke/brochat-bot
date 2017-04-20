@@ -508,11 +508,16 @@ async def on_ready():
     print('Logged in as {}'.format(client.user.name))
     print(client.user.id)
     print('------')
+    connect_strings = [
+        "I have returned to enforce...I mean encourage friendship.",
+        "Here to make brochat great again!",
+        "Make every breakfast a Bot-fast.",
+        "Pancakes are ***REMOVED*** ***REMOVED***."
+    ]
     for channel in client.get_all_channels():
         if channel.name == 'general':
-            await client.send_message(channel,
-                                      'I have returned to enforce...I mean '
-                                      'encourage friendship.')
+            await client.send_message(channel, connect_strings[
+                randint(0, len(connect_strings) - 1)])
 
 
 async def print_help(client, message):
