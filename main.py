@@ -515,7 +515,7 @@ async def on_ready():
         "Pancakes are ***REMOVED*** ***REMOVED***."
     ]
     for channel in client.get_all_channels():
-        if channel.name == 'general':
+        if channel.name == 'general' or channel.name == 'brochat':
             await client.send_message(channel, connect_strings[
                 randint(0, len(connect_strings) - 1)])
 
