@@ -184,7 +184,7 @@ class Gametime(object):
         """
         Returns a players status for this gametime.
         :param name:
-        :return: status string, defaults to "in"
+        :return: status string, default to "in"
         """
 
         search_result = self.find_player_by_name(name)
