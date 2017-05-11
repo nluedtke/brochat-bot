@@ -118,13 +118,15 @@ class WeekendGames(object):
         game_id = 0
         for gametime in self.gametimes:
             game_id += 1
-            upcoming_days += "{}: There is a gaming session coming up on {}\n" \
+            upcoming_days += "{}: There is a gaming session coming up on **{}**\n" \
                 .format(game_id, pretty_date(gametime.get_date()))
             if len(gametime.players) == 0:
                 upcoming_days += "    Nobody's in for this day.\n"
             else:
                 for player in gametime.players:
-                    upcoming_days += "    - {} is in.\n".format(player['name'])
+                    status = gametime.get_player_status(player['name'])
+                    upcoming_days += "    - **{}** is *{}*.\n".format(
+                        player['name'], status)
         return upcoming_days
 
     def gametime_actions(self, message):
@@ -228,7 +230,7 @@ class WeekendGames(object):
 
         return self.get_gametimes()
 
-    def add(self, person, game_id):
+    def add(self, person, game_id, status):
         """
         Adds a person to the specified gametime
 
@@ -252,10 +254,11 @@ class WeekendGames(object):
         if self.gametimes[game_id].find_player_by_name(person_to_add):
             return "You're already in for that day."
         else:
-            self.gametimes[game_id].register_player(person_to_add)
+            self.gametimes[game_id].register_player(person_to_add, status=status)
             self.update_db()
-            return '{} is in for {}.' \
-                .format(person_to_add, pretty_date(
+            return '{} is {} for {}.' \
+                .format(person_to_add, self.gametimes[game_id].get_player_status(
+                        person_to_add), pretty_date(
                         self.gametimes[game_id].get_date()))
 
     def remove(self, person, game_id):
@@ -532,8 +535,9 @@ async def print_help(client, message):
                   "**!ham:** I'll tell you what we're gonna get\n" \
                   "**!gametime**: I'll add, list, and manage gametimes!\n" \
                   "**!in:<sessionid>** Sign up for a game session\n" \
-                  "**!whosin:** See who's in for gaming sessions\n" \
                   "**!out:<sessionid>** Remove yourself from a session\n" \
+                  "**!possible:<sessionid>** Sign up, tentatively for a session\n" \
+                  "**!whosin:** See who's in for gaming sessions\n" \
                   "**!trump:** I'll show you Trump's latest Yuge " \
                   "success!\n" \
                   "**!summary: <url>** I'll summarize a link for you\n" \
@@ -751,7 +755,27 @@ async def in_command(client, message):
                                   .format(whos_in.get_gametimes()))
     elif len(arguments) == 1:
         await client.send_message(message.channel,
-                                  whos_in.add(message.author, arguments[0]))
+                                  whos_in.add(message.author, arguments[0],status="in"))
+    else:
+        await client.send_message(message.channel,
+                                  "You'll need to be more specific :smile:")
+
+async def possible_command(client, message):
+    """
+    Handles !possible actions
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+    if len(arguments) != 1 or arguments[0].lower() == "!possible":
+        await client.send_message(message.channel,
+                                  "When are you possibly in for, though?\n\n{}"
+                                  .format(whos_in.get_gametimes()))
+    elif len(arguments) == 1:
+        await client.send_message(message.channel,
+                                  whos_in.add(message.author, arguments[0],status="possible"))
     else:
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
@@ -1112,6 +1136,7 @@ async def on_message(message):
         "summary": summary,
         "gametime": gametime,
         "in": in_command,
+        "possible": possible_command,
         "out": out_command,
         "whosin": whosin_command,
         "text": send_text,

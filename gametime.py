@@ -162,7 +162,7 @@ class Gametime(object):
                 return player
         return None
 
-    def register_player(self, name, time=None):
+    def register_player(self, name, time=None, status=None):
         """
         Registers a player, if applicable.
         :param name: string name
@@ -173,11 +173,28 @@ class Gametime(object):
         if not search_result:
             self.players.append({"name": name,
                                  "time": time,
-                                 "arrived_time": None})
+                                 "arrived_time": None,
+                                 "status": status})
         else:
             for player in self.players:
                 if name in player:
                     player["time"] = time
+
+    def get_player_status(self, name):
+        """
+        Returns a players status for this gametime.
+        :param name:
+        :return: status string, default to "in"
+        """
+
+        search_result = self.find_player_by_name(name)
+        if not search_result:
+            raise Exception("Player not found!")
+        else:
+            try:
+                return search_result["status"]
+            except KeyError:
+                return "in"
 
     def unregister_player(self, name):
         """
