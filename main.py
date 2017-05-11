@@ -179,6 +179,7 @@ class WeekendGames(object):
         :param day: string of a proper case day of the week.
         :return: string response to send to chat.
         """
+        day = day.capitalize()
         if day in Gametime.DAYS_IN_WEEK:
             new_gametime = Gametime(day=Gametime.DAYS_IN_WEEK.index(day),
                                     time=start_time)
