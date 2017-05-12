@@ -29,7 +29,7 @@ def shot_lottery(client_obj, wg_games):
     :return: Array of strings for the shot lottery
     """
     glass = ":tumbler_glass:"
-    output = ["Alright everyone, its time for the SHOT LOTTERY!"
+    output = ["Alright everyone (@here), its time for the SHOT LOTTERY!"
               "\n{} won the last lottery!".format(whos_in.last_shot),
               "...The tension is rising..."]
     players = []
