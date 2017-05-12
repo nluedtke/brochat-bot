@@ -96,8 +96,18 @@ class WeekendGames(object):
         # store our games
         self.gametimes = []
         if 'gametimes' in db:
-            for gametime in db['gametimes']:
-                self.gametimes.append(Gametime(json_create=gametime))
+            for gt in db['gametimes']:
+                self.gametimes.append(Gametime(json_create=gt))
+
+        self.c_win = 0
+        self.c_los = 0
+        self.c_draw = 0
+        if 'c_win' in db:
+            self.c_win = db['c_win']
+        if 'c_loss' in db:
+            self.c_loss = db['c_loss']
+        if 'c_draw' in db:
+            self.c_win = db['c_draw']
 
         # non persistent variables
         self.wins = 0
@@ -116,15 +126,16 @@ class WeekendGames(object):
         if len(self.gametimes) == 0:
             return "No games coming up, friendship outlook bleak."
         game_id = 0
-        for gametime in self.gametimes:
+        for gt in self.gametimes:
             game_id += 1
-            upcoming_days += "{}: There is a gaming session coming up on **{}**\n" \
-                .format(game_id, pretty_date(gametime.get_date()))
-            if len(gametime.players) == 0:
+            upcoming_days += "{}: There is a gaming session coming up on " \
+                             "**{}**\n".format(game_id,
+                                               pretty_date(gt.get_date()))
+            if len(gt.players) == 0:
                 upcoming_days += "    Nobody's in for this day.\n"
             else:
-                for player in gametime.players:
-                    status = gametime.get_player_status(player['name'])
+                for player in gt.players:
+                    status = gt.get_player_status(player['name'])
                     upcoming_days += "    - **{}** is *{}*.\n".format(
                         player['name'], status)
         return upcoming_days
@@ -139,14 +150,14 @@ class WeekendGames(object):
         arguments = argument_parser(message)
 
         gametime_help_string = \
-               "That's not a valid command for **!gametime**\n\n" \
-               "Please use:\n" \
-               "!gametime <add> <day of the week>" \
-               "<_optional_: military time, HH:MM> to **add a gametime**\n" \
-               "!gametime <remove> <index> to **delete a gametime**\n" \
-               "!gametime <list> to **list current gametimes**\n" \
-               "!gametime <set> <index> <time> to " \
-                               "**set the time of a gametime**"
+            "That's not a valid command for **!gametime**\n\n" \
+            "Please use:\n" \
+            "!gametime <add> <day of the week>" \
+            "<_optional_: military time, HH:MM> to **add a gametime**\n" \
+            "!gametime <remove> <index> to **delete a gametime**\n" \
+            "!gametime <list> to **list current gametimes**\n" \
+            "!gametime <set> <index> <time> to " \
+            "**set the time of a gametime**"
         valid_commands = {
             "add": self.create_gametime,
             "remove": self.remove_gametime,
@@ -199,7 +210,7 @@ class WeekendGames(object):
         except ValueError:
             return "Your index should be a number, silly."
         if 0 < index <= len(self.gametimes):
-            self.gametimes.pop(index-1)
+            self.gametimes.pop(index - 1)
             self.update_db()
             return "Gametime removed."
         else:
@@ -214,7 +225,7 @@ class WeekendGames(object):
             output_string = ""
             output_string += self.gametimes[index - 1].set_time(new_time)
             self.update_db()
-            return "{}\nGametime {} set to {}."\
+            return "{}\nGametime {} set to {}." \
                 .format(output_string, index,
                         pretty_date(self.gametimes[index - 1].get_date()))
         else:
@@ -235,6 +246,7 @@ class WeekendGames(object):
         """
         Adds a person to the specified gametime
 
+        :param status:
         :param person: person to add
         :param game_id: list id of the gametime in gametimes
         :return: string to print to chat
@@ -255,12 +267,14 @@ class WeekendGames(object):
         if self.gametimes[game_id].find_player_by_name(person_to_add):
             return "You're already in for that day."
         else:
-            self.gametimes[game_id].register_player(person_to_add, status=status)
+            self.gametimes[game_id].register_player(person_to_add,
+                                                    status=status)
             self.update_db()
             return '{} is {} for {}.' \
-                .format(person_to_add, self.gametimes[game_id].get_player_status(
-                        person_to_add), pretty_date(
-                        self.gametimes[game_id].get_date()))
+                .format(person_to_add,
+                        self.gametimes[game_id].get_player_status(
+                            person_to_add), pretty_date(
+                            self.gametimes[game_id].get_date()))
 
     def remove(self, person, game_id):
         """
@@ -307,9 +321,12 @@ class WeekendGames(object):
         db['consecutive_shot_wins'] = self.consecutive_shot_wins
         db['last_lottery_time'] = self.last_lottery
         db['gametimes'] = []
-        for gametime in self.gametimes:
-            db['gametimes'].append(gametime.to_json())
+        for gt in self.gametimes:
+            db['gametimes'].append(gt.to_json())
         db['users'] = users
+        db['c_win'] = self.c_win
+        db['c_loss'] = self.c_loss
+        db['c_draw'] = self.c_draw
         with open(db_file, 'w') as dbfile:
             json.dump(db, dbfile, sort_keys=True, indent=4,
                       ensure_ascii=False)
@@ -379,6 +396,7 @@ class WeekendGames(object):
         """
 
         self.wins += 1
+        self.c_win += 1
         if self.last == "win":
             self.consecutive += 1
         else:
@@ -393,6 +411,7 @@ class WeekendGames(object):
         """
 
         self.losses += 1
+        self.c_loss += 1
         if self.last == "loss":
             self.consecutive += 1
         else:
@@ -407,6 +426,7 @@ class WeekendGames(object):
         """
 
         self.draws += 1
+        self.c_draw += 1
         if self.last == "draw":
             self.consecutive += 1
         else:
@@ -434,6 +454,15 @@ class WeekendGames(object):
         """
 
         return "{0} - {1} - {2}".format(self.wins, self.losses, self.draws)
+
+    def get_c_record(self):
+        """
+        Gets the cumaltive record of a session
+
+        :return: str: With record formatting
+        """
+
+        return "{0} - {1} - {2}".format(self.c_win, self.c_loss, self.c_draw)
 
 
 # Handle tokens from local file
@@ -484,7 +513,7 @@ else:
     users = {}
 
 # Instantiate Discord client and Weekend Games
-client = discord.Client()
+_client = discord.Client()
 whos_in = WeekendGames()
 
 
@@ -502,15 +531,15 @@ def argument_parser(input_args):
         return arguments
 
 
-@client.event
+@_client.event
 async def on_ready():
     """
     Asynchronous event handler for logging in
 
     :return: None
     """
-    print('Logged in as {}'.format(client.user.name))
-    print(client.user.id)
+    print('Logged in as {}'.format(_client.user.name))
+    print(_client.user.id)
     print('------')
     connect_strings = [
         "I have returned to enforce...I mean encourage friendship.",
@@ -518,9 +547,9 @@ async def on_ready():
         "Make every breakfast a Bot-fast.",
         "Pancakes are ***REMOVED*** ***REMOVED***."
     ]
-    for channel in client.get_all_channels():
+    for channel in _client.get_all_channels():
         if channel.name == 'general' or channel.name == 'brochat':
-            await client.send_message(channel, connect_strings[
+            await _client.send_message(channel, connect_strings[
                 randint(0, len(connect_strings) - 1)])
 
 
@@ -537,7 +566,8 @@ async def print_help(client, message):
                   "**!gametime**: I'll add, list, and manage gametimes!\n" \
                   "**!in:<sessionid>** Sign up for a game session\n" \
                   "**!out:<sessionid>** Remove yourself from a session\n" \
-                  "**!possible:<sessionid>** Sign up, tentatively for a session\n" \
+                  "**!possible:<sessionid>** Sign up, tentatively for a " \
+                  "session\n" \
                   "**!whosin:** See who's in for gaming sessions\n" \
                   "**!trump:** I'll show you Trump's latest Yuge " \
                   "success!\n" \
@@ -661,6 +691,7 @@ async def get_uptime(client, message):
     await client.send_message(message.channel, 'Uptime: {}'
                               .format(ret_str))
 
+
 async def run_test(client, message):
     """
     Handles the test command
@@ -677,6 +708,7 @@ async def run_test(client, message):
 
     await client.edit_message(tmp, 'You have {} messages.'.format(counter))
 
+
 async def sleep(client, message):
     """
     Sleeps the bot
@@ -687,6 +719,7 @@ async def sleep(client, message):
     """
     await asyncio.sleep(10)
     await client.send_message(message.channel, 'Done sleeping')
+
 
 async def go_ham(client, message):
     """
@@ -700,6 +733,7 @@ async def go_ham(client, message):
                               '@here Let\'s get retarded, {}'.format(
                                   message.author.display_name))
 
+
 async def dankmeme(client, message):
     """
     Gets a dank meme
@@ -709,6 +743,7 @@ async def dankmeme(client, message):
     :return: None
     """
     await client.send_message(message.channel, get_reddit("dankmemes"))
+
 
 async def bertstrip(client, message):
     """
@@ -720,6 +755,7 @@ async def bertstrip(client, message):
     """
     await client.send_message(message.channel, get_reddit("bertstrips"))
 
+
 async def summary(client, message):
     """
     Gets a summary of a url
@@ -729,6 +765,7 @@ async def summary(client, message):
     :return: None
     """
     await client.send_message(message.channel, get_smmry(message.content))
+
 
 async def gametime(client, message):
     """
@@ -740,6 +777,7 @@ async def gametime(client, message):
     """
     await client.send_message(message.channel, whos_in.gametime_actions(
         message.content))
+
 
 async def in_command(client, message):
     """
@@ -756,10 +794,12 @@ async def in_command(client, message):
                                   .format(whos_in.get_gametimes()))
     elif len(arguments) == 1:
         await client.send_message(message.channel,
-                                  whos_in.add(message.author, arguments[0],status="in"))
+                                  whos_in.add(message.author, arguments[0],
+                                              status="in"))
     else:
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
+
 
 async def possible_command(client, message):
     """
@@ -776,10 +816,12 @@ async def possible_command(client, message):
                                   .format(whos_in.get_gametimes()))
     elif len(arguments) == 1:
         await client.send_message(message.channel,
-                                  whos_in.add(message.author, arguments[0],status="possible"))
+                                  whos_in.add(message.author, arguments[0],
+                                              status="possible"))
     else:
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
+
 
 async def out_command(client, message):
     """
@@ -802,6 +844,7 @@ async def out_command(client, message):
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
 
+
 async def whosin_command(client, message):
     """
     Handles !whosin
@@ -811,6 +854,7 @@ async def whosin_command(client, message):
     :return: None
     """
     await client.send_message(message.channel, whos_in.whos_in())
+
 
 async def send_text(client, message):
     """
@@ -844,6 +888,7 @@ async def send_text(client, message):
             await client.send_message(message.channel,
                                       'Could not send text message!')
 
+
 async def get_trump(client, message):
     """
     Gets a presidential tweet
@@ -866,6 +911,7 @@ async def get_trump(client, message):
             'https://twitter.com/{}/status/{}'.format(
                 trumps_last_tweet[0]['user']['screen_name'],
                 str(trumps_last_tweet[0]['id'])))
+
 
 async def run_shot_lottery(client, message):
     """
@@ -901,6 +947,7 @@ async def trigger_social(client, message):
                                                "SHOTS! SHOTS!\n{}{}{}".
                               format(glass, glass, glass))
 
+
 async def record_win(client, message):
     """
     Handles !win
@@ -911,13 +958,13 @@ async def record_win(client, message):
     """
     whos_in.add_win()
     await client.send_message(message.channel, "Congrats on the win!")
-    record_string = "Current record: {}".format(whos_in.get_record())
-    await client.send_message(message.channel, record_string)
+    await record_get(client, message)
     if whos_in.consecutive == 3:
         await trigger_social(client, message)
         whos_in.consecutive = 0
     else:
         await run_shot_lottery(client, message)
+
 
 async def record_loss(client, message):
     """
@@ -929,11 +976,11 @@ async def record_loss(client, message):
     """
     whos_in.add_loss()
     await client.send_message(message.channel, "You guys are bad!")
-    record_string = "Current record: {}".format(whos_in.get_record())
-    await client.send_message(message.channel, record_string)
+    await record_get(client, message)
     if whos_in.consecutive == 3:
         await trigger_social(client, message)
         whos_in.consecutive = 0
+
 
 async def record_draw(client, message):
     """print_version()
@@ -945,11 +992,11 @@ async def record_draw(client, message):
     """
     whos_in.add_draw()
     await client.send_message(message.channel, "What a waste!")
-    record_string = "Current record: {}".format(whos_in.get_record())
-    await client.send_message(message.channel, record_string)
+    await record_get(client, message)
     if whos_in.consecutive == 3:
         await trigger_social(client, message)
         whos_in.consecutive = 0
+
 
 async def record_clear(client, message):
     """
@@ -964,6 +1011,7 @@ async def record_clear(client, message):
     whos_in.clear_record()
     await client.send_message(message.channel, "Record Cleared!")
 
+
 async def record_get(client, message):
     """
     Handles !get-record
@@ -972,8 +1020,11 @@ async def record_get(client, message):
     :param message: The message
     :return: None
     """
-    record_string = "Current record: {}".format(whos_in.get_record())
+    record_string = "Current Record: {}".format(whos_in.get_record())
     await client.send_message(message.channel, record_string)
+    record_string = "Overall Record {}".format(whos_in.get_c_record())
+    await client.send_message(message.channel, record_string)
+
 
 async def battletag(client, message):
     """
@@ -995,6 +1046,7 @@ async def battletag(client, message):
     else:
         await client.send_message(message.channel,
                                   "I couldn\'t find your user info!")
+
 
 async def set_command(client, message):
     """
@@ -1024,8 +1076,8 @@ async def set_command(client, message):
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
                 (len(arguments[1]) != 12 or
-                         arguments[1][0] != '+' or not
-                isinstance(int(arguments[1][1:]), int)):
+                 arguments[1][0] != '+' or not
+                 isinstance(int(arguments[1][1:]), int)):
             await client.send_message(message.channel,
                                       "You'll need to use the format "
                                       "**+14148888888**"
@@ -1037,6 +1089,7 @@ async def set_command(client, message):
                                           users[author][arguments[0]]))
     # Update database
     whos_in.update_db()
+
 
 async def whoami(client, message):
     """
@@ -1059,6 +1112,7 @@ async def whoami(client, message):
         await client.send_message(message.channel,
                                   "You're {}, but that all I know about "
                                   "you.".format(author))
+
 
 async def owstats(client, message):
     """
@@ -1083,7 +1137,7 @@ async def owstats(client, message):
         print("Overwatch API returned a response code of {}".format(
             response_profile.status_code))
         if 'statusCode' in response_profile.json() or \
-                        'statusCode' in response_heroes.json():
+           'statusCode' in response_heroes.json():
             await client.send_message(message.channel,
                                       "Something went wrong. Make sure "
                                       "your battletag is set up like "
@@ -1116,7 +1170,7 @@ async def owstats(client, message):
                                   " battletag.")
 
 
-@client.event
+@_client.event
 async def on_message(message):
     """
     Asynchronous event handler for incoming message
@@ -1125,7 +1179,8 @@ async def on_message(message):
     """
 
     if "Jim" in message.content and "brochat-bot" not in str(message.author):
-        await client.send_message(message.channel, 'Jim, you mean fat ***REMOVED*** boy?')
+        await _client.send_message(message.channel,
+                                   'Jim, you mean fat ***REMOVED*** boy?')
 
     commands = {
         "test": run_test,
@@ -1160,14 +1215,14 @@ async def on_message(message):
         cmd = message.content.lower()
         cmd = cmd.split()[0][1:]
         if cmd in commands:
-            await commands[cmd](client, message)
+            await commands[cmd](_client, message)
 
     elif message.content.startswith('@brochat-bot'):
         print(message)
 
 
 startTime = time()
-client.run(token)
+_client.run(token)
 
 
 # TODO weekend gaming session management
