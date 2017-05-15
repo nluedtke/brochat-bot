@@ -1245,16 +1245,24 @@ async def check_trumps_mouth():
             c_to_send = channel
             break
 
+    delay = 30 * 60
+
     while not _client.is_closed:
-        await asyncio.sleep(30 * 60)
+        await asyncio.sleep(delay)
         print("Checking trump's mouth now")
-        trumps_lt_id = twitter.get_user_timeline(
-            screen_name='realdonaldtrump',
-            count=1, include_retweets=False)[0]['id']
-        if trumps_lt_id != last:
-            await _client.send_message(c_to_send, "New Message from the prez! "
-                                                  "Try !trump")
-            last = trumps_lt_id
+        try:
+            trumps_lt_id = twitter.get_user_timeline(
+                screen_name='realdonaldtrump', count=1,
+                include_retweets=False)[0]['id']
+        except:
+            print("Error caught in check_trump shortening delay")
+            delay = 10 * 60
+        else:
+            delay = 30 * 60
+            if trumps_lt_id != last:
+                await _client.send_message(c_to_send, "New Message from the "
+                                                      "prez! Try !trump")
+                last = trumps_lt_id
 
 async def print_at_midnight():
     """
