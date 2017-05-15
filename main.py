@@ -58,13 +58,13 @@ def shot_lottery(client_obj, wg_games):
     return output
 
 
-def pretty_date(datetime):
+def pretty_date(dt):
     """
     Takes a datetime and makes it a pretty string.
-    :param datetime:
+    :param dt:
     :return: string
     """
-    return datetime.strftime("%a, %b %d at %H:%M EST")
+    return dt.strftime("%a, %b %d at %H:%M EST")
     # this version has the time, for the future:
     # return datetime.strftime("%a, %b %d at %I:%M %p")
 
@@ -641,7 +641,7 @@ def get_reddit(subreddit):
         for entry in response_json['data']['children']:
             if entry['data']['stickied'] is True \
                     or (entry['data']['url'][-4:] != '.png' and
-                                entry['data']['url'][-4:] != '.jpg'):
+                        entry['data']['url'][-4:] != '.jpg'):
                 response_json['data']['children'].remove(entry)
         print(str(len(response_json['data']['children'])))
         seed = randint(0, len(response_json['data']['children']) - 1)
@@ -1085,8 +1085,8 @@ async def set_command(client, message):
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
                 (len(arguments[1]) != 12 or
-                         arguments[1][0] != '+' or not
-                isinstance(int(arguments[1][1:]), int)):
+                 arguments[1][0] != '+' or not
+                 isinstance(int(arguments[1][1:]), int)):
             await client.send_message(message.channel,
                                       "You'll need to use the format "
                                       "**+14148888888**"
@@ -1146,7 +1146,7 @@ async def owstats(client, message):
         print("Overwatch API returned a response code of {}".format(
             response_profile.status_code))
         if 'statusCode' in response_profile.json() or \
-                        'statusCode' in response_heroes.json():
+           'statusCode' in response_heroes.json():
             await client.send_message(message.channel,
                                       "Something went wrong. Make sure "
                                       "your battletag is set up like "
@@ -1234,7 +1234,7 @@ async def check_trumps_mouth():
     Waits for an update from the prez
     :return: None
     """
-
+    c_to_send = None
     await _client.wait_until_ready()
     last = twitter.get_user_timeline(
             screen_name='realdonaldtrump',
@@ -1269,6 +1269,7 @@ async def print_at_midnight():
     Prints list at midnight
     :return:
     """
+    c_to_send = None
     await _client.wait_until_ready()
     for channel in _client.get_all_channels():
         if channel.name == 'general' or channel.name == 'brochat':
