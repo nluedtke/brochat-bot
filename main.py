@@ -1228,7 +1228,34 @@ async def on_message(message):
     elif message.content.startswith('@brochat-bot'):
         print(message)
 
+async def check_trumps_mouth():
+    """
+    Waits for an update from the prez
+    :return: None
+    """
 
+    await _client.wait_until_ready()
+    last = twitter.get_user_timeline(
+            screen_name='realdonaldtrump',
+            count=1, include_retweets=False)[0]['id']
+
+    for channel in _client.get_all_channels():
+        if channel.name == 'general' or channel.name == 'brochat':
+            c_to_send = channel
+            break
+
+    while not _client.is_closed:
+        await asyncio.sleep(30 * 60)
+        trumps_lt_id = twitter.get_user_timeline(
+            screen_name='realdonaldtrump',
+            count=1, include_retweets=False)[0]['id']
+        if trumps_lt_id != last:
+            await _client.send_message(c_to_send, "New Message from the prez! "
+                                                  "Try !trump")
+            last = trumps_lt_id
+
+
+_client.loop.create_task(check_trumps_mouth())
 startTime = time()
 _client.run(token)
 
