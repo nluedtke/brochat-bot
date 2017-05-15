@@ -10,7 +10,7 @@ import socket
 import discord
 import asyncio
 from twython import Twython, TwythonError
-from twilio.rest import TwilioRestClient
+from twilio.rest import Client
 import requests
 from gametime import Gametime
 
@@ -491,7 +491,7 @@ smmry_api_key = tokens['smmry_api_key']
 # Twilio Tokens
 account_sid = tokens['twilio_account_sid']
 auth_token = tokens['twilio_auth_token']
-twilio_client = TwilioRestClient(account_sid, auth_token)
+twilio_client = Client(account_sid, auth_token)
 
 # Create/Load Local Database
 db_file = 'db.json'
