@@ -5,6 +5,7 @@ import os
 from sys import stderr
 from random import randint
 import socket
+import datetime
 
 # NonStandard Imports
 import discord
@@ -1246,6 +1247,7 @@ async def check_trumps_mouth():
 
     while not _client.is_closed:
         await asyncio.sleep(30 * 60)
+        print("Checking trump's mouth now")
         trumps_lt_id = twitter.get_user_timeline(
             screen_name='realdonaldtrump',
             count=1, include_retweets=False)[0]['id']
@@ -1254,8 +1256,28 @@ async def check_trumps_mouth():
                                                   "Try !trump")
             last = trumps_lt_id
 
+async def print_at_midnight():
+    """
+    Prints list at midnight
+    :return:
+    """
+    await _client.wait_until_ready()
+    for channel in _client.get_all_channels():
+        if channel.name == 'general' or channel.name == 'brochat':
+            c_to_send = channel
+            break
+
+    while not _client.is_closed:
+        now = datetime.datetime.now()
+        midnight = now.replace(hour=23, minute=59, second=59, microsecond=59)
+        print("Scheduling next list print at {}".format(midnight))
+        await asyncio.sleep((midnight-now).seconds)
+        await _client.send_message(c_to_send, whos_in.whos_in())
+        await asyncio.sleep(60 * 10)
+
 
 _client.loop.create_task(check_trumps_mouth())
+_client.loop.create_task(print_at_midnight())
 startTime = time()
 _client.run(token)
 
