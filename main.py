@@ -5,12 +5,13 @@ import os
 from sys import stderr
 from random import randint
 import socket
+import datetime
 
 # NonStandard Imports
 import discord
 import asyncio
 from twython import Twython, TwythonError
-from twilio.rest import TwilioRestClient
+from twilio.rest import Client
 import requests
 from gametime import Gametime
 
@@ -57,13 +58,13 @@ def shot_lottery(client_obj, wg_games):
     return output
 
 
-def pretty_date(datetime):
+def pretty_date(dt):
     """
     Takes a datetime and makes it a pretty string.
-    :param datetime:
+    :param dt:
     :return: string
     """
-    return datetime.strftime("%a, %b %d at %H:%M EST")
+    return dt.strftime("%a, %b %d at %H:%M EST")
     # this version has the time, for the future:
     # return datetime.strftime("%a, %b %d at %I:%M %p")
 
@@ -264,17 +265,25 @@ class WeekendGames(object):
         else:
             person_to_add = str(person.display_name)
 
-        if self.gametimes[game_id].find_player_by_name(person_to_add):
-            return "You're already in for that day."
+        game = self.gametimes[game_id]
+
+        if game.find_player_by_name(person_to_add) and \
+           status != game.get_player_status(person_to_add):
+            game.unregister_player(person_to_add)
+
+        if game.find_player_by_name(person_to_add):
+            self.gametimes[game_id] = game
+            return "You're already {} for that day.".format(
+                game.get_player_status(person_to_add))
         else:
-            self.gametimes[game_id].register_player(person_to_add,
-                                                    status=status)
+            game.register_player(person_to_add,
+                                 status=status)
+            self.gametimes[game_id] = game
             self.update_db()
-            return '{} is {} for {}.' \
-                .format(person_to_add,
-                        self.gametimes[game_id].get_player_status(
-                            person_to_add), pretty_date(
-                            self.gametimes[game_id].get_date()))
+            return '{} is {} for {}.'.format(person_to_add,
+                                             game.get_player_status(
+                                                 person_to_add),
+                                             pretty_date(game.get_date()))
 
     def remove(self, person, game_id):
         """
@@ -491,7 +500,7 @@ smmry_api_key = tokens['smmry_api_key']
 # Twilio Tokens
 account_sid = tokens['twilio_account_sid']
 auth_token = tokens['twilio_auth_token']
-twilio_client = TwilioRestClient(account_sid, auth_token)
+twilio_client = Client(account_sid, auth_token)
 
 # Create/Load Local Database
 db_file = 'db.json'
@@ -1220,7 +1229,64 @@ async def on_message(message):
     elif message.content.startswith('@brochat-bot'):
         print(message)
 
+async def check_trumps_mouth():
+    """
+    Waits for an update from the prez
+    :return: None
+    """
+    c_to_send = None
+    await _client.wait_until_ready()
+    last = twitter.get_user_timeline(
+            screen_name='realdonaldtrump',
+            count=1, include_retweets=False)[0]['id']
 
+    for channel in _client.get_all_channels():
+        if channel.name == 'general' or channel.name == 'brochat':
+            c_to_send = channel
+            break
+
+    delay = 30 * 60
+
+    while not _client.is_closed:
+        await asyncio.sleep(delay)
+        print("Checked trump at {}".format(datetime.datetime.now()))
+        try:
+            trumps_lt_id = twitter.get_user_timeline(
+                screen_name='realdonaldtrump', count=1,
+                include_retweets=False)[0]['id']
+        except:
+            print("Error caught in check_trump shortening delay")
+            delay = 10 * 60
+        else:
+            delay = 30 * 60
+            if trumps_lt_id != last:
+                await _client.send_message(c_to_send, "New Message from the "
+                                                      "prez! Try !trump")
+                last = trumps_lt_id
+
+async def print_at_midnight():
+    """
+    Prints list at midnight
+    :return:
+    """
+    c_to_send = None
+    await _client.wait_until_ready()
+    for channel in _client.get_all_channels():
+        if channel.name == 'general' or channel.name == 'brochat':
+            c_to_send = channel
+            break
+
+    while not _client.is_closed:
+        now = datetime.datetime.now()
+        midnight = now.replace(hour=23, minute=59, second=59, microsecond=59)
+        print("Scheduling next list print at {}".format(midnight))
+        await asyncio.sleep((midnight-now).seconds)
+        await _client.send_message(c_to_send, whos_in.whos_in())
+        await asyncio.sleep(60 * 10)
+
+
+_client.loop.create_task(check_trumps_mouth())
+_client.loop.create_task(print_at_midnight())
 startTime = time()
 _client.run(token)
 

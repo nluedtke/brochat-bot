@@ -17,7 +17,7 @@ Below are instructions to set up and run your own brochat-bot.
    you installed main.py.
   3) Run main.py. This will set up a blank database (a lightweight json 
    file) to hold the persistent database.
-  4) If the tokens are set up correctly a brochat-bot should appears. 
+  4) If the tokens are set up correctly a brochat-bot should appear. 
   Type !help to get a list of commands that brochat-bot can handle.
 
 ### Development (How to help)

@@ -165,6 +165,7 @@ class Gametime(object):
     def register_player(self, name, time=None, status=None):
         """
         Registers a player, if applicable.
+        :param status:
         :param name: string name
         :param time: datetime time of arrival, None is "sometime"
         :return: None
@@ -232,7 +233,7 @@ class Gametime(object):
         """
 
         if self.date.weekday() == other.date.weekday() and \
-                        self.time == other.time:
+           self.time == other.time:
             return True
         else:
             return False
