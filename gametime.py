@@ -233,7 +233,7 @@ class Gametime(object):
         """
 
         if self.date.weekday() == other.date.weekday() and \
-                        self.time == other.time:
+           self.time == other.time:
             return True
         else:
             return False
