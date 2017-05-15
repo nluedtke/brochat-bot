@@ -264,17 +264,25 @@ class WeekendGames(object):
         else:
             person_to_add = str(person.display_name)
 
-        if self.gametimes[game_id].find_player_by_name(person_to_add):
-            return "You're already in for that day."
+        game = self.gametimes[game_id]
+
+        if game.find_player_by_name(person_to_add) and \
+           status != game.get_player_status(person_to_add):
+            game.unregister_player(person_to_add)
+
+        if game.find_player_by_name(person_to_add):
+            self.gametimes[game_id] = game
+            return "You're already {} for that day.".format(
+                game.get_player_status(person_to_add))
         else:
-            self.gametimes[game_id].register_player(person_to_add,
-                                                    status=status)
+            game.register_player(person_to_add,
+                                 status=status)
+            self.gametimes[game_id] = game
             self.update_db()
-            return '{} is {} for {}.' \
-                .format(person_to_add,
-                        self.gametimes[game_id].get_player_status(
-                            person_to_add), pretty_date(
-                            self.gametimes[game_id].get_date()))
+            return '{} is {} for {}.'.format(person_to_add,
+                                             game.get_player_status(
+                                                 person_to_add),
+                                             pretty_date(game.get_date()))
 
     def remove(self, person, game_id):
         """
@@ -632,7 +640,7 @@ def get_reddit(subreddit):
         for entry in response_json['data']['children']:
             if entry['data']['stickied'] is True \
                     or (entry['data']['url'][-4:] != '.png' and
-                        entry['data']['url'][-4:] != '.jpg'):
+                                entry['data']['url'][-4:] != '.jpg'):
                 response_json['data']['children'].remove(entry)
         print(str(len(response_json['data']['children'])))
         seed = randint(0, len(response_json['data']['children']) - 1)
@@ -1076,8 +1084,8 @@ async def set_command(client, message):
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
                 (len(arguments[1]) != 12 or
-                 arguments[1][0] != '+' or not
-                 isinstance(int(arguments[1][1:]), int)):
+                         arguments[1][0] != '+' or not
+                isinstance(int(arguments[1][1:]), int)):
             await client.send_message(message.channel,
                                       "You'll need to use the format "
                                       "**+14148888888**"
@@ -1137,7 +1145,7 @@ async def owstats(client, message):
         print("Overwatch API returned a response code of {}".format(
             response_profile.status_code))
         if 'statusCode' in response_profile.json() or \
-           'statusCode' in response_heroes.json():
+                        'statusCode' in response_heroes.json():
             await client.send_message(message.channel,
                                       "Something went wrong. Make sure "
                                       "your battletag is set up like "
