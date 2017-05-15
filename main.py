@@ -1249,7 +1249,7 @@ async def check_trumps_mouth():
 
     while not _client.is_closed:
         await asyncio.sleep(delay)
-        print("Checking trump's mouth now")
+        print("Checked trump at {}".format(datetime.datetime.now()))
         try:
             trumps_lt_id = twitter.get_user_timeline(
                 screen_name='realdonaldtrump', count=1,
