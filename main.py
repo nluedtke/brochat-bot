@@ -6,6 +6,7 @@ from sys import stderr
 from random import randint
 import socket
 import datetime
+import random
 
 # NonStandard Imports
 import discord
@@ -1245,7 +1246,7 @@ async def check_trumps_mouth():
             c_to_send = channel
             break
 
-    delay = 30 * 60
+    delay = 60 * 60
 
     while not _client.is_closed:
         await asyncio.sleep(delay)
@@ -1255,10 +1256,10 @@ async def check_trumps_mouth():
                 screen_name='realdonaldtrump', count=1,
                 include_retweets=False)[0]['id']
         except:
-            print("Error caught in check_trump shortening delay")
+            print("Error caught in check_trump, shortening delay")
             delay = 10 * 60
         else:
-            delay = 30 * 60
+            delay = 60 * 60
             if trumps_lt_id != last:
                 await _client.send_message(c_to_send, "New Message from the "
                                                       "prez! Try !trump")
@@ -1284,9 +1285,47 @@ async def print_at_midnight():
         await _client.send_message(c_to_send, whos_in.whos_in())
         await asyncio.sleep(60 * 10)
 
+async def handle_news():
+    """
+    Handles the news feed
+    :return:
+    """
+
+    news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
+                    'foxnews', 'rueters', 'nprnews', 'usatoday', 'cbsnews',
+                    'abc', 'washingtonpost', 'msnbc', 'cnnlive']
+    c_to_send = None
+    random.shuffle(news_handles)
+    await _client.wait_until_ready()
+    for channel in _client.get_all_channels():
+        if channel.name == 'general' or channel.name == 'brochat':
+            c_to_send = channel
+            break
+
+    delay = 120 * 60
+    while not _client.is_closed:
+        next_source = news_handles.pop(0)
+        news_handles.append(next_source)
+        print("Next news source will be {}".format(next_source))
+        await asyncio.sleep(delay)
+        try:
+            news = twitter.get_user_timeline(
+                screen_name=next_source, count=1,
+                include_retweets=False)
+        except:
+            print("Error caught in news, shortening delay")
+            delay = 30
+        else:
+            delay = 120 * 60
+            await _client.send_message(c_to_send,
+                                       "https://twitter.com/{0}/status/{1}"
+                                       .format(news[0]['user']['screen_name'],
+                                               str(news[0]['id'])))
+
 
 _client.loop.create_task(check_trumps_mouth())
 _client.loop.create_task(print_at_midnight())
+_client.loop.create_task(handle_news())
 startTime = time()
 _client.run(token)
 
