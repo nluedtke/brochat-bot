@@ -1320,7 +1320,7 @@ async def handle_news():
     """
 
     news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
-                    'foxnews', 'rueters', 'nprnews', 'usatoday', 'cbsnews',
+                    'foxnews', 'reuters', 'nprnews', 'usatoday', 'cbsnews',
                     'abc', 'washingtonpost', 'msnbc', 'cnnlive']
     c_to_send = None
     random.shuffle(news_handles)
