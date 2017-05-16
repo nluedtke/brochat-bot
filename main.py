@@ -1334,7 +1334,6 @@ async def handle_news():
 
     delay = 120 * 60
     while not _client.is_closed:
-        delay = 30
         next_source = news_handles.pop(0)
         news_handles.append(next_source)
         print("Next news source will be {}".format(next_source))
