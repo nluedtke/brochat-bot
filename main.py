@@ -20,6 +20,9 @@ VERSION_MAJOR = 1
 VERSION_MINOR = 4
 VERSION_PATCH = 0
 
+# Global toggle for news feed
+NEWS_FEED_ON = True
+
 
 def shot_lottery(client_obj, wg_games):
     """
@@ -269,7 +272,7 @@ class WeekendGames(object):
         game = self.gametimes[game_id]
 
         if game.find_player_by_name(person_to_add) and \
-           status != game.get_player_status(person_to_add):
+                        status != game.get_player_status(person_to_add):
             game.unregister_player(person_to_add)
 
         if game.find_player_by_name(person_to_add):
@@ -594,6 +597,7 @@ async def print_help(client, message):
                   "**!battletag:** I'll tell you your battletag\n" \
                   "**!owstats:** I'll assess your Overwatch performance\n" \
                   "**!whoami:** I'll tell you what I know about you\n" \
+                  "**!toggle-news:** Turn news feed on/off\n" \
                   "**!version:** Print the version of brochat-bot\n" \
                   "**!uptime:** Print how long the bot has been running for\n"
 
@@ -642,7 +646,7 @@ def get_reddit(subreddit):
         for entry in response_json['data']['children']:
             if entry['data']['stickied'] is True \
                     or (entry['data']['url'][-4:] != '.png' and
-                        entry['data']['url'][-4:] != '.jpg'):
+                                entry['data']['url'][-4:] != '.jpg'):
                 response_json['data']['children'].remove(entry)
         print(str(len(response_json['data']['children'])))
         seed = randint(0, len(response_json['data']['children']) - 1)
@@ -1086,8 +1090,8 @@ async def set_command(client, message):
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
                 (len(arguments[1]) != 12 or
-                 arguments[1][0] != '+' or not
-                 isinstance(int(arguments[1][1:]), int)):
+                         arguments[1][0] != '+' or not
+                isinstance(int(arguments[1][1:]), int)):
             await client.send_message(message.channel,
                                       "You'll need to use the format "
                                       "**+14148888888**"
@@ -1124,6 +1128,26 @@ async def whoami(client, message):
                                   "you.".format(author))
 
 
+async def toggle_news(client, message):
+    """
+    Handles !toggle-news
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    global NEWS_FEED_ON
+
+    if NEWS_FEED_ON:
+        NEWS_FEED_ON = False
+        await client.send_message(message.channel,
+                                  "News Feed turned off.")
+    else:
+        NEWS_FEED_ON = True
+        await client.send_message(message.channel,
+                                  "News Feed turned on.")
+
+
 async def owstats(client, message):
     """
     Handles !owstats
@@ -1147,7 +1171,7 @@ async def owstats(client, message):
         print("Overwatch API returned a response code of {}".format(
             response_profile.status_code))
         if 'statusCode' in response_profile.json() or \
-           'statusCode' in response_heroes.json():
+                        'statusCode' in response_heroes.json():
             await client.send_message(message.channel,
                                       "Something went wrong. Make sure "
                                       "your battletag is set up like "
@@ -1218,7 +1242,8 @@ async def on_message(message):
         "set": set_command,
         "whoami": whoami,
         "owstats": owstats,
-        "version": print_version
+        "version": print_version,
+        "toggle-news": toggle_news
     }
 
     if message.content.startswith("!"):
@@ -1230,6 +1255,7 @@ async def on_message(message):
     elif message.content.startswith('@brochat-bot'):
         print(message)
 
+
 async def check_trumps_mouth():
     """
     Waits for an update from the prez
@@ -1238,8 +1264,8 @@ async def check_trumps_mouth():
     c_to_send = None
     await _client.wait_until_ready()
     last = twitter.get_user_timeline(
-            screen_name='realdonaldtrump',
-            count=1, include_retweets=False)[0]['id']
+        screen_name='realdonaldtrump',
+        count=1, include_retweets=False)[0]['id']
 
     for channel in _client.get_all_channels():
         if channel.name == 'general' or channel.name == 'brochat':
@@ -1265,6 +1291,7 @@ async def check_trumps_mouth():
                                                       "prez! Try !trump")
                 last = trumps_lt_id
 
+
 async def print_at_midnight():
     """
     Prints list at midnight
@@ -1281,9 +1308,10 @@ async def print_at_midnight():
         now = datetime.datetime.now()
         midnight = now.replace(hour=23, minute=59, second=59, microsecond=59)
         print("Scheduling next list print at {}".format(midnight))
-        await asyncio.sleep((midnight-now).seconds)
+        await asyncio.sleep((midnight - now).seconds)
         await _client.send_message(c_to_send, whos_in.whos_in())
         await asyncio.sleep(60 * 10)
+
 
 async def handle_news():
     """
@@ -1296,7 +1324,9 @@ async def handle_news():
                     'abc', 'washingtonpost', 'msnbc', 'cnnlive']
     c_to_send = None
     random.shuffle(news_handles)
+    global NEWS_FEED_ON
     await _client.wait_until_ready()
+
     for channel in _client.get_all_channels():
         if channel.name == 'general' or channel.name == 'brochat':
             c_to_send = channel
@@ -1304,23 +1334,25 @@ async def handle_news():
 
     delay = 120 * 60
     while not _client.is_closed:
+        delay = 30
         next_source = news_handles.pop(0)
         news_handles.append(next_source)
         print("Next news source will be {}".format(next_source))
         await asyncio.sleep(delay)
-        try:
-            news = twitter.get_user_timeline(
-                screen_name=next_source, count=1,
-                include_retweets=False)
-        except:
-            print("Error caught in news, shortening delay")
-            delay = 30
-        else:
-            delay = 120 * 60
-            await _client.send_message(c_to_send,
-                                       "https://twitter.com/{0}/status/{1}"
-                                       .format(news[0]['user']['screen_name'],
-                                               str(news[0]['id'])))
+        if NEWS_FEED_ON:
+            try:
+                news = twitter.get_user_timeline(
+                    screen_name=next_source, count=1,
+                    include_retweets=False)
+            except:
+                print("Error caught in news, shortening delay")
+                delay = 30
+            else:
+                delay = 120 * 60
+                await _client.send_message(
+                    c_to_send, "https://twitter.com/{0}/status/{1}"
+                    .format(news[0]['user']['screen_name'],
+                            str(news[0]['id'])))
 
 
 _client.loop.create_task(check_trumps_mouth())
