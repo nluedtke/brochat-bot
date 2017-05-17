@@ -595,7 +595,6 @@ async def print_help(client, message):
                   "**!get-record:** Print the session record\n" \
                   "**!set:** Tell Brochat-Bot some info about you\n" \
                   "**!battletag:** I'll tell you your battletag\n" \
-                  "**!owstats:** I'll assess your Overwatch performance\n" \
                   "**!whoami:** I'll tell you what I know about you\n" \
                   "**!toggle-news:** Turn news feed on/off\n" \
                   "**!version:** Print the version of brochat-bot\n" \
@@ -1241,7 +1240,6 @@ async def on_message(message):
         "battletag": battletag,
         "set": set_command,
         "whoami": whoami,
-        "owstats": owstats,
         "version": print_version,
         "toggle-news": toggle_news
     }
