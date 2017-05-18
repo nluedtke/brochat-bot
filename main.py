@@ -210,6 +210,7 @@ class WeekendGames(object):
                 if new_gametime == game_session:
                     return "There is already a session that time."
             self.gametimes.append(new_gametime)
+            self.gametimes.sort(key=lambda x: x.date)
             self.update_db()
             return "Gametime created for {}.".format(
                 pretty_date(new_gametime.get_date()))
