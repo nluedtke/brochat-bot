@@ -32,9 +32,9 @@ class Gametime(object):
         if json_create:
             self.timezone = pytz.timezone(json_create['timezone'])
             self.created = datetime.datetime.strptime(json_create['created'],
-                                                      "%c")
+                                                      "%c %Z")
             self.game = json_create['game']
-            self.date = datetime.datetime.strptime(json_create['date'], "%c")
+            self.date = datetime.datetime.strptime(json_create['date'], "%c %Z")
             self.time = json_create['time']
             self.snapshot = json_create['snapshot']
             self.players = json_create['players']
@@ -61,9 +61,9 @@ class Gametime(object):
         """
         json_info = {
             "timezone": str(self.timezone),
-            "created": datetime.datetime.strftime(self.created, "%c"),
+            "created": datetime.datetime.strftime(self.created, "%c %Z"),
             "game": self.game,
-            "date": datetime.datetime.strftime(self.date, "%c"),
+            "date": datetime.datetime.strftime(self.date, "%c %Z"),
             "time": self.time,
             "snapshot": self.snapshot,
             "players": self.players
