@@ -128,7 +128,6 @@ class WeekendGames(object):
         self.last = None
         self.consecutive = 0
 
-    # TODO: Sort gametimes by date, ascending
     def get_gametimes(self):
         """
         Get upcoming gametimes.
