@@ -3,10 +3,9 @@ from time import time
 import json
 import os
 from sys import stderr
-from random import randint
+from random import randint, shuffle
 import socket
 import datetime
-import random
 
 # NonStandard Imports
 import discord
@@ -1326,7 +1325,7 @@ async def handle_news():
                     'foxnews', 'reuters', 'npr', 'usatoday', 'cbsnews',
                     'abc', 'washingtonpost', 'msnbc', 'cnnlive']
     c_to_send = None
-    random.shuffle(news_handles)
+    shuffle(news_handles)
     global NEWS_FEED_ON
     await _client.wait_until_ready()
 
