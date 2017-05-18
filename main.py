@@ -23,6 +23,11 @@ VERSION_PATCH = 0
 # Global toggle for news feed
 NEWS_FEED_ON = True
 
+# Delays for Newsfeed and Check_trump, These are in minutes
+# remember that news_del is fuzzed + (0-10)
+trump_del = 30
+news_del = 55
+
 
 def shot_lottery(client_obj, wg_games):
     """
@@ -1270,7 +1275,7 @@ async def check_trumps_mouth():
             c_to_send = channel
             break
 
-    delay = 60 * 60
+    delay = trump_del * 60
 
     while not _client.is_closed:
         await asyncio.sleep(delay)
@@ -1283,7 +1288,7 @@ async def check_trumps_mouth():
             print("Error caught in check_trump, shortening delay")
             delay = 10 * 60
         else:
-            delay = 60 * 60
+            delay = trump_del * 60
             if trumps_lt_id != last:
                 await _client.send_message(c_to_send, "New Message from the "
                                                       "prez! Try !trump")
@@ -1330,7 +1335,7 @@ async def handle_news():
             c_to_send = channel
             break
 
-    delay = (55 * 60) + (randint(0, 10)*60)
+    delay = news_del + (randint(0, 10)*60)
     while not _client.is_closed:
         next_source = news_handles.pop(0)
         news_handles.append(next_source)
@@ -1345,7 +1350,7 @@ async def handle_news():
                 print("Error caught in news, shortening delay")
                 delay = 30
             else:
-                delay = (55 * 60) + (randint(0, 10)*60)
+                delay = news_del + (randint(0, 10)*60)
                 await _client.send_message(
                     c_to_send, "https://twitter.com/{0}/status/{1}"
                     .format(news[0]['user']['screen_name'],
