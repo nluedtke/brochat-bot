@@ -1326,7 +1326,7 @@ async def handle_news():
     await _client.wait_until_ready()
 
     for channel in _client.get_all_channels():
-        if channel.name == 'general' or channel.name == 'brochat':
+        if channel.name == 'general' or channel.name == 'newsfeed':
             c_to_send = channel
             break
 
