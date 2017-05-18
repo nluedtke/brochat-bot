@@ -1323,7 +1323,7 @@ async def handle_news():
 
     news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
                     'foxnews', 'reuters', 'npr', 'usatoday', 'cbsnews',
-                    'abc', 'washingtonpost', 'msnbc', 'cnnlive']
+                    'abc', 'washingtonpost', 'msnbc']
     c_to_send = None
     shuffle(news_handles)
     global NEWS_FEED_ON
