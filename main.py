@@ -1330,7 +1330,7 @@ async def handle_news():
             c_to_send = channel
             break
 
-    delay = 120 * 60
+    delay = (55 * 60) + randint(10)
     while not _client.is_closed:
         next_source = news_handles.pop(0)
         news_handles.append(next_source)
@@ -1345,7 +1345,7 @@ async def handle_news():
                 print("Error caught in news, shortening delay")
                 delay = 30
             else:
-                delay = 120 * 60
+                delay = (55 * 60) + randint(10)
                 await _client.send_message(
                     c_to_send, "https://twitter.com/{0}/status/{1}"
                     .format(news[0]['user']['screen_name'],
