@@ -25,7 +25,7 @@ NEWS_FEED_ON = True
 # Delays for Newsfeed and Check_trump, These are in minutes
 # remember that news_del is fuzzed + (0-10)
 trump_del = 30
-news_del = 55
+news_del = 5
 
 # Variable hold trumps last tweet id
 last_id = 0
