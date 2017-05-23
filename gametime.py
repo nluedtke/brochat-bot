@@ -35,6 +35,7 @@ class Gametime(object):
                                                       "%c")
             self.game = json_create['game']
             self.date = datetime.datetime.strptime(json_create['date'], "%c")
+            self.date = self.date.replace(tzinfo=self.timezone)
             self.time = json_create['time']
             self.snapshot = json_create['snapshot']
             self.players = json_create['players']

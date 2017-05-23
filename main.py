@@ -25,7 +25,10 @@ NEWS_FEED_ON = True
 # Delays for Newsfeed and Check_trump, These are in minutes
 # remember that news_del is fuzzed + (0-10)
 trump_del = 30
-news_del = 55
+news_del = 5
+
+# Variable hold trumps last tweet id
+last_id = 0
 
 
 def shot_lottery(client_obj, wg_games):
@@ -125,7 +128,6 @@ class WeekendGames(object):
         self.last = None
         self.consecutive = 0
 
-    # TODO: Sort gametimes by date, ascending
     def get_gametimes(self):
         """
         Get upcoming gametimes.
@@ -207,6 +209,7 @@ class WeekendGames(object):
                 if new_gametime == game_session:
                     return "There is already a session that time."
             self.gametimes.append(new_gametime)
+            self.gametimes.sort(key=lambda x: x.date)
             self.update_db()
             return "Gametime created for {}.".format(
                 pretty_date(new_gametime.get_date()))
@@ -276,7 +279,7 @@ class WeekendGames(object):
         game = self.gametimes[game_id]
 
         if game.find_player_by_name(person_to_add) and \
-                        status != game.get_player_status(person_to_add):
+           status != game.get_player_status(person_to_add):
             game.unregister_player(person_to_add)
 
         if game.find_player_by_name(person_to_add):
@@ -649,7 +652,7 @@ def get_reddit(subreddit):
         for entry in response_json['data']['children']:
             if entry['data']['stickied'] is True \
                     or (entry['data']['url'][-4:] != '.png' and
-                                entry['data']['url'][-4:] != '.jpg'):
+                        entry['data']['url'][-4:] != '.jpg'):
                 response_json['data']['children'].remove(entry)
         print(str(len(response_json['data']['children'])))
         seed = randint(0, len(response_json['data']['children']) - 1)
@@ -914,6 +917,7 @@ async def get_trump(client, message):
     :param message: The message
     :return: None
     """
+    global last_id
     try:
         trumps_last_tweet = twitter.get_user_timeline(
             screen_name='realdonaldtrump', count=1, include_retweets=False)
@@ -921,6 +925,7 @@ async def get_trump(client, message):
         await client.send_message(message.channel,
                                   "Twitter is acting up, try again later.")
     else:
+        last_id = trumps_last_tweet[0]['id']
         await client.send_message(
             message.channel,
             ':pen_ballpoint::monkey: Trump has been saying things, as '
@@ -1093,8 +1098,8 @@ async def set_command(client, message):
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
                 (len(arguments[1]) != 12 or
-                         arguments[1][0] != '+' or not
-                isinstance(int(arguments[1][1:]), int)):
+                    arguments[1][0] != '+' or not
+                    isinstance(int(arguments[1][1:]), int)):
             await client.send_message(message.channel,
                                       "You'll need to use the format "
                                       "**+14148888888**"
@@ -1174,7 +1179,7 @@ async def owstats(client, message):
         print("Overwatch API returned a response code of {}".format(
             response_profile.status_code))
         if 'statusCode' in response_profile.json() or \
-                        'statusCode' in response_heroes.json():
+           'statusCode' in response_heroes.json():
             await client.send_message(message.channel,
                                       "Something went wrong. Make sure "
                                       "your battletag is set up like "
@@ -1263,9 +1268,10 @@ async def check_trumps_mouth():
     Waits for an update from the prez
     :return: None
     """
+    global last_id
     c_to_send = None
     await _client.wait_until_ready()
-    last = twitter.get_user_timeline(
+    last_id = twitter.get_user_timeline(
         screen_name='realdonaldtrump',
         count=1, include_retweets=False)[0]['id']
 
@@ -1288,10 +1294,10 @@ async def check_trumps_mouth():
             delay = 10 * 60
         else:
             delay = trump_del * 60
-            if trumps_lt_id != last:
+            if trumps_lt_id != last_id:
                 await _client.send_message(c_to_send, "New Message from the "
                                                       "prez! Try !trump")
-                last = trumps_lt_id
+                last_id = trumps_lt_id
 
 
 async def print_at_midnight():
@@ -1335,7 +1341,7 @@ async def handle_news():
             c_to_send = channel
             break
 
-    delay = news_del + (randint(0, 10)*60)
+    delay = (news_del * 60) + (randint(0, 10)*60)
     while not _client.is_closed:
         next_source = news_handles.pop(0)
         news_handles.append(next_source)
@@ -1350,7 +1356,7 @@ async def handle_news():
                 print("Error caught in news, shortening delay")
                 delay = 30
             else:
-                delay = news_del + (randint(0, 10)*60)
+                delay = (news_del * 60) + (randint(0, 10)*60)
                 await _client.send_message(
                     c_to_send, "https://twitter.com/{0}/status/{1}"
                     .format(news[0]['user']['screen_name'],
