@@ -21,12 +21,12 @@ VERSION_MINOR = 5
 VERSION_PATCH = 0
 
 # Global toggle for news feed
-NEWS_FEED_ON = True
+NEWS_FEED_ON = False
 
 # Delays for Newsfeed and Check_trump, These are in minutes
 # remember that news_del is fuzzed + (0-10)
 trump_del = 30
-news_del = 5
+news_del = 55
 
 # Variable hold trumps last tweet id
 last_id = 0
