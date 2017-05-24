@@ -6,6 +6,7 @@ from sys import stderr
 from random import randint, shuffle
 import socket
 import datetime
+from difflib import get_close_matches
 
 # NonStandard Imports
 import discord
@@ -1258,6 +1259,11 @@ async def on_message(message):
         cmd = cmd.split()[0][1:]
         if cmd in commands:
             await commands[cmd](_client, message)
+        else:
+            closest = get_close_matches(cmd, commands)[0]
+            await _client.send_message(message.channel,
+                                       "!{} is not a command, did you mean !{}?"
+                                       .format(cmd, closest))
 
     elif message.content.startswith('@brochat-bot'):
         print(message)
