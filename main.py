@@ -1188,10 +1188,10 @@ async def get_news(client, message):
         except:
             print("Error in get_news, trying another source")
 
-    await _client.send_message(message.channel,
-                               "https://twitter.com/{0}/status/{1}"
-                               .format(news[0]['user']['screen_name'],
-                                       str(news[0]['id'])))
+    await client.send_message(message.channel,
+                              "https://twitter.com/{0}/status/{1}"
+                              .format(news[0]['user']['screen_name'],
+                                      str(news[0]['id'])))
 
 
 async def owstats(client, message):
