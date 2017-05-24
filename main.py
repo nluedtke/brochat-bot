@@ -31,6 +31,12 @@ news_del = 55
 # Variable hold trumps last tweet id
 last_id = 0
 
+# News handles to pull from
+news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
+                'foxnews', 'reuters', 'npr', 'usatoday', 'cbsnews',
+                'abc', 'washingtonpost', 'msnbc', 'ap', 'aphealthscience',
+                'lifehacker', 'cnnnewsroom', 'theonion']
+
 
 def shot_lottery(client_obj, wg_games):
     """
@@ -1333,10 +1339,7 @@ async def handle_news():
     :return:
     """
 
-    news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
-                    'foxnews', 'reuters', 'npr', 'usatoday', 'cbsnews',
-                    'abc', 'washingtonpost', 'msnbc', 'ap', 'aphealthscience',
-                    'lifehacker', 'cnnnewsroom', 'theonion']
+    global news_handles
     c_to_send = None
     shuffle(news_handles)
     global NEWS_FEED_ON
