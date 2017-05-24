@@ -602,6 +602,7 @@ async def print_help(client, message):
                   "**!summary: <url>** I'll summarize a link for you\n" \
                   "**!dankmeme:** I'll fetch you a succulent dank may-may\n" \
                   "**!bertstrip:** I'll ruin your childhood\n" \
+                  "**!news:** I'll grab a news story for you.\n" \
                   "**!text <name>:** Get that fool in the loop\n" \
                   "**!shot-lottery:** Run a shot lottery.\n" \
                   "**!win/!loss/!draw:** Update session record " \
@@ -1167,6 +1168,31 @@ async def toggle_news(client, message):
         await client.send_message(message.channel,
                                   "News Feed turned on.")
 
+async def get_news(client, message):
+    """
+    Handles !news
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    global news_handles
+    shuffle(news_handles)
+    found_art = False
+
+    while not found_art:
+        source = news_handles[0]
+        try:
+            news = twitter.get_user_timeline(screen_name=source, count=1,
+                                             include_retweets=False)
+        except:
+            print("Error in get_news, trying another source")
+
+    await _client.send_message(message.channel,
+                               "https://twitter.com/{0}/status/{1}"
+                               .format(news[0]['user']['screen_name'],
+                                       str(news[0]['id'])))
+
 
 async def owstats(client, message):
     """
@@ -1262,7 +1288,8 @@ async def on_message(message):
         "set": set_command,
         "whoami": whoami,
         "version": print_version,
-        "toggle-news": toggle_news
+        "toggle-news": toggle_news,
+        'news': get_news
     }
 
     if message.content.startswith("!"):
