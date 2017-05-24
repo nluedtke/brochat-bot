@@ -1187,6 +1187,8 @@ async def get_news(client, message):
                                              include_retweets=False)
         except:
             print("Error in get_news, trying another source")
+        else:
+            found_art = True
 
     await client.send_message(message.channel,
                               "https://twitter.com/{0}/status/{1}"
