@@ -22,6 +22,7 @@ VERSION_PATCH = 3
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
+NEWS_FEED_CREATED = False
 
 # Delays for Newsfeed and Check_trump, These are in minutes
 # remember that news_del is fuzzed + (0-10)
@@ -1151,13 +1152,17 @@ async def toggle_news(client, message):
     :param message: The message
     :return: None
     """
-    global NEWS_FEED_ON
+    global NEWS_FEED_ON, NEWS_FEED_CREATED
 
     if NEWS_FEED_ON:
+
         NEWS_FEED_ON = False
         await client.send_message(message.channel,
                                   "News Feed turned off.")
     else:
+        if not NEWS_FEED_CREATED:
+            client.loop.create_task(handle_news())
+            NEWS_FEED_CREATED = True
         NEWS_FEED_ON = True
         await client.send_message(message.channel,
                                   "News Feed turned on.")
@@ -1339,10 +1344,9 @@ async def handle_news():
     :return:
     """
 
-    global news_handles
+    global news_handles, NEWS_FEED_ON
     c_to_send = None
     shuffle(news_handles)
-    global NEWS_FEED_ON
     await _client.wait_until_ready()
 
     for channel in _client.get_all_channels():
@@ -1374,7 +1378,6 @@ async def handle_news():
 
 _client.loop.create_task(check_trumps_mouth())
 _client.loop.create_task(print_at_midnight())
-_client.loop.create_task(handle_news())
 startTime = time()
 _client.run(token)
 
