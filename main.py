@@ -1196,6 +1196,46 @@ async def get_news(client, message):
                                       str(news[0]['id'])))
 
 
+async def change_trump_delay(client, message):
+    """
+    Handles !tdelay
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    global trump_del
+    arguments = argument_parser(message.content)
+
+    if len(arguments) != 1 or arguments[0] == '!tdelay':
+        await client.send_message(message.channel, "Incorrect arguments to set "
+                                                   "delay, try !tdelay <int>")
+    else:
+        trump_del = int(arguments[0])
+        await client.send_message(message.channel, "Trump delay set to {}"
+                                  .format(trump_del))
+
+
+async def change_news_delay(client, message):
+    """
+    Handles !ndelay
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    global news_del
+    arguments = argument_parser(message.content)
+
+    if len(arguments) != 1 or arguments[0] == '!ndelay':
+        await client.send_message(message.channel, "Incorrect arguments to set "
+                                                   "delay, try !ndelay <int>")
+    else:
+        news_del = int(arguments[0])
+        await client.send_message(message.channel, "News delay set to {}"
+                                  .format(news_del))
+
+
 async def owstats(client, message):
     """
     Handles !owstats
@@ -1291,10 +1331,13 @@ async def on_message(message):
         "whoami": whoami,
         "version": print_version,
         "toggle-news": toggle_news,
-        'news': get_news
+        'news': get_news,
+        'tdelay': change_trump_delay,
+        'ndelay': change_news_delay
     }
 
-    if message.content.startswith("!"):
+    if message.content.startswith("!") and \
+       "brochat-bot" not in str(message.author):
         cmd = message.content.lower()
         cmd = cmd.split()[0][1:]
         if cmd in commands:
