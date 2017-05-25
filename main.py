@@ -6,6 +6,7 @@ from sys import stderr
 from random import randint, shuffle
 import socket
 import datetime
+from difflib import get_close_matches
 
 # NonStandard Imports
 import discord
@@ -20,15 +21,22 @@ VERSION_MINOR = 4
 VERSION_PATCH = 3
 
 # Global toggle for news feed
-NEWS_FEED_ON = True
+NEWS_FEED_ON = False
+NEWS_FEED_CREATED = False
 
 # Delays for Newsfeed and Check_trump, These are in minutes
 # remember that news_del is fuzzed + (0-10)
 trump_del = 30
-news_del = 5
+news_del = 55
 
 # Variable hold trumps last tweet id
 last_id = 0
+
+# News handles to pull from
+news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
+                'foxnews', 'reuters', 'npr', 'usatoday', 'cbsnews',
+                'abc', 'washingtonpost', 'msnbc', 'ap', 'aphealthscience',
+                'lifehacker', 'cnnnewsroom', 'theonion']
 
 
 def shot_lottery(client_obj, wg_games):
@@ -594,6 +602,7 @@ async def print_help(client, message):
                   "**!summary: <url>** I'll summarize a link for you\n" \
                   "**!dankmeme:** I'll fetch you a succulent dank may-may\n" \
                   "**!bertstrip:** I'll ruin your childhood\n" \
+                  "**!news:** I'll grab a news story for you.\n" \
                   "**!text <name>:** Get that fool in the loop\n" \
                   "**!shot-lottery:** Run a shot lottery.\n" \
                   "**!win/!loss/!draw:** Update session record " \
@@ -1144,16 +1153,87 @@ async def toggle_news(client, message):
     :param message: The message
     :return: None
     """
-    global NEWS_FEED_ON
+    global NEWS_FEED_ON, NEWS_FEED_CREATED
 
     if NEWS_FEED_ON:
+
         NEWS_FEED_ON = False
         await client.send_message(message.channel,
                                   "News Feed turned off.")
     else:
+        if not NEWS_FEED_CREATED:
+            client.loop.create_task(handle_news())
+            NEWS_FEED_CREATED = True
         NEWS_FEED_ON = True
         await client.send_message(message.channel,
                                   "News Feed turned on.")
+
+async def get_news(client, message):
+    """
+    Handles !news
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    global news_handles
+    shuffle(news_handles)
+    found_art = False
+
+    while not found_art:
+        source = news_handles[0]
+        try:
+            news = twitter.get_user_timeline(screen_name=source, count=1,
+                                             include_retweets=False)
+        except:
+            print("Error in get_news, trying another source")
+        else:
+            found_art = True
+
+    await client.send_message(message.channel,
+                              "https://twitter.com/{0}/status/{1}"
+                              .format(news[0]['user']['screen_name'],
+                                      str(news[0]['id'])))
+
+
+async def change_trump_delay(client, message):
+    """
+    Handles !tdelay
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    global trump_del
+    arguments = argument_parser(message.content)
+
+    if len(arguments) != 1 or arguments[0] == '!tdelay':
+        await client.send_message(message.channel, "Incorrect arguments to set "
+                                                   "delay, try !tdelay <int>")
+    else:
+        trump_del = int(arguments[0])
+        await client.send_message(message.channel, "Trump delay set to {}"
+                                  .format(trump_del))
+
+
+async def change_news_delay(client, message):
+    """
+    Handles !ndelay
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    global news_del
+    arguments = argument_parser(message.content)
+
+    if len(arguments) != 1 or arguments[0] == '!ndelay':
+        await client.send_message(message.channel, "Incorrect arguments to set "
+                                                   "delay, try !ndelay <int>")
+    else:
+        news_del = int(arguments[0])
+        await client.send_message(message.channel, "News delay set to {}"
+                                  .format(news_del))
 
 
 async def owstats(client, message):
@@ -1250,14 +1330,23 @@ async def on_message(message):
         "set": set_command,
         "whoami": whoami,
         "version": print_version,
-        "toggle-news": toggle_news
+        "toggle-news": toggle_news,
+        'news': get_news,
+        'tdelay': change_trump_delay,
+        'ndelay': change_news_delay
     }
 
-    if message.content.startswith("!"):
+    if message.content.startswith("!") and \
+       "brochat-bot" not in str(message.author):
         cmd = message.content.lower()
         cmd = cmd.split()[0][1:]
         if cmd in commands:
             await commands[cmd](_client, message)
+        else:
+            closest = get_close_matches(cmd, commands)[0]
+            await _client.send_message(message.channel,
+                                       "!{} is not a command, did you mean !{}?"
+                                       .format(cmd, closest))
 
     elif message.content.startswith('@brochat-bot'):
         print(message)
@@ -1327,13 +1416,9 @@ async def handle_news():
     :return:
     """
 
-    news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
-                    'foxnews', 'reuters', 'npr', 'usatoday', 'cbsnews',
-                    'abc', 'washingtonpost', 'msnbc', 'ap', 'aphealthscience',
-                    'lifehacker', 'cnnnewsroom', 'theonion']
+    global news_handles, NEWS_FEED_ON
     c_to_send = None
     shuffle(news_handles)
-    global NEWS_FEED_ON
     await _client.wait_until_ready()
 
     for channel in _client.get_all_channels():
@@ -1365,7 +1450,6 @@ async def handle_news():
 
 _client.loop.create_task(check_trumps_mouth())
 _client.loop.create_task(print_at_midnight())
-_client.loop.create_task(handle_news())
 startTime = time()
 _client.run(token)
 
