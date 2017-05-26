@@ -6,6 +6,6 @@ RUN apt-get update && \
     apt-get remove -y python-pip && \
     rm -rf /var/lib/apt/lists/*
 
-COPY db.json gametime.py main.py tokens.config .
+COPY db.json gametime.py main.py tokens.config ./
 ENTRYPOINT ["python3", "main.py"]
 

@@ -20,6 +20,17 @@ Below are instructions to set up and run your own brochat-bot.
   4) If the tokens are set up correctly a brochat-bot should appear. 
   Type !help to get a list of commands that brochat-bot can handle.
 
+#### Docker Container
+With docker running in the top level git dir:
+```
+docker build -t <NAME OF IMAGE> .
+```
+will build the container
+```
+docker run -d --restart=always --name <NAME OF CONTAINER> <NAME OF IMAGE>
+```
+will run the container
+
 ### Development (How to help)
 Currently development is done on the master branch and stable releases 
 are released and deployed through tags. This will change as the code 
