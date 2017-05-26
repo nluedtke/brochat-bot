@@ -1343,10 +1343,16 @@ async def on_message(message):
         if cmd in commands:
             await commands[cmd](_client, message)
         else:
-            closest = get_close_matches(cmd, commands)[0]
-            await _client.send_message(message.channel,
-                                       "!{} is not a command, did you mean !{}?"
-                                       .format(cmd, closest))
+            try:
+                closest = get_close_matches(cmd, commands)[0]
+            except IndexError:
+                await _client.send_message(message.channel,
+                                           "!{} is not a known command."
+                                           .format(cmd))
+            else:
+                await _client.send_message(message.channel,
+                                           "!{} is not a command, did you mean "
+                                           "!{}?".format(cmd, closest))
 
     elif message.content.startswith('@brochat-bot'):
         print(message)
