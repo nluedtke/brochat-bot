@@ -27,8 +27,7 @@ docker build -t <NAME OF IMAGE> .
 ```
 will build the container
 ```
-docker run -d --restart=always --name <NAME OF CONTAINER> <NAME OF
-IMAGE>
+docker run -d --restart=always --name <NAME OF CONTAINER> <NAME OF IMAGE>
 ```
 will run the container
 
