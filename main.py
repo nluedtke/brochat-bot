@@ -7,6 +7,7 @@ from random import randint, shuffle
 import socket
 import datetime
 from difflib import get_close_matches
+import pytz
 
 # NonStandard Imports
 import discord
@@ -1408,9 +1409,12 @@ async def print_at_midnight():
             break
 
     while not _client.is_closed:
-        now = datetime.datetime.now()
+        now = datetime.datetime.now().replace(
+            tzinfo=pytz.timezone('US/Eastern'))
         midnight = now.replace(hour=23, minute=59, second=59, microsecond=59)
-        print("Scheduling next list print at {}".format(midnight))
+        if now > midnight:
+            midnight = midnight.replace(day=(now.day + 1))
+        print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
         await _client.send_message(c_to_send, whos_in.whos_in())
         await asyncio.sleep(60 * 10)
