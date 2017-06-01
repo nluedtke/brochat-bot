@@ -1426,7 +1426,7 @@ async def handle_news():
     :return:
     """
 
-    global news_handles, NEWS_FEED_ON
+    global news_handles, NEWS_FEED_ON, NEWS_FEED_CREATED
     c_to_send = None
     shuffle(news_handles)
     await _client.wait_until_ready()
@@ -1456,6 +1456,10 @@ async def handle_news():
                     c_to_send, "https://twitter.com/{0}/status/{1}"
                     .format(news[0]['user']['screen_name'],
                             str(news[0]['id'])))
+        else:
+            NEWS_FEED_CREATED = False
+            print("Destroying News Feed Task")
+            return
 
 
 _client.loop.create_task(check_trumps_mouth())
