@@ -591,31 +591,31 @@ async def print_help(client, message):
     :return: None
     """
     help_string = "Here are some things I can help you with:\n\n" \
-                  "**!ham:** I'll tell you what we're gonna get\n" \
+                  "**!ham**: I'll tell you what we're gonna get\n" \
                   "**!gametime**: I'll add, list, and manage gametimes!\n" \
-                  "**!in:<sessionid>** Sign up for a game session\n" \
-                  "**!out:<sessionid>** Remove yourself from a session\n" \
-                  "**!possible:<sessionid>** Sign up, tentatively for a " \
+                  "**!in <sessionid>**: Sign up for a game session\n" \
+                  "**!out <sessionid>**: Remove yourself from a session\n" \
+                  "**!possible <sessionid>**: Sign up, tentatively for a " \
                   "session\n" \
-                  "**!whosin:** See who's in for gaming sessions\n" \
-                  "**!trump:** I'll show you Trump's latest Yuge " \
+                  "**!whosin**: See who's in for gaming sessions\n" \
+                  "**!trump**: I'll show you Trump's latest Yuge " \
                   "success!\n" \
-                  "**!summary: <url>** I'll summarize a link for you\n" \
-                  "**!dankmeme:** I'll fetch you a succulent dank may-may\n" \
-                  "**!bertstrip:** I'll ruin your childhood\n" \
-                  "**!news:** I'll grab a news story for you.\n" \
-                  "**!text <name>:** Get that fool in the loop\n" \
-                  "**!shot-lottery:** Run a shot lottery.\n" \
-                  "**!win/!loss/!draw:** Update session record " \
+                  "**!summary <url>**: I'll summarize a link for you\n" \
+                  "**!dankmeme**: I'll fetch you a succulent dank may-may\n" \
+                  "**!bertstrip**: I'll ruin your childhood\n" \
+                  "**!news**: I'll grab a news story for you.\n" \
+                  "**!text <name>**: Get that fool in the loop\n" \
+                  "**!shot-lottery**: Run a shot lottery.\n" \
+                  "**!win/!loss/!draw**: Update session record " \
                   "appropriately\n" \
-                  "**!clear-record:** Clear the session record\n" \
-                  "**!get-record:** Print the session record\n" \
-                  "**!set:** Tell Brochat-Bot some info about you\n" \
-                  "**!battletag:** I'll tell you your battletag\n" \
-                  "**!whoami:** I'll tell you what I know about you\n" \
-                  "**!toggle-news:** Turn news feed on/off\n" \
-                  "**!version:** Print the version of brochat-bot\n" \
-                  "**!uptime:** Print how long the bot has been running for\n"
+                  "**!clear-record**: Clear the session record\n" \
+                  "**!get-record**: Print the session record\n" \
+                  "**!set**: Tell Brochat-Bot some info about you\n" \
+                  "**!battletag**: I'll tell you your battletag\n" \
+                  "**!whoami**: I'll tell you what I know about you\n" \
+                  "**!toggle-news**: Turn news feed on/off\n" \
+                  "**!version**: Print the version of brochat-bot\n" \
+                  "**!uptime**: Print how long the bot has been running for\n"
 
     await client.send_message(message.channel, help_string)
 
