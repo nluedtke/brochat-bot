@@ -1409,8 +1409,7 @@ async def print_at_midnight():
             break
 
     while not _client.is_closed:
-        now = datetime.datetime.now().replace(
-            tzinfo=pytz.timezone('US/Eastern'))
+        now = datetime.datetime.now(pytz.timezone('US/Eastern'))
         midnight = now.replace(hour=23, minute=59, second=59, microsecond=59)
         if now > midnight:
             midnight = midnight.replace(day=(now.day + 1))
