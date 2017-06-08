@@ -927,7 +927,6 @@ async def get_trump(client, message):
     :param message: The message
     :return: None
     """
-    global last_id
     twitter_id = 'realdonaldtrump'
     tweet_text = \
         ':pen_ballpoint::monkey: Trump has been saying things, as ' \
@@ -936,7 +935,11 @@ async def get_trump(client, message):
         ':pen_ballpoint::monkey: Trump has been repeating things, as ' \
         'usual... (RT ALERT)'
 
-    return await get_last_tweet(twitter_id, tweet_text, rt_text, client, message)
+    try:
+        await get_last_tweet(twitter_id, tweet_text, rt_text, client, message)
+    except TwythonError:
+        await client.send_message(message.channel,
+                                  "Twitter is acting up, try again later.")
 
 async def get_last_tweet(id, tweet_text, rt_text, client, message):
     """
@@ -955,9 +958,8 @@ async def get_last_tweet(id, tweet_text, rt_text, client, message):
     try:
         last_tweet = twitter.get_user_timeline(
             screen_name=id, count=1, include_retweets=True)
-    except TwythonError:
-        await client.send_message(message.channel,
-                                  "Twitter is acting up, try again later.")
+    except TwythonError as e:
+        raise e
     else:
         # if it's a retweet, send the original tweet
         if 'retweeted_status' in last_tweet[0]:
@@ -1222,14 +1224,16 @@ async def get_news(client, message):
     found_art = False
 
     while not found_art:
-        source = news_handles[0]
+        source = news_handles.pop(0)
+        news_handles.append(source)
         tweet_text = "It looks like @" + source + " is reporting:"
         rt_text = "It looks like @" + source + " is retweeting:"
-        # TODO: Make this less awful.
+
         try:
             await get_last_tweet(source, tweet_text, rt_text, client, message)
-        except:
+        except TwythonError:
             print("Error in get_news, trying another source")
+
         else:
             found_art = True
 
