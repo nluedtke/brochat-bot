@@ -13,7 +13,7 @@ import pytz
 import discord
 import asyncio
 from twython import Twython, TwythonError
-from twilio.rest import Client
+#from twilio.rest import Client
 import requests
 from gametime import Gametime
 
@@ -520,7 +520,7 @@ smmry_api_key = tokens['smmry_api_key']
 # Twilio Tokens
 account_sid = tokens['twilio_account_sid']
 auth_token = tokens['twilio_auth_token']
-twilio_client = Client(account_sid, auth_token)
+#twilio_client = Client(account_sid, auth_token)
 
 # Create/Load Local Database
 db_file = 'db.json'
@@ -928,21 +928,61 @@ async def get_trump(client, message):
     :return: None
     """
     global last_id
+    twitter_id = 'realdonaldtrump'
+    tweet_text = \
+        ':pen_ballpoint::monkey: Trump has been saying things, as ' \
+        'usual...'
+    rt_text = \
+        ':pen_ballpoint::monkey: Trump has been repeating things, as ' \
+        'usual... (RT ALERT)'
+
+    return await get_last_tweet(twitter_id, tweet_text, rt_text, client, message)
+
+async def get_last_tweet(id, tweet_text, rt_text, client, message):
+    """
+    Gets the last tweet for id.
+    :param id:
+    :param tweet_text: flavor text for tweets
+    :param rt_text: flavor text for retweets
+    :param client: discord client
+    :param message: discord message
+    :return:
+    """
+
+    if id == 'realdonaldtrump':
+        global last_id
+
     try:
-        trumps_last_tweet = twitter.get_user_timeline(
-            screen_name='realdonaldtrump', count=1, include_retweets=False)
+        last_tweet = twitter.get_user_timeline(
+            screen_name=id, count=1, include_retweets=True)
     except TwythonError:
         await client.send_message(message.channel,
                                   "Twitter is acting up, try again later.")
     else:
-        last_id = trumps_last_tweet[0]['id']
-        await client.send_message(
-            message.channel,
-            ':pen_ballpoint::monkey: Trump has been saying things, as '
-            'usual...\n\n'
-            'https://twitter.com/{}/status/{}'.format(
-                trumps_last_tweet[0]['user']['screen_name'],
-                str(trumps_last_tweet[0]['id'])))
+        # if it's a retweet, send the original tweet
+        if 'retweeted_status' in last_tweet[0]:
+            if id == 'realdonaldtrump':
+                last_id = last_tweet[0]['id']
+            rt_id = last_tweet[0]['retweeted_status']['id']
+            rt_screen_name = last_tweet[0]['retweeted_status']['user']['screen_name']
+            await client.send_message(
+                message.channel,
+                '{}\n\n'
+                'https://twitter.com/{}/status/{}'.format(
+                    rt_text,
+                    rt_screen_name,
+                    str(rt_id)))
+        # otherwise, send the tweet
+        else:
+            if id == 'realdonaldtrump':
+                last_id = last_tweet[0]['id']
+            await client.send_message(
+                message.channel,
+                '{}\n\n'
+                'https://twitter.com/{}/status/{}'.format(
+                    tweet_text,
+                    last_tweet[0]['user']['screen_name'],
+                    str(last_tweet[0]['id'])))
 
 
 async def run_shot_lottery(client, message):
@@ -1183,19 +1223,17 @@ async def get_news(client, message):
 
     while not found_art:
         source = news_handles[0]
+        tweet_text = "It looks like @" + source + " is reporting:"
+        rt_text = "It looks like @" + source + " is retweeting:"
+        # TODO: Make this less awful.
         try:
-            news = twitter.get_user_timeline(screen_name=source, count=1,
-                                             include_retweets=False)
+            await get_last_tweet(source, tweet_text, rt_text, client, message)
         except:
             print("Error in get_news, trying another source")
         else:
             found_art = True
 
-    await client.send_message(message.channel,
-                              "https://twitter.com/{0}/status/{1}"
-                              .format(news[0]['user']['screen_name'],
-                                      str(news[0]['id'])))
-
+    return
 
 async def change_trump_delay(client, message):
     """
