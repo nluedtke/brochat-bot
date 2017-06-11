@@ -121,7 +121,7 @@ class WeekendGames(object):
                 self.gametimes.append(Gametime(json_create=gt))
 
         self.c_win = 0
-        self.c_los = 0
+        self.c_loss = 0
         self.c_draw = 0
         if 'c_win' in db:
             self.c_win = db['c_win']
