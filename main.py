@@ -18,8 +18,8 @@ import requests
 from gametime import Gametime
 
 VERSION_MAJOR = 2
-VERSION_MINOR = 1
-VERSION_PATCH = 2
+VERSION_MINOR = 2
+VERSION_PATCH = 0
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
