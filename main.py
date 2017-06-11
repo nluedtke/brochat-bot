@@ -128,7 +128,7 @@ class WeekendGames(object):
         if 'c_loss' in db:
             self.c_loss = db['c_loss']
         if 'c_draw' in db:
-            self.c_win = db['c_draw']
+            self.c_draw = db['c_draw']
 
         # non persistent variables
         self.wins = 0
