@@ -1336,6 +1336,16 @@ async def owstats(client, message):
 
 
 @_client.event
+async def on_message_edit(before, after):
+    """
+    Asynchronous event handler for edit
+
+    return: None
+    """
+    await on_message(after)
+
+
+@_client.event
 async def on_message(message):
     """
     Asynchronous event handler for incoming message
