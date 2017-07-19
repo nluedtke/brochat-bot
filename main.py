@@ -267,7 +267,7 @@ class WeekendGames(object):
         """
         Adds a person to the specified gametime
 
-        :param status:
+        :param status: Status to mark for player
         :param person: person to add
         :param game_id: list id of the gametime in gametimes
         :return: string to print to chat
@@ -597,6 +597,8 @@ async def print_help(client, message):
                   "**!out <sessionid>**: Remove yourself from a session\n" \
                   "**!possible <sessionid>**: Sign up, tentatively for a " \
                   "session\n" \
+                  "**!late <sessionid>**: Sign up, but will be late for a " \
+                  "session\n" \
                   "**!whosin**: See who's in for gaming sessions\n" \
                   "**!trump**: I'll show you Trump's latest Yuge " \
                   "success!\n" \
@@ -848,6 +850,29 @@ async def possible_command(client, message):
         await client.send_message(message.channel,
                                   whos_in.add(message.author, arguments[0],
                                               status="possible"))
+    else:
+        await client.send_message(message.channel,
+                                  "You'll need to be more specific :smile:")
+
+
+async def late_command(client, message):
+    """
+    Handles !late actions
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+    if len(arguments) != 1 or arguments[0].lower() == "!late":
+        await client.send_message(message.channel,
+                                  "For what session are you going to be late "
+                                  "for, though?\n\n{}"
+                                  .format(whos_in.get_gametimes()))
+    elif len(arguments) == 1:
+        await client.send_message(message.channel,
+                                  whos_in.add(message.author, arguments[0],
+                                              status="going to be late"))
     else:
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
@@ -1368,6 +1393,7 @@ async def on_message(message):
         "gametime": gametime,
         "in": in_command,
         "possible": possible_command,
+        "late": late_command,
         "out": out_command,
         "whosin": whosin_command,
         "text": send_text,
