@@ -40,12 +40,13 @@ news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
                 'lifehacker', 'cnnnewsroom', 'theonion']
 
 
-def shot_lottery(client_obj, wg_games):
+def shot_lottery(client_obj, wg_games, auto_call=False):
     """
     Run a shot lottery
 
     :param client_obj: client object to use
     :param wg_games: WeekendGames object to use
+    :param auto_call: Was this called from a win?
     :rtype: list
     :return: Array of strings for the shot lottery
     """
@@ -54,9 +55,23 @@ def shot_lottery(client_obj, wg_games):
               "\n{} won the last lottery!".format(whos_in.last_shot),
               "...The tension is rising..."]
     players = []
-    for m in client_obj.get_all_members():
-        if str(m.status) == 'online' and str(m.display_name) != 'brochat-bot':
+
+    if auto_call:
+        largest_num_in_voice = 0
+        for channel in _client.get_all_channels():
+            if str(channel.type) == "voice" and len(channel.voice_members) \
+                    > largest_num_in_voice:
+                largest_num_in_voice = len(channel.voice_members)
+                channel_to_use = channel
+        for m in channel_to_use.voice_members:
             players.append(m.display_name)
+
+    if not auto_call or len(players) < 1:
+        for m in client_obj.get_all_members():
+            if str(m.status) == 'online' and str(m.display_name) \
+                    != 'brochat-bot':
+                players.append(m.display_name)
+
     output.append("{} have been entered in the SHOT LOTTERY good luck!"
                   .format(players))
     players.append('SOCIAL!')
@@ -1012,18 +1027,19 @@ async def get_last_tweet(id, tweet_text, rt_text, client, message):
                     str(last_tweet[0]['id'])))
 
 
-async def run_shot_lottery(client, message):
+async def run_shot_lottery(client, message, auto_call=False):
     """
     Runs a shot-lottery
 
     :param client: The Client
     :param message: The message
+    :param auto_call: Called from win?
     :return: None
     """
     if not whos_in.is_lottery_time():
         await client.send_message(message.channel, "Too soon for shots...")
     else:
-        shot_lottery_string = shot_lottery(client, whos_in)
+        shot_lottery_string = shot_lottery(client, whos_in, auto_call)
         for x in range(4):
             await client.send_message(message.channel,
                                       shot_lottery_string.pop(0))
@@ -1062,7 +1078,7 @@ async def record_win(client, message):
         await trigger_social(client, message)
         whos_in.consecutive = 0
     else:
-        await run_shot_lottery(client, message)
+        await run_shot_lottery(client, message, True)
 
 
 async def record_loss(client, message):
