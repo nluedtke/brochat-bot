@@ -16,6 +16,7 @@ from twython import Twython, TwythonError
 from twilio.rest import Client
 import requests
 from gametime import Gametime
+from poll import Poll
 
 VERSION_MAJOR = 2
 VERSION_MINOR = 3
@@ -151,6 +152,7 @@ class WeekendGames(object):
         self.losses = 0
         self.last = None
         self.consecutive = 0
+        self.poll = None
 
     def get_gametimes(self):
         """
@@ -179,7 +181,7 @@ class WeekendGames(object):
         """
         Routes a gametime action, specified in the second
         argument, ex !gametime <add> Sunday
-        :param message:
+        :param message: Containing Arguments
         :return: string response to print to chat.
         """
         arguments = argument_parser(message)
@@ -217,6 +219,53 @@ class WeekendGames(object):
                 except KeyError:
                     return gametime_help_string
         return gametime_help_string
+
+    def poll_actions(self, message):
+        """
+        Handles Poll creation/deletion
+
+        :param message: Containing arguments
+        :return: string response to print to chat.
+        """
+        arguments = argument_parser(message)
+
+        poll_help_string = \
+            "That's not a valid command for **!poll**\n\n" \
+            "Please use:\n" \
+            "!poll start \"option 1\" \"option 2\" etc... to **start a " \
+            "poll**\n" \
+            "!poll stop to **delete the current poll**"
+        valid_commands = {
+            "start": self.create_poll,
+            "stop": self.stop_poll,
+        }
+        if arguments[0] in valid_commands:
+            return valid_commands[arguments[0]](" ".join(arguments[1:]))
+        return poll_help_string
+
+    def create_poll(self, options):
+        """
+        Creates a poll if one is not already running
+
+        :param options: Options for the poll
+        """
+
+        if self.poll is not None:
+            return "Can't start poll, one is running try !poll stop first"
+        self.poll = Poll(options)
+        return self.poll.get_current_state()
+
+    def stop_poll(self, options):
+        """
+        Stops a poll
+        """
+
+        if self.poll is None:
+            return "No poll running"
+        out_str = self.poll.get_current_state()
+        out_str += "Poll Stopped"
+        self.poll = None
+        return out_str
 
     def create_gametime(self, day, start_time=None):
         """
@@ -825,6 +874,16 @@ async def gametime(client, message):
     await client.send_message(message.channel, whos_in.gametime_actions(
         message.content))
 
+async def poll(client, message):
+    """
+    Handles poll actions
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    await client.send_message(message.channel, whos_in.poll_actions(
+        message.content))
 
 async def in_command(client, message):
     """
@@ -846,6 +905,34 @@ async def in_command(client, message):
     else:
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
+
+async def add_vote(client, message):
+    """
+    Handles !vote actions
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    if whos_in.poll is None:
+        await client.send_message(message.channel,
+                                  "No Poll currently taking place")
+
+    arguments = argument_parser(message.content)
+    if len(arguments) != 1 or arguments[0].lower() == "!vote":
+        await client.send_message(message.channel,
+                                  "What are you voting for, though?\n\n{}"
+                                  .format(whos_in.poll.get_current_state()))
+    elif len(arguments) == 1:
+        try:
+            await client.send_message(message.channel,
+                                      whos_in.poll.add_vote(arguments[0]))
+        except IndexError:
+            await client.send_message(message.channel,
+                                      "Not a valid option!")
+    else:
+        await client.send_message(message.channel, "You'll need to be more "
+                                                   "specific :smile:")
 
 
 async def possible_command(client, message):
@@ -1428,7 +1515,9 @@ async def on_message(message):
         "toggle-news": toggle_news,
         'news': get_news,
         'tdelay': change_trump_delay,
-        'ndelay': change_news_delay
+        'ndelay': change_news_delay,
+        'poll': poll,
+        'vote': add_vote
     }
 
     if message.content.startswith("!") and \
