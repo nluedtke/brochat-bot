@@ -19,7 +19,7 @@ from gametime import Gametime
 
 VERSION_MAJOR = 2
 VERSION_MINOR = 3
-VERSION_PATCH = 0
+VERSION_PATCH = 1
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
