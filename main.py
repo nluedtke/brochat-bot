@@ -263,6 +263,8 @@ class WeekendGames(object):
     def stop_poll(self, options):
         """
         Stops a poll
+
+        :param options: Unused variable
         """
 
         if self.poll is None:
@@ -1051,6 +1053,45 @@ async def send_text(client, message):
                                       'Could not send text message!')
 
 
+async def shot_duel(client, message):
+    """
+    Creates a duel
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+
+    members = client.get_all_members()
+
+    map_disp_to_name = {}
+
+    for m in members:
+        map_disp_to_name[m.display_name] = m
+
+    if len(arguments) != 1 or arguments[0] == '!shot-duel':
+        await client.send_message(message.channel,
+                                  'Who do you want to duel?')
+    elif arguments[0] not in map_disp_to_name:
+        await client.send_message(message.channel,
+                                  'That\'s not a real person...')
+    elif arguments[0] == 'brochat-bot':
+        await client.send_message(message.channel,
+                                  'brochat-bot would drink you under the '
+                                  'table try another person!')
+    elif str(map_disp_to_name[arguments[0]].status) != 'online':
+        await client.send_message(message.channel,
+                                  'That person is likely already passed out!')
+    else:
+        await client.send_message(message.channel,
+                                  'The challenge has been laid down!\n'
+                                  '{}, {} has asked you to duel!\n'
+                                  'Do you accept?!?!?! (!yes or !no)'
+                                  .format(map_disp_to_name[arguments[
+                                      0]].mention, message.author.display_name))
+
+
 async def get_trump(client, message):
     """
     Gets a presidential tweet
@@ -1522,7 +1563,8 @@ async def on_message(message):
         'tdelay': change_trump_delay,
         'ndelay': change_news_delay,
         'poll': poll,
-        'vote': add_vote
+        'vote': add_vote,
+        'shot-duel': shot_duel
     }
 
     if message.content.startswith("!") and \
