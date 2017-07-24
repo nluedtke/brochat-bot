@@ -40,6 +40,11 @@ news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
                 'abc', 'washingtonpost', 'msnbc', 'ap', 'aphealthscience',
                 'lifehacker', 'cnnnewsroom', 'theonion']
 
+# Shot_duel acceptance and active
+accepted = False
+shot_duel_running = False
+vict_name = ""
+
 
 def shot_lottery(client_obj, wg_games, auto_call=False):
     """
@@ -1060,6 +1065,15 @@ async def shot_duel(client, message):
     :param message: The message
     :return: None
     """
+
+    global shot_duel_running
+
+    if shot_duel_running:
+        await client.send_message(message.channel,
+                                  'There is a duel already running, wait your '
+                                  'turn to challenge someone!')
+        return
+
     arguments = argument_parser(message.content)
 
     members = client.get_all_members()
@@ -1083,13 +1097,8 @@ async def shot_duel(client, message):
         await client.send_message(message.channel,
                                   'That person is likely already passed out!')
     else:
-        await client.send_message(message.channel,
-                                  'The challenge has been laid down!\n'
-                                  '{}, {} has asked you to duel!\n'
-                                  'Do you accept?!?!?! (!yes or !no)'
-                                  .format(map_disp_to_name[arguments[
-                                      0]].mention, message.author.display_name))
-
+        client.loop.create_task(event_handle_shot_duel(
+            message.author, map_disp_to_name[arguments[0]], message.channel))
 
 async def get_trump(client, message):
     """
@@ -1431,6 +1440,20 @@ async def change_trump_delay(client, message):
         await client.send_message(message.channel, "Trump delay set to {}"
                                   .format(trump_del))
 
+async def toggle_accept(client, message):
+    """
+    Logs an accept command
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    global accepted, vict_name, shot_duel_running
+
+    if shot_duel_running and message.author.display_name == vict_name:
+        accepted = True
+    else:
+        await client.send_message(message.channel, "You weren't challenged!")
 
 async def change_news_delay(client, message):
     """
@@ -1563,7 +1586,8 @@ async def on_message(message):
         'ndelay': change_news_delay,
         'poll': poll,
         'vote': add_vote,
-        'shot-duel': shot_duel
+        'shot-duel': shot_duel,
+        'accept': toggle_accept
     }
 
     if message.content.startswith("!") and \
@@ -1688,6 +1712,45 @@ async def handle_news():
             NEWS_FEED_CREATED = False
             print("Destroying News Feed Task")
             return
+
+async def event_handle_shot_duel(challenger, victim, channel):
+    """
+    Handles a shot_duel should a victim accept.
+
+    :param challenger: Person challenging
+    :param victim: Person challenged
+    :param channel: challenge duel is taking place in
+    :return: None
+    """
+    global shot_duel_running, accepted, vict_name
+    shot_duel_running = True
+    vict_name = victim.display_name
+    await _client.wait_until_ready()
+    await _client.send_message(channel,
+                               'The challenge has been laid down!\n'
+                               '{}, {} has asked you to duel!\n'
+                               'Do you accept?!?!?! (!accept)\n'
+                               'You have 60 seconds to decide.'
+                               .format(victim.mention, challenger.display_name))
+
+    waited = 10
+    while waited < 60:
+        await asyncio.sleep(10)
+        waited += 10
+        if accepted:
+            await _client.send_message(channel, "Duel Accepted! Here we go!")
+            break
+
+    if not accepted:
+        await _client.send_message(channel,
+                                   "Shot duel not accepted! Clearly {} is "
+                                   "better than {}."
+                                   .format(victim.display_name,
+                                           challenger.display_name))
+
+    shot_duel_running = False
+    accepted = False
+    vict_name = ""
 
 
 _client.loop.create_task(check_trumps_mouth())
