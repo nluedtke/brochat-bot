@@ -81,8 +81,13 @@ def shot_lottery(client_obj, wg_games, auto_call=False):
                   .format(len(players) - 1))
     winner = randint(0, len(players) - 1)
     if players[winner] != 'SOCIAL!':
-        output.append("The winning number is {}, Congrats {} you WIN!\n"
-                      ":beers: Take your shot!".format(winner, players[winner]))
+        for m in client_obj.get_all_members():
+            if str(m.display_name) == players[winner]:
+                tag_id = m.mention
+                break
+        output.append("The winning number is {}, Congrats {} ({}) you WIN!\n"
+                      ":beers: Take your shot!".format(winner,
+                                                       players[winner], tag_id))
         consecutive = wg_games.add_shot_win(players[winner])
         if consecutive > 1:
             output.append("That's {} in a row!".format(consecutive))
