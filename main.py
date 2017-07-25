@@ -1713,6 +1713,13 @@ async def handle_news():
             print("Destroying News Feed Task")
             return
 
+async def dual_dice_roll():
+    """
+    Return two dice rolls
+    """
+
+    return randint(1, 6), randint(1, 6)
+
 async def event_handle_shot_duel(challenger, victim, channel):
     """
     Handles a shot_duel should a victim accept.
@@ -1738,58 +1745,61 @@ async def event_handle_shot_duel(challenger, victim, channel):
         await asyncio.sleep(10)
         waited += 10
         if accepted:
-            win_num = randint(1, 6)
             await _client.send_message(channel, "Duel Accepted! Here we go!\n"
-                                                "First to roll a {} "
-                                                "wins.".format(win_num))
-            winners = [win_num]
-            players = [challenger, victim]
-            shuffle(players)
-            await _client.send_message(channel, "{} goes first!"
-                                       .format(players[0].display_name))
-            counter = 0
-            await asyncio.sleep(10)
-            while True:
-                roll = randint(1, 6)
-                counter += 1
-                await _client.send_message(channel,
-                                           "{} Rolls! :game_die: out!"
-                                           .format(players[0].display_name))
-                await asyncio.sleep(4 + randint(1, 3))
-                await _client.send_message(channel,
-                                           "The roll is a {}!".format(roll))
-                if roll in winners:
-                    await _client.send_message(channel,
-                                               "{} wins! {} take your shot!"
-                                               .format(players[0].display_name,
-                                                       players[1].mention))
-                    break
-                else:
-                    await asyncio.sleep(2 + randint(1, 3))
-                    players.append(players.pop(0))
-                    await _client.send_message(channel, "{} goes next!"
-                                               .format(players[0].display_name))
-                    await asyncio.sleep(4 + randint(1, 3))
-                if counter % 2 == 0:
-                    if len(winners) < 5:
-                        new_win = randint(1, 6)
-                        while new_win in winners:
-                            new_win = randint(1, 6)
-                        winners.append(new_win)
-                        await _client.send_message(channel,
-                                                   "No winners that round!\n "
-                                                   "Adding {} to the winning "
-                                                   "numbers.\n"
-                                                   "A roll of {} wins!"
-                                                   .format(new_win, winners))
-                        delay = 19 + randint(1, 10)
-                        await _client.send_message(channel,
-                                                   "Gathering :game_die:, "
-                                                   "next round in {} "
-                                                   "seconds.".format(
-                                                       delay))
-                        await asyncio.sleep(delay)
+                                                "Both Players have 12 life\n"
+                                                "Good Luck")
+            c_total = []
+            v_total = []
+            round = 1
 
+            while True:
+                await asyncio.sleep(10)
+                await _client.send_message(channel, "Round {}!".format(round))
+                c_roll, v_roll = await dual_dice_roll()
+                c_total.append(c_roll)
+                v_total.append(v_roll)
+                await _client.send_message(channel,
+                                           "{} rolled a {}\n"
+                                           "{} rolled a {}\n"
+                                           .format(challenger.display_name,
+                                                   c_roll, victim.display_name,
+                                                   v_roll))
+                c_life = 12 - sum(v_total)
+                v_life = 12 - sum(c_total)
+                await asyncio.sleep(5)
+                await _client.send_message(channel,
+                                           "{} is at {}\n"
+                                           "{} is at {}\n"
+                                           .format(challenger.display_name,
+                                                   c_life, victim.display_name,
+                                                   v_life))
+                if v_life < 1 and c_life < 1:
+                    await _client.send_message(channel,
+                                               "Both players have died!\n"
+                                               "{} and {} both drink".format(
+                                                   challenger.mention,
+                                                   victim.mention))
+                    break
+                elif v_life < 1:
+                    await _client.send_message(channel,
+                                               "{} has died!\n"
+                                               "{} wins the duel!\n"
+                                               "{} drinks!"
+                                               .format(victim.display_name,
+                                                       challenger.display_name,
+                                                       victim.mention))
+                    break
+                elif c_life < 1:
+                    await _client.send_message(channel,
+                                               "{} has died!\n"
+                                               "{} wins the duel!\n"
+                                               "{} drinks!"
+                                               .format(challenger.display_name,
+                                                       victim.display_name,
+                                                       challenger.mention))
+                    break
+                round += 1
+                await asyncio.sleep(10)
             break
 
     if not accepted:
