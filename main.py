@@ -1738,15 +1738,66 @@ async def event_handle_shot_duel(challenger, victim, channel):
         await asyncio.sleep(10)
         waited += 10
         if accepted:
-            await _client.send_message(channel, "Duel Accepted! Here we go!")
+            win_num = randint(1, 6)
+            await _client.send_message(channel, "Duel Accepted! Here we go!\n"
+                                                "First to roll a {} "
+                                                "wins.".format(win_num))
+            winners = [win_num]
+            players = [challenger, victim]
+            shuffle(players)
+            await _client.send_message(channel, "{} goes first!"
+                                       .format(players[0].display_name))
+            counter = 0
+            await asyncio.sleep(10)
+            while True:
+                roll = randint(1, 6)
+                counter += 1
+                await _client.send_message(channel,
+                                           "{} Rolls! :game_die: out!"
+                                           .format(players[0].display_name))
+                await asyncio.sleep(4 + randint(1, 3))
+                await _client.send_message(channel,
+                                           "The roll is a {}!".format(roll))
+                if roll in winners:
+                    await _client.send_message(channel,
+                                               "{} wins! {} take your shot!"
+                                               .format(players[0].display_name,
+                                                       players[1].mention))
+                    break
+                else:
+                    await asyncio.sleep(2 + randint(1, 3))
+                    players.append(players.pop(0))
+                    await _client.send_message(channel, "{} goes next!"
+                                               .format(players[0].display_name))
+                    await asyncio.sleep(4 + randint(1, 3))
+                if counter % 2 == 0:
+                    if len(winners) < 5:
+                        new_win = randint(1, 6)
+                        while new_win in winners:
+                            new_win = randint(1, 6)
+                        winners.append(new_win)
+                        await _client.send_message(channel,
+                                                   "No winners that round!\n "
+                                                   "Adding {} to the winning "
+                                                   "numbers.\n"
+                                                   "A roll of {} wins!"
+                                                   .format(new_win, winners))
+                        delay = 19 + randint(1, 10)
+                        await _client.send_message(channel,
+                                                   "Gathering :game_die:, "
+                                                   "next round in {} "
+                                                   "seconds.".format(
+                                                       delay))
+                        await asyncio.sleep(delay)
+
             break
 
     if not accepted:
         await _client.send_message(channel,
                                    "Shot duel not accepted! Clearly {} is "
                                    "better than {}."
-                                   .format(victim.display_name,
-                                           challenger.display_name))
+                                   .format(challenger.display_name,
+                                           victim.display_name))
 
     shot_duel_running = False
     accepted = False
