@@ -1732,6 +1732,21 @@ async def event_handle_shot_duel(challenger, victim, channel):
     global shot_duel_running, accepted, vict_name
     shot_duel_running = True
     vict_name = victim.display_name
+
+    if vict_name not in users:
+        users[vict_name] = {}
+    if challenger.display_name not in users:
+        users[challenger.display_name] = {}
+    if 'duel_record' not in users[vict_name]:
+        users[vict_name]['duel_record'] = [0, 0, 0]
+    if 'duel_record' not in users[challenger.display_name]:
+        users[challenger.display_name]['duel_record'] = [0, 0, 0]
+
+    c_rec = users[challenger.display_name]['duel_record']
+    v_rec = users[vict_name]['duel_record']
+
+    life = 12
+
     await _client.wait_until_ready()
     await _client.send_message(channel,
                                '.\nThe challenge has been laid down!\n'
@@ -1740,15 +1755,21 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                'You have 60 seconds to decide.'
                                .format(victim.mention, challenger.display_name))
 
-    waited = 10
+    waited = 5
     while waited < 60:
-        await asyncio.sleep(10)
-        waited += 10
+        await asyncio.sleep(5)
+        waited += 5
         if accepted:
             await _client.send_message(channel,
                                        ".\nDuel Accepted! Here we go!\n"
-                                       "Both Players have 12 life.\n"
-                                       "Good Luck!!!")
+                                       "{} is {} - {} - {}\n"
+                                       "{} is {} - {} - {}\n"
+                                       "Both Players have {} life.\n"
+                                       "Good Luck!!!"
+                                       .format(challenger.display_name,
+                                               c_rec[0], c_rec[1], c_rec[2],
+                                               vict_name, v_rec[0], v_rec[1],
+                                               v_rec[2], life))
             c_total = []
             v_total = []
             round = 1
@@ -1759,46 +1780,38 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 c_roll, v_roll = await dual_dice_roll()
                 c_total.append(c_roll)
                 v_total.append(v_roll)
-                c_life = 12 - sum(v_total)
-                v_life = 12 - sum(c_total)
-                await _client.send_message(channel,
-                                           ".\n{} rolled a {}.\n"
-                                           "{} rolled a {}.\n"
-                                           "{} is at {}.\n"
-                                           "{} is at {}.\n"
-                                           .format(challenger.display_name,
-                                                   c_roll, victim.display_name,
-                                                   v_roll,
-                                                   challenger.display_name,
-                                                   c_life, victim.display_name,
-                                                   v_life))
-                await asyncio.sleep(5)
+                c_life = life - sum(v_total)
+                v_life = life - sum(c_total)
+                duel_string = ".\n{} rolled a {}.\n{} rolled a {}.\n" \
+                              "{} is at {}.\n{} is at {}.\n"\
+                    .format(challenger.display_name, c_roll,
+                            victim.display_name, v_roll,
+                            challenger.display_name, c_life,
+                            victim.display_name, v_life)
                 if v_life < 1 and c_life < 1:
-                    await _client.send_message(channel,
-                                               ".\nBoth players have died!\n"
-                                               "{} and {} both drink!".format(
-                                                   challenger.mention,
-                                                   victim.mention))
-                    break
+                    duel_string += "\nBoth players have died!\n{} and {} " \
+                                   "both drink!".format(challenger.mention,
+                                                        victim.mention)
+                    users[vict_name]['duel_record'][2] += 1
+                    users[challenger.display_name]['duel_record'][2] += 1
                 elif v_life < 1:
-                    await _client.send_message(channel,
-                                               ".\n{} has died!\n"
-                                               "{} wins the duel!\n"
-                                               "{} drinks!"
-                                               .format(victim.display_name,
+                    duel_string += "\n{} has died!\n{} wins the duel!\n" \
+                                   "{} drinks!".format(victim.display_name,
                                                        challenger.display_name,
-                                                       victim.mention))
-                    break
+                                                       victim.mention)
+                    users[vict_name]['duel_record'][1] += 1
+                    users[challenger.display_name]['duel_record'][0] += 1
                 elif c_life < 1:
-                    await _client.send_message(channel,
-                                               ".\n{} has died!\n"
-                                               "{} wins the duel!\n"
-                                               "{} drinks!"
-                                               .format(challenger.display_name,
+                    duel_string += "\n{} has died!\n{} wins the duel!\n" \
+                                   "{} drinks!".format(challenger.display_name,
                                                        victim.display_name,
-                                                       challenger.mention))
-                    break
+                                                       challenger.mention)
+                    users[vict_name]['duel_record'][0] += 1
+                    users[challenger.display_name]['duel_record'][1] += 1
                 round += 1
+                await _client.send_message(channel, duel_string)
+                if v_life < 1 or c_life < 1:
+                    break
                 await asyncio.sleep(15)
             break
 
