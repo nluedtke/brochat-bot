@@ -1734,7 +1734,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
     vict_name = victim.display_name
     await _client.wait_until_ready()
     await _client.send_message(channel,
-                               'The challenge has been laid down!\n'
+                               '.\nThe challenge has been laid down!\n'
                                '{}, {} has asked you to duel!\n'
                                'Do you accept?!?!?! (!accept)\n'
                                'You have 60 seconds to decide.'
@@ -1745,44 +1745,44 @@ async def event_handle_shot_duel(challenger, victim, channel):
         await asyncio.sleep(10)
         waited += 10
         if accepted:
-            await _client.send_message(channel, "Duel Accepted! Here we go!\n"
-                                                "Both Players have 12 life\n"
-                                                "Good Luck")
+            await _client.send_message(channel,
+                                       ".\nDuel Accepted! Here we go!\n"
+                                       "Both Players have 12 life.\n"
+                                       "Good Luck!!!")
             c_total = []
             v_total = []
             round = 1
 
             while True:
-                await asyncio.sleep(10)
                 await _client.send_message(channel, "Round {}!".format(round))
+                await asyncio.sleep(15)
                 c_roll, v_roll = await dual_dice_roll()
                 c_total.append(c_roll)
                 v_total.append(v_roll)
-                await _client.send_message(channel,
-                                           "{} rolled a {}\n"
-                                           "{} rolled a {}\n"
-                                           .format(challenger.display_name,
-                                                   c_roll, victim.display_name,
-                                                   v_roll))
                 c_life = 12 - sum(v_total)
                 v_life = 12 - sum(c_total)
-                await asyncio.sleep(5)
                 await _client.send_message(channel,
-                                           "{} is at {}\n"
-                                           "{} is at {}\n"
+                                           ".\n{} rolled a {}.\n"
+                                           "{} rolled a {}.\n"
+                                           "{} is at {}.\n"
+                                           "{} is at {}.\n"
                                            .format(challenger.display_name,
+                                                   c_roll, victim.display_name,
+                                                   v_roll,
+                                                   challenger.display_name,
                                                    c_life, victim.display_name,
                                                    v_life))
+                await asyncio.sleep(5)
                 if v_life < 1 and c_life < 1:
                     await _client.send_message(channel,
-                                               "Both players have died!\n"
-                                               "{} and {} both drink".format(
+                                               ".\nBoth players have died!\n"
+                                               "{} and {} both drink!".format(
                                                    challenger.mention,
                                                    victim.mention))
                     break
                 elif v_life < 1:
                     await _client.send_message(channel,
-                                               "{} has died!\n"
+                                               ".\n{} has died!\n"
                                                "{} wins the duel!\n"
                                                "{} drinks!"
                                                .format(victim.display_name,
@@ -1791,7 +1791,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                     break
                 elif c_life < 1:
                     await _client.send_message(channel,
-                                               "{} has died!\n"
+                                               ".\n{} has died!\n"
                                                "{} wins the duel!\n"
                                                "{} drinks!"
                                                .format(challenger.display_name,
@@ -1799,7 +1799,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                                        challenger.mention))
                     break
                 round += 1
-                await asyncio.sleep(10)
+                await asyncio.sleep(15)
             break
 
     if not accepted:
