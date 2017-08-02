@@ -20,7 +20,7 @@ from poll import Poll
 
 VERSION_MAJOR = 3
 VERSION_MINOR = 0
-VERSION_PATCH = 0
+VERSION_PATCH = 1
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
