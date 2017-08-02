@@ -40,6 +40,11 @@ news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
                 'abc', 'washingtonpost', 'msnbc', 'ap', 'aphealthscience',
                 'lifehacker', 'cnnnewsroom', 'theonion']
 
+# Shot_duel acceptance and active
+accepted = False
+shot_duel_running = False
+vict_name = ""
+
 
 def shot_lottery(client_obj, wg_games, auto_call=False):
     """
@@ -85,9 +90,8 @@ def shot_lottery(client_obj, wg_games, auto_call=False):
             if str(m.display_name) == players[winner]:
                 tag_id = m.mention
                 break
-        output.append("The winning number is {}, Congrats {} ({}) you WIN!\n"
-                      ":beers: Take your shot!".format(winner,
-                                                       players[winner], tag_id))
+        output.append("The winning number is {}, Congrats {} you WIN!\n"
+                      ":beers: Take your shot!".format(winner, tag_id))
         consecutive = wg_games.add_shot_win(players[winner])
         if consecutive > 1:
             output.append("That's {} in a row!".format(consecutive))
@@ -263,6 +267,8 @@ class WeekendGames(object):
     def stop_poll(self, options):
         """
         Stops a poll
+
+        :param options: Unused variable
         """
 
         if self.poll is None:
@@ -1051,6 +1057,49 @@ async def send_text(client, message):
                                       'Could not send text message!')
 
 
+async def shot_duel(client, message):
+    """
+    Creates a duel
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+
+    global shot_duel_running
+
+    if shot_duel_running:
+        await client.send_message(message.channel,
+                                  'There is a duel already running, wait your '
+                                  'turn to challenge someone!')
+        return
+
+    arguments = argument_parser(message.content)
+
+    members = client.get_all_members()
+
+    map_disp_to_name = {}
+
+    for m in members:
+        map_disp_to_name[m.display_name] = m
+
+    if len(arguments) != 1 or arguments[0] == '!shot-duel':
+        await client.send_message(message.channel,
+                                  'Who do you want to duel?')
+    elif arguments[0] not in map_disp_to_name:
+        await client.send_message(message.channel,
+                                  'That\'s not a real person...')
+    elif arguments[0] == 'brochat-bot':
+        await client.send_message(message.channel,
+                                  'brochat-bot would drink you under the '
+                                  'table try another person!')
+    elif str(map_disp_to_name[arguments[0]].status) != 'online':
+        await client.send_message(message.channel,
+                                  'That person is likely already passed out!')
+    else:
+        client.loop.create_task(event_handle_shot_duel(
+            message.author, map_disp_to_name[arguments[0]], message.channel))
+
 async def get_trump(client, message):
     """
     Gets a presidential tweet
@@ -1391,6 +1440,20 @@ async def change_trump_delay(client, message):
         await client.send_message(message.channel, "Trump delay set to {}"
                                   .format(trump_del))
 
+async def toggle_accept(client, message):
+    """
+    Logs an accept command
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    global accepted, vict_name, shot_duel_running
+
+    if shot_duel_running and message.author.display_name == vict_name:
+        accepted = True
+    else:
+        await client.send_message(message.channel, "You weren't challenged!")
 
 async def change_news_delay(client, message):
     """
@@ -1522,7 +1585,9 @@ async def on_message(message):
         'tdelay': change_trump_delay,
         'ndelay': change_news_delay,
         'poll': poll,
-        'vote': add_vote
+        'vote': add_vote,
+        'shot-duel': shot_duel,
+        'accept': toggle_accept
     }
 
     if message.content.startswith("!") and \
@@ -1647,6 +1712,119 @@ async def handle_news():
             NEWS_FEED_CREATED = False
             print("Destroying News Feed Task")
             return
+
+async def dual_dice_roll():
+    """
+    Return two dice rolls
+    """
+
+    return randint(1, 6), randint(1, 6)
+
+async def event_handle_shot_duel(challenger, victim, channel):
+    """
+    Handles a shot_duel should a victim accept.
+
+    :param challenger: Person challenging
+    :param victim: Person challenged
+    :param channel: challenge duel is taking place in
+    :return: None
+    """
+    global shot_duel_running, accepted, vict_name
+    shot_duel_running = True
+    vict_name = victim.display_name
+
+    if vict_name not in users:
+        users[vict_name] = {}
+    if challenger.display_name not in users:
+        users[challenger.display_name] = {}
+    if 'duel_record' not in users[vict_name]:
+        users[vict_name]['duel_record'] = [0, 0, 0]
+    if 'duel_record' not in users[challenger.display_name]:
+        users[challenger.display_name]['duel_record'] = [0, 0, 0]
+
+    c_rec = users[challenger.display_name]['duel_record']
+    v_rec = users[vict_name]['duel_record']
+
+    life = 12
+
+    await _client.wait_until_ready()
+    await _client.send_message(channel,
+                               '.\nThe challenge has been laid down!\n'
+                               '{}, {} has asked you to duel!\n'
+                               'Do you accept?!?!?! (!accept)\n'
+                               'You have 60 seconds to decide.'
+                               .format(victim.mention, challenger.display_name))
+
+    waited = 5
+    while waited < 60:
+        await asyncio.sleep(5)
+        waited += 5
+        if accepted:
+            await _client.send_message(channel,
+                                       ".\nDuel Accepted! Here we go!\n"
+                                       "{} is {} - {} - {}\n"
+                                       "{} is {} - {} - {}\n"
+                                       "Both Players have {} life.\n"
+                                       "Good Luck!!!"
+                                       .format(challenger.display_name,
+                                               c_rec[0], c_rec[1], c_rec[2],
+                                               vict_name, v_rec[0], v_rec[1],
+                                               v_rec[2], life))
+            c_total = []
+            v_total = []
+            round = 1
+
+            while True:
+                await _client.send_message(channel, "Round {}!".format(round))
+                await asyncio.sleep(15)
+                c_roll, v_roll = await dual_dice_roll()
+                c_total.append(c_roll)
+                v_total.append(v_roll)
+                c_life = life - sum(v_total)
+                v_life = life - sum(c_total)
+                duel_string = ".\n{} rolled a {}.\n{} rolled a {}.\n" \
+                              "{} is at {}.\n{} is at {}.\n"\
+                    .format(challenger.display_name, c_roll,
+                            victim.display_name, v_roll,
+                            challenger.display_name, c_life,
+                            victim.display_name, v_life)
+                if v_life < 1 and c_life < 1:
+                    duel_string += "\nBoth players have died!\n{} and {} " \
+                                   "both drink!".format(challenger.mention,
+                                                        victim.mention)
+                    users[vict_name]['duel_record'][2] += 1
+                    users[challenger.display_name]['duel_record'][2] += 1
+                elif v_life < 1:
+                    duel_string += "\n{} has died!\n{} wins the duel!\n" \
+                                   "{} drinks!".format(victim.display_name,
+                                                       challenger.display_name,
+                                                       victim.mention)
+                    users[vict_name]['duel_record'][1] += 1
+                    users[challenger.display_name]['duel_record'][0] += 1
+                elif c_life < 1:
+                    duel_string += "\n{} has died!\n{} wins the duel!\n" \
+                                   "{} drinks!".format(challenger.display_name,
+                                                       victim.display_name,
+                                                       challenger.mention)
+                    users[vict_name]['duel_record'][0] += 1
+                    users[challenger.display_name]['duel_record'][1] += 1
+                round += 1
+                await _client.send_message(channel, duel_string)
+                if v_life < 1 or c_life < 1:
+                    break
+                await asyncio.sleep(15)
+            break
+
+    if not accepted:
+        await _client.send_message(channel,
+                                   "Shot duel not accepted! Clearly {} is "
+                                   "better than {}."
+                                   .format(challenger.display_name,
+                                           victim.display_name))
+
+    shot_duel_running = False
+    accepted = False
+    vict_name = ""
 
 
 _client.loop.create_task(check_trumps_mouth())
