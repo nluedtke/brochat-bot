@@ -18,9 +18,9 @@ import requests
 from gametime import Gametime
 from poll import Poll
 
-VERSION_MAJOR = 2
-VERSION_MINOR = 3
-VERSION_PATCH = 1
+VERSION_MAJOR = 3
+VERSION_MINOR = 0
+VERSION_PATCH = 0
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
