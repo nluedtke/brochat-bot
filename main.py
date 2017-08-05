@@ -3,7 +3,7 @@ from time import time
 import json
 import os
 from sys import stderr
-from random import randint, shuffle
+from random import randint, shuffle, choice
 import socket
 import datetime
 from difflib import get_close_matches
@@ -1721,7 +1721,48 @@ async def dual_dice_roll():
     Return two dice rolls
     """
 
-    return randint(1, 6), randint(1, 6)
+    return randint(-1, 6), randint(-1, 6)
+
+async def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
+    """
+    :param c_name: Challenger's name
+    :param c_roll: Challenger's roll
+    :param c_life: Challenger's life
+    :param v_life: Victim's life
+    :param v_name: Victim's name
+    :param v_roll: Victim's roll
+    """
+    a_types = ["lunge", "jab", "chop", "slice", "sweep", "thrust"]
+
+    r_string = ".\n"
+    if c_roll < 0:
+        r_string += "{} fell on his own sword and did {} to himself!".format(
+            c_name, abs(c_roll))
+    elif c_roll == 0:
+        r_string += "{} misses with his attack!".format(c_name)
+    elif 0 < c_roll < 6:
+        r_string += "{} lands a {} and deals {} damage!".format(
+            c_name, choice(a_types), c_roll)
+    elif c_roll == 6:
+        r_string += "{} lands a MASSIVE strike and deals {} damage!".format(
+            c_name, c_roll)
+
+    r_string += "\n"
+    if v_roll < 0:
+        r_string += "{} fell on his own sword and did {} to himself!".format(
+            v_name, abs(v_roll))
+    elif v_roll == 0:
+        r_string += "{} misses with his attack!".format(v_name)
+    elif 0 < v_roll < 6:
+        r_string += "{} lands a {} and deals {} damage!".format(
+            v_name, choice(a_types), v_roll)
+    elif v_roll == 6:
+        r_string += "{} lands a MASSIVE strike and deals {} damage!".format(
+            v_name, v_roll)
+
+    r_string += "\n{} is at {}.\n{} is at {}.\n".format(c_name, c_life,
+                                                      v_name, v_life)
+    return r_string
 
 async def event_handle_shot_duel(challenger, victim, channel):
     """
@@ -1781,16 +1822,22 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 await _client.send_message(channel, "Round {}!".format(round))
                 await asyncio.sleep(15)
                 c_roll, v_roll = await dual_dice_roll()
-                c_total.append(c_roll)
-                v_total.append(v_roll)
+
+                if c_roll >= 0:
+                    c_total.append(c_roll)
+                else:
+                    v_total.append(abs(c_roll))
+
+                if v_roll >= 0:
+                    v_total.append(v_roll)
+                else:
+                    c_total.append(abs(v_roll))
+
                 c_life = life - sum(v_total)
                 v_life = life - sum(c_total)
-                duel_string = ".\n{} rolled a {}.\n{} rolled a {}.\n" \
-                              "{} is at {}.\n{} is at {}.\n"\
-                    .format(challenger.display_name, c_roll,
-                            victim.display_name, v_roll,
-                            challenger.display_name, c_life,
-                            victim.display_name, v_life)
+                duel_string = await build_duel_str(challenger.display_name,
+                                                   c_roll, victim.display_name,
+                                                   v_roll, c_life, v_life)
                 if v_life < 1 and c_life < 1:
                     duel_string += "\nBoth players have died!\n{} and {} " \
                                    "both drink!".format(challenger.mention,
