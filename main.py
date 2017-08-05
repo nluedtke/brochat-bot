@@ -1083,22 +1083,25 @@ async def shot_duel(client, message):
     for m in members:
         map_disp_to_name[m.display_name] = m
 
-    if len(arguments) != 1 or arguments[0] == '!shot-duel':
+    if len(arguments) < 1 or arguments[0] == '!shot-duel':
         await client.send_message(message.channel,
                                   'Who do you want to duel?')
-    elif arguments[0] not in map_disp_to_name:
+
+    name = " ".join(arguments)
+    print(name)
+    if name not in map_disp_to_name:
         await client.send_message(message.channel,
                                   'That\'s not a real person...')
-    elif arguments[0] == 'brochat-bot':
+    elif name == 'brochat-bot':
         await client.send_message(message.channel,
                                   'brochat-bot would drink you under the '
                                   'table try another person!')
-    elif str(map_disp_to_name[arguments[0]].status) != 'online':
+    elif str(map_disp_to_name[name].status) != 'online':
         await client.send_message(message.channel,
                                   'That person is likely already passed out!')
     else:
         client.loop.create_task(event_handle_shot_duel(
-            message.author, map_disp_to_name[arguments[0]], message.channel))
+            message.author, map_disp_to_name[name], message.channel))
 
 async def get_trump(client, message):
     """
