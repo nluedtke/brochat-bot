@@ -1086,7 +1086,7 @@ async def shot_duel(client, message):
     for m in members:
         map_disp_to_name[m.display_name] = m
 
-    if len(arguments) < 1 or arguments[0] == '!shot-duel':
+    if len(arguments) < 1 or arguments[0] == '!duel':
         await client.send_message(message.channel,
                                   'Who do you want to duel?')
         return
@@ -1608,7 +1608,7 @@ async def on_message(message):
         'ndelay': change_news_delay,
         'poll': poll,
         'vote': add_vote,
-        'shot-duel': shot_duel,
+        'duel': shot_duel,
         'accept': toggle_accept,
         'clear': clear
     }
