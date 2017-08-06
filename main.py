@@ -1883,6 +1883,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 round += 1
                 await _client.send_message(channel, duel_string)
                 if v_life < 1 or c_life < 1:
+                    whos_in.update_db()
                     break
                 await asyncio.sleep(15)
             break
