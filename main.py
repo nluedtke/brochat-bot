@@ -1086,6 +1086,7 @@ async def shot_duel(client, message):
     if len(arguments) < 1 or arguments[0] == '!shot-duel':
         await client.send_message(message.channel,
                                   'Who do you want to duel?')
+        return
 
     name = " ".join(arguments)
     print(name)
