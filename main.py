@@ -1786,6 +1786,10 @@ async def event_handle_shot_duel(challenger, victim, channel):
         users[vict_name]['duel_record'] = [0, 0, 0]
     if 'duel_record' not in users[challenger.display_name]:
         users[challenger.display_name]['duel_record'] = [0, 0, 0]
+    if 'inventory' not in users[vict_name]:
+        users[vict_name]['inventory'] = {}
+    if 'inventory' not in users[challenger.display_name]:
+        users[challenger.display_name]['inventory'] = {}
 
     c_rec = users[challenger.display_name]['duel_record']
     v_rec = users[vict_name]['duel_record']
