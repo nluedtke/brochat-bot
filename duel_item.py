@@ -8,6 +8,7 @@ from random import choice
 #   1) type: effect_type
 #   2) prop: strength or effect discripter
 #   3) uses: amount of uses, measured in duels
+#   4) text: text description of item
 # effect_type: effect
 # Currently there are three effect_types:
 #   1) roll_effect = This effect modifies a roll
@@ -17,13 +18,19 @@ from random import choice
 common_items = {
     "Copper Ring of One Better": {"type": "roll_effect",
                                   "prop": 1,
-                                  "uses": 1},
+                                  "uses": 1,
+                                  "text": "This ring adds +1 to all damage "
+                                          "for the user for one duel."},
     "Bronze Ring of One Better": {"type": "roll_effect",
                                   "prop": 1,
-                                  "uses": 2},
+                                  "uses": 2,
+                                  "text": "This ring adds +1 to all damage "
+                                          "for the user for two duels."},
     "Steel Ring of One Better": {"type": "roll_effect",
                                  "prop": 1,
-                                 "uses": 4}
+                                 "uses": 4,
+                                 "text": "This ring adds +1 to all damage "
+                                         "for the user for four duels."}
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -31,11 +38,13 @@ common_items = {
 rare_items = {
     "Gold Ring of One Better": {"type": "roll_effect",
                                 "prop": 1,
-                                "uses": 10}
+                                "uses": 10,
+                                "text": "This ring adds +1 to all damage "
+                                        "for the user for ten duels."}
 }
 
 
-class Duel_Item(object):
+class DuelItem(object):
     """
     Defines the Duel_Item Class
     """
@@ -69,16 +78,16 @@ if __name__ == "__main__":
     """
     For testing
     """
-    i = Duel_Item(3)
+    i = DuelItem(3)
     print(i.name)
     print(i.prop)
     print(i.uses)
 
-    i = Duel_Item(1)
+    i = DuelItem(1)
     print(i.name)
     print(i.prop)
     print(i.uses)
 
-    i = Duel_Item(99)
+    i = DuelItem(99)
     if i.name is None:
         print("True")
