@@ -17,7 +17,7 @@ from twilio.rest import Client
 import requests
 from gametime import Gametime
 from poll import Poll
-from duel_item import Duel_Item
+from duel_item import DuelItem
 
 VERSION_MAJOR = 3
 VERSION_MINOR = 0
@@ -1824,14 +1824,14 @@ async def event_handle_shot_duel(challenger, victim, channel):
             v_total = []
 
             # item chance rolls
-            item = Duel_Item(randint(1, 100))
+            item = DuelItem(randint(1, 100))
             if item.name is not None:
                 await _client.send_message(channel,
                                            "Congratulations {}! You received "
                                            "the \"{}\"."
                                            .format(challenger.display_name,
                                                    item.name))
-            item = Duel_Item(randint(1, 100))
+            item = DuelItem(randint(1, 100))
             if item.name is not None:
                 await _client.send_message(channel,
                                            "Congratulations {}! You received "
