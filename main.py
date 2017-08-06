@@ -1842,7 +1842,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
             while True:
                 await _client.send_message(channel, "Round {}!".format(round))
-                await asyncio.sleep(15)
+                await asyncio.sleep(10)
                 c_roll, v_roll = await dual_dice_roll()
 
                 if c_roll >= 0:
