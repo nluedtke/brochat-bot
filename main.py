@@ -1545,6 +1545,21 @@ async def on_message_edit(before, after):
     await on_message(after)
 
 
+def is_me(m):
+    return m.author == _client.user
+
+
+async def clear(client, message):
+    """
+    :param message:
+    :param client client to perform action
+    """
+    channel = message.channel
+    deleted = await client.purge_from(channel, limit=100, check=is_me)
+    await client.send_message(channel, 'Deleted {} message(s)'
+                              .format(len(deleted)))
+
+
 @_client.event
 async def on_message(message):
     """
@@ -1591,7 +1606,8 @@ async def on_message(message):
         'poll': poll,
         'vote': add_vote,
         'shot-duel': shot_duel,
-        'accept': toggle_accept
+        'accept': toggle_accept,
+        'clear': clear
     }
 
     if message.content.startswith("!") and \
