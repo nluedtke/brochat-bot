@@ -21,7 +21,7 @@ from duel_item import DuelItem
 
 VERSION_MAJOR = 3
 VERSION_MINOR = 0
-VERSION_PATCH = 4
+VERSION_PATCH = 5
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
