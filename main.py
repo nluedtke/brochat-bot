@@ -45,6 +45,9 @@ accepted = False
 shot_duel_running = False
 vict_name = ""
 
+# Location of db.json and tokens.config
+data_dir = "/data"
+
 
 def shot_lottery(client_obj, wg_games, auto_call=False):
     """
@@ -571,11 +574,11 @@ class WeekendGames(object):
 
 # Handle tokens from local file
 tokens = {}
-if not os.path.exists('tokens.config'):
+if not os.path.exists('{}/tokens.config'.format(data_dir)):
     print("No tokens config file found.", file=stderr)
     exit(-1)
 else:
-    with open('tokens.config', 'r') as t_file:
+    with open('{}/tokens.config'.format(data_dir), 'r') as t_file:
         tokens = json.load(t_file)
 
 # Discord Bot Token
@@ -598,7 +601,7 @@ auth_token = tokens['twilio_auth_token']
 twilio_client = Client(account_sid, auth_token)
 
 # Create/Load Local Database
-db_file = 'db.json'
+db_file = '{}/db.json'.format(data_dir)
 db = {}
 
 if not os.path.exists(db_file):
