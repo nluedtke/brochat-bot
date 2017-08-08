@@ -574,9 +574,14 @@ class WeekendGames(object):
 
 # Handle tokens from local file
 tokens = {}
-if not os.path.exists('{}/tokens.config'.format(data_dir)):
+if not os.path.exists('{}/tokens.config'.format(data_dir)) and not \
+        os.path.exists('tokens.config'):
     print("No tokens config file found.", file=stderr)
     exit(-1)
+elif os.path.exists('tokens.config'):
+    print("Using local token file")
+    with open('tokens.config', 'r') as t_file:
+        tokens = json.load(t_file)
 else:
     with open('{}/tokens.config'.format(data_dir), 'r') as t_file:
         tokens = json.load(t_file)
@@ -604,8 +609,13 @@ twilio_client = Client(account_sid, auth_token)
 db_file = '{}/db.json'.format(data_dir)
 db = {}
 
-if not os.path.exists(db_file):
+if not os.path.exists(db_file) and not os.path.exists('db.json'):
     print("Starting DB from scratch")
+    with open(db_file, 'w') as datafile:
+        json.dump(db, datafile)
+elif os.path.exists('db.json'):
+    db_file = 'db.json'
+    print("Using local db file")
     with open(db_file, 'w') as datafile:
         json.dump(db, datafile)
 else:
