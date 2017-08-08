@@ -21,7 +21,7 @@ from duel_item import DuelItem
 
 VERSION_MAJOR = 3
 VERSION_MINOR = 0
-VERSION_PATCH = 3
+VERSION_PATCH = 4
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
@@ -45,6 +45,9 @@ news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
 accepted = False
 shot_duel_running = False
 vict_name = ""
+
+# Location of db.json and tokens.config
+data_dir = "/data"
 
 
 def shot_lottery(client_obj, wg_games, auto_call=False):
@@ -572,11 +575,11 @@ class WeekendGames(object):
 
 # Handle tokens from local file
 tokens = {}
-if not os.path.exists('tokens.config'):
+if not os.path.exists('{}/tokens.config'.format(data_dir)):
     print("No tokens config file found.", file=stderr)
     exit(-1)
 else:
-    with open('tokens.config', 'r') as t_file:
+    with open('{}/tokens.config'.format(data_dir), 'r') as t_file:
         tokens = json.load(t_file)
 
 # Discord Bot Token
@@ -599,7 +602,7 @@ auth_token = tokens['twilio_auth_token']
 twilio_client = Client(account_sid, auth_token)
 
 # Create/Load Local Database
-db_file = 'db.json'
+db_file = '{}/db.json'.format(data_dir)
 db = {}
 
 if not os.path.exists(db_file):
@@ -1546,6 +1549,21 @@ async def on_message_edit(before, after):
     await on_message(after)
 
 
+def is_me(m):
+    return m.author == _client.user
+
+
+async def clear(client, message):
+    """
+    :param message:
+    :param client client to perform action
+    """
+    channel = message.channel
+    deleted = await client.purge_from(channel, limit=100, check=is_me)
+    await client.send_message(channel, 'Deleted {} message(s)'
+                              .format(len(deleted)))
+
+
 @_client.event
 async def on_message(message):
     """
@@ -1592,7 +1610,8 @@ async def on_message(message):
         'poll': poll,
         'vote': add_vote,
         'duel': shot_duel,
-        'accept': toggle_accept
+        'accept': toggle_accept,
+        'clear': clear
     }
 
     if message.content.startswith("!") and \
