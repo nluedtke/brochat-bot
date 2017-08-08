@@ -1563,6 +1563,10 @@ def is_me(m):
     return m.author == _client.user
 
 
+def is_command(m):
+    return m.content.startswith("!")
+
+
 async def clear(client, message):
     """
     :param message:
@@ -1570,8 +1574,9 @@ async def clear(client, message):
     """
     channel = message.channel
     deleted = await client.purge_from(channel, limit=100, check=is_me)
+    c_ds = await client.purge_from(channel, limit=100, check=is_command)
     await client.send_message(channel, 'Deleted {} message(s)'
-                              .format(len(deleted)))
+                              .format(len(deleted) + len(c_ds)))
 
 
 @_client.event
