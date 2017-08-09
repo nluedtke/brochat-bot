@@ -264,7 +264,10 @@ class WeekendGames(object):
 
         if self.poll is not None:
             return "Can't start poll, one is running try !poll stop first"
-        self.poll = Poll(options)
+        try:
+            self.poll = Poll(options)
+        except SyntaxError:
+            return "You probably want to start the poll correctly. Nice try."
         return self.poll.get_current_state()
 
     def stop_poll(self, options):
@@ -276,8 +279,7 @@ class WeekendGames(object):
 
         if self.poll is None:
             return "No poll running"
-        out_str = self.poll.get_current_state()
-        out_str += "Poll Stopped"
+        out_str = self.poll.get_final_state()
         self.poll = None
         return out_str
 
@@ -950,7 +952,8 @@ async def add_vote(client, message):
     elif len(arguments) == 1:
         try:
             await client.send_message(message.channel,
-                                      whos_in.poll.add_vote(arguments[0]))
+                                      whos_in.poll.add_vote(arguments[0],
+                                                            message.author))
         except IndexError:
             await client.send_message(message.channel,
                                       "Not a valid option!")
