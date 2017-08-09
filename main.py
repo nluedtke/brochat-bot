@@ -1575,8 +1575,8 @@ async def clear(client, message):
     :param client client to perform action
     """
     channel = message.channel
-    deleted = await client.purge_from(channel, limit=100, check=is_me)
-    c_ds = await client.purge_from(channel, limit=100, check=is_command)
+    deleted = await client.purge_from(channel, limit=50, check=is_me)
+    c_ds = await client.purge_from(channel, limit=50, check=is_command)
     await client.send_message(channel, 'Deleted {} message(s)'
                               .format(len(deleted) + len(c_ds)))
 
