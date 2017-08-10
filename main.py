@@ -1204,6 +1204,7 @@ async def run_shot_lottery(client, message, auto_call=False):
         for x in range(4):
             await client.send_message(message.channel,
                                       shot_lottery_string.pop(0))
+            await client.send_typing(message.channel)
             await asyncio.sleep(4)
         while len(shot_lottery_string) > 0:
             await client.send_message(message.channel,
@@ -1858,7 +1859,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
             while True:
                 await _client.send_message(channel, "Round {}!".format(round))
+                await _client.send_typing(channel)
                 await asyncio.sleep(10)
+
                 c_roll, v_roll = await dual_dice_roll()
 
                 if c_roll >= 0:
