@@ -1711,6 +1711,7 @@ async def print_at_midnight():
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
         await _client.send_message(c_to_send, whos_in.whos_in())
+        whos_in.update_db()
         await asyncio.sleep(60 * 10)
 
 
