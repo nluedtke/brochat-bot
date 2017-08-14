@@ -619,7 +619,7 @@ if not os.path.exists(db_file) and not os.path.exists('db.json'):
 elif os.path.exists('db.json'):
     db_file = 'db.json'
     print("Using local db file")
-    with open(db_file, 'w') as datafile:
+    with open(db_file, 'r') as datafile:
         json.dump(db, datafile)
 else:
     print("Loading the DB")
