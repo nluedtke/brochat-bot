@@ -1828,8 +1828,10 @@ async def event_handle_shot_duel(challenger, victim, channel):
         users[challenger.display_name]['duel_record'] = [0, 0, 0]
     if 'inventory' not in users[vict_name]:
         users[vict_name]['inventory'] = {}
+        users[vict_name]['a_item'] = None
     if 'inventory' not in users[challenger.display_name]:
         users[challenger.display_name]['inventory'] = {}
+        users[vict_name]['a_item'] = None
 
     c_rec = users[challenger.display_name]['duel_record']
     v_rec = users[vict_name]['duel_record']
@@ -1879,10 +1881,10 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                            .format(vict_name, item.name))
                 users[vict_name]['inventory'][item.id] = 0
 
-            round = 1
+            _round = 1
 
             while True:
-                await _client.send_message(channel, "Round {}!".format(round))
+                await _client.send_message(channel, "Round {}!".format(_round))
                 await _client.send_typing(channel)
                 await asyncio.sleep(10)
 
@@ -1923,7 +1925,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                                        challenger.mention)
                     users[vict_name]['duel_record'][0] += 1
                     users[challenger.display_name]['duel_record'][1] += 1
-                round += 1
+                _round += 1
                 await _client.send_message(channel, duel_string)
                 if v_life < 1 or c_life < 1:
                     whos_in.update_db()
