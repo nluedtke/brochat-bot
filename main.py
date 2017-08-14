@@ -613,14 +613,15 @@ db_file = '{}/db.json'.format(data_dir)
 db = {}
 
 if not os.path.exists(db_file) and not os.path.exists('db.json'):
-    print("Starting DB from scratch")
+    print("Starting DB from scratch (locally)")
+    db_file = 'db.json'
     with open(db_file, 'w') as datafile:
         json.dump(db, datafile)
 elif os.path.exists('db.json'):
     db_file = 'db.json'
     print("Using local db file")
     with open(db_file, 'r') as datafile:
-        json.dump(db, datafile)
+        json.load(db, datafile)
 else:
     print("Loading the DB")
     with open(db_file, 'r') as datafile:
