@@ -54,34 +54,35 @@ class DuelItem(object):
     Defines the Duel_Item Class
     """
 
-    def __init__(self, item_roll):
+    def __init__(self, item_roll, _id=None):
         """
         :param item_roll: Int representing the roll value used to determine
+        :param _id: Create item from id number
         if an item should be reward and what type of item
         """
 
-        self.id = None
+        self.item_id = None
         self.name = None
         self.prop = None
         self.uses = None
         self.type = None
 
-        if 5 >= item_roll > 1:
-            item = choice(list(common_items.keys()))
-            print("Created " + item)
-            self.id = item
-            self.name = common_items[item]['name']
-            self.prop = common_items[item]['prop']
-            self.type = common_items[item]['type']
-            self.uses = common_items[item]['uses']
-        elif item_roll == 1:
-            item = choice(list(rare_items.keys()))
-            print("Created " + item)
-            self.id = item
-            self.name = rare_items[item]['name']
-            self.prop = rare_items[item]['prop']
-            self.type = rare_items[item]['type']
-            self.uses = rare_items[item]['uses']
+        if _id is not None:
+            self.item_id = _id
+        else:
+            if 5 >= item_roll > 1:
+                item = choice(list(common_items.keys()))
+                self.item_id = item
+            elif item_roll == 1:
+                item = choice(list(rare_items.keys()))
+                self.item_id = item
+
+        if self.item_id is not None:
+            print("Created " + self.item_id)
+            self.name = rare_items[self.item_id]['name']
+            self.prop = rare_items[self.item_id]['prop']
+            self.type = rare_items[self.item_id]['type']
+            self.uses = rare_items[self.item_id]['uses']
 
 
 if __name__ == "__main__":
