@@ -3,7 +3,7 @@ from time import time
 import json
 import os
 from sys import stderr
-from random import randint, shuffle
+from random import randint, shuffle, choice
 import socket
 import datetime
 from difflib import get_close_matches
@@ -16,10 +16,11 @@ from twython import Twython, TwythonError
 from twilio.rest import Client
 import requests
 from gametime import Gametime
+from poll import Poll
 
-VERSION_MAJOR = 2
-VERSION_MINOR = 1
-VERSION_PATCH = 1
+VERSION_MAJOR = 3
+VERSION_MINOR = 0
+VERSION_PATCH = 6
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
@@ -39,13 +40,22 @@ news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
                 'abc', 'washingtonpost', 'msnbc', 'ap', 'aphealthscience',
                 'lifehacker', 'cnnnewsroom', 'theonion']
 
+# Shot_duel acceptance and active
+accepted = False
+shot_duel_running = False
+vict_name = ""
 
-def shot_lottery(client_obj, wg_games):
+# Location of db.json and tokens.config
+data_dir = "/data"
+
+
+def shot_lottery(client_obj, wg_games, auto_call=False):
     """
     Run a shot lottery
 
     :param client_obj: client object to use
     :param wg_games: WeekendGames object to use
+    :param auto_call: Was this called from a win?
     :rtype: list
     :return: Array of strings for the shot lottery
     """
@@ -54,9 +64,23 @@ def shot_lottery(client_obj, wg_games):
               "\n{} won the last lottery!".format(whos_in.last_shot),
               "...The tension is rising..."]
     players = []
-    for m in client_obj.get_all_members():
-        if str(m.status) == 'online' and str(m.display_name) != 'brochat-bot':
+
+    if auto_call:
+        largest_num_in_voice = 0
+        for channel in _client.get_all_channels():
+            if str(channel.type) == "voice" and len(channel.voice_members) \
+                    > largest_num_in_voice:
+                largest_num_in_voice = len(channel.voice_members)
+                channel_to_use = channel
+        for m in channel_to_use.voice_members:
             players.append(m.display_name)
+
+    if not auto_call or len(players) < 1:
+        for m in client_obj.get_all_members():
+            if str(m.status) == 'online' and str(m.display_name) \
+                    != 'brochat-bot':
+                players.append(m.display_name)
+
     output.append("{} have been entered in the SHOT LOTTERY good luck!"
                   .format(players))
     players.append('SOCIAL!')
@@ -65,8 +89,12 @@ def shot_lottery(client_obj, wg_games):
                   .format(len(players) - 1))
     winner = randint(0, len(players) - 1)
     if players[winner] != 'SOCIAL!':
+        for m in client_obj.get_all_members():
+            if str(m.display_name) == players[winner]:
+                tag_id = m.mention
+                break
         output.append("The winning number is {}, Congrats {} you WIN!\n"
-                      ":beers: Take your shot!".format(winner, players[winner]))
+                      ":beers: Take your shot!".format(winner, tag_id))
         consecutive = wg_games.add_shot_win(players[winner])
         if consecutive > 1:
             output.append("That's {} in a row!".format(consecutive))
@@ -121,14 +149,14 @@ class WeekendGames(object):
                 self.gametimes.append(Gametime(json_create=gt))
 
         self.c_win = 0
-        self.c_los = 0
+        self.c_loss = 0
         self.c_draw = 0
         if 'c_win' in db:
             self.c_win = db['c_win']
         if 'c_loss' in db:
             self.c_loss = db['c_loss']
         if 'c_draw' in db:
-            self.c_win = db['c_draw']
+            self.c_draw = db['c_draw']
 
         # non persistent variables
         self.wins = 0
@@ -136,6 +164,7 @@ class WeekendGames(object):
         self.losses = 0
         self.last = None
         self.consecutive = 0
+        self.poll = None
 
     def get_gametimes(self):
         """
@@ -164,7 +193,7 @@ class WeekendGames(object):
         """
         Routes a gametime action, specified in the second
         argument, ex !gametime <add> Sunday
-        :param message:
+        :param message: Containing Arguments
         :return: string response to print to chat.
         """
         arguments = argument_parser(message)
@@ -202,6 +231,57 @@ class WeekendGames(object):
                 except KeyError:
                     return gametime_help_string
         return gametime_help_string
+
+    def poll_actions(self, message):
+        """
+        Handles Poll creation/deletion
+
+        :param message: Containing arguments
+        :return: string response to print to chat.
+        """
+        arguments = argument_parser(message)
+
+        poll_help_string = \
+            "That's not a valid command for **!poll**\n\n" \
+            "Please use:\n" \
+            "!poll start \"option 1\" \"option 2\" etc... to **start a " \
+            "poll**\n" \
+            "!poll stop to **delete the current poll**"
+        valid_commands = {
+            "start": self.create_poll,
+            "stop": self.stop_poll,
+        }
+        if arguments[0] in valid_commands:
+            return valid_commands[arguments[0]](" ".join(arguments[1:]))
+        return poll_help_string
+
+    def create_poll(self, options):
+        """
+        Creates a poll if one is not already running
+
+        :param options: Options for the poll
+        """
+
+        if self.poll is not None:
+            return "Can't start poll, one is running try !poll stop first"
+        try:
+            self.poll = Poll(options)
+        except SyntaxError:
+            return "You probably want to start the poll correctly. Nice try."
+        return self.poll.get_current_state()
+
+    def stop_poll(self, options):
+        """
+        Stops a poll
+
+        :param options: Unused variable
+        """
+
+        if self.poll is None:
+            return "No poll running"
+        out_str = self.poll.get_final_state()
+        self.poll = None
+        return out_str
 
     def create_gametime(self, day, start_time=None):
         """
@@ -267,7 +347,7 @@ class WeekendGames(object):
         """
         Adds a person to the specified gametime
 
-        :param status:
+        :param status: Status to mark for player
         :param person: person to add
         :param game_id: list id of the gametime in gametimes
         :return: string to print to chat
@@ -496,11 +576,16 @@ class WeekendGames(object):
 
 # Handle tokens from local file
 tokens = {}
-if not os.path.exists('tokens.config'):
+if not os.path.exists('{}/tokens.config'.format(data_dir)) and not \
+        os.path.exists('tokens.config'):
     print("No tokens config file found.", file=stderr)
     exit(-1)
-else:
+elif os.path.exists('tokens.config'):
+    print("Using local token file")
     with open('tokens.config', 'r') as t_file:
+        tokens = json.load(t_file)
+else:
+    with open('{}/tokens.config'.format(data_dir), 'r') as t_file:
         tokens = json.load(t_file)
 
 # Discord Bot Token
@@ -523,11 +608,16 @@ auth_token = tokens['twilio_auth_token']
 twilio_client = Client(account_sid, auth_token)
 
 # Create/Load Local Database
-db_file = 'db.json'
+db_file = '{}/db.json'.format(data_dir)
 db = {}
 
-if not os.path.exists(db_file):
+if not os.path.exists(db_file) and not os.path.exists('db.json'):
     print("Starting DB from scratch")
+    with open(db_file, 'w') as datafile:
+        json.dump(db, datafile)
+elif os.path.exists('db.json'):
+    db_file = 'db.json'
+    print("Using local db file")
     with open(db_file, 'w') as datafile:
         json.dump(db, datafile)
 else:
@@ -596,6 +686,8 @@ async def print_help(client, message):
                   "**!in <sessionid>**: Sign up for a game session\n" \
                   "**!out <sessionid>**: Remove yourself from a session\n" \
                   "**!possible <sessionid>**: Sign up, tentatively for a " \
+                  "session\n" \
+                  "**!late <sessionid>**: Sign up, but will be late for a " \
                   "session\n" \
                   "**!whosin**: See who's in for gaming sessions\n" \
                   "**!trump**: I'll show you Trump's latest Yuge " \
@@ -808,6 +900,16 @@ async def gametime(client, message):
     await client.send_message(message.channel, whos_in.gametime_actions(
         message.content))
 
+async def poll(client, message):
+    """
+    Handles poll actions
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    await client.send_message(message.channel, whos_in.poll_actions(
+        message.content))
 
 async def in_command(client, message):
     """
@@ -830,6 +932,35 @@ async def in_command(client, message):
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
 
+async def add_vote(client, message):
+    """
+    Handles !vote actions
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    if whos_in.poll is None:
+        await client.send_message(message.channel,
+                                  "No Poll currently taking place")
+
+    arguments = argument_parser(message.content)
+    if len(arguments) != 1 or arguments[0].lower() == "!vote":
+        await client.send_message(message.channel,
+                                  "What are you voting for, though?\n\n{}"
+                                  .format(whos_in.poll.get_current_state()))
+    elif len(arguments) == 1:
+        try:
+            await client.send_message(message.channel,
+                                      whos_in.poll.add_vote(arguments[0],
+                                                            message.author))
+        except IndexError:
+            await client.send_message(message.channel,
+                                      "Not a valid option!")
+    else:
+        await client.send_message(message.channel, "You'll need to be more "
+                                                   "specific :smile:")
+
 
 async def possible_command(client, message):
     """
@@ -848,6 +979,29 @@ async def possible_command(client, message):
         await client.send_message(message.channel,
                                   whos_in.add(message.author, arguments[0],
                                               status="possible"))
+    else:
+        await client.send_message(message.channel,
+                                  "You'll need to be more specific :smile:")
+
+
+async def late_command(client, message):
+    """
+    Handles !late actions
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+    if len(arguments) != 1 or arguments[0].lower() == "!late":
+        await client.send_message(message.channel,
+                                  "For what session are you going to be late "
+                                  "for, though?\n\n{}"
+                                  .format(whos_in.get_gametimes()))
+    elif len(arguments) == 1:
+        await client.send_message(message.channel,
+                                  whos_in.add(message.author, arguments[0],
+                                              status="going to be late"))
     else:
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
@@ -919,6 +1073,53 @@ async def send_text(client, message):
                                       'Could not send text message!')
 
 
+async def shot_duel(client, message):
+    """
+    Creates a duel
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+
+    global shot_duel_running
+
+    if shot_duel_running:
+        await client.send_message(message.channel,
+                                  'There is a duel already running, wait your '
+                                  'turn to challenge someone!')
+        return
+
+    arguments = argument_parser(message.content)
+
+    members = client.get_all_members()
+
+    map_disp_to_name = {}
+
+    for m in members:
+        map_disp_to_name[m.display_name] = m
+
+    if len(arguments) < 1 or arguments[0] == '!duel':
+        await client.send_message(message.channel,
+                                  'Who do you want to duel?')
+        return
+
+    name = " ".join(arguments)
+    print(name)
+    if name not in map_disp_to_name:
+        await client.send_message(message.channel,
+                                  'That\'s not a real person...')
+    elif name == 'brochat-bot':
+        await client.send_message(message.channel,
+                                  'brochat-bot would drink you under the '
+                                  'table try another person!')
+    elif str(map_disp_to_name[name].status) != 'online':
+        await client.send_message(message.channel,
+                                  'That person is likely already passed out!')
+    else:
+        client.loop.create_task(event_handle_shot_duel(
+            message.author, map_disp_to_name[name], message.channel))
+
 async def get_trump(client, message):
     """
     Gets a presidential tweet
@@ -927,39 +1128,83 @@ async def get_trump(client, message):
     :param message: The message
     :return: None
     """
-    global last_id
+    twitter_id = 'realdonaldtrump'
+    tweet_text = \
+        ':pen_ballpoint::monkey: Trump has been saying things, as ' \
+        'usual...'
+    rt_text = \
+        ':pen_ballpoint::monkey: Trump has been repeating things, as ' \
+        'usual... (RT ALERT)'
+
     try:
-        trumps_last_tweet = twitter.get_user_timeline(
-            screen_name='realdonaldtrump', count=1, include_retweets=False)
+        await get_last_tweet(twitter_id, tweet_text, rt_text, client, message)
     except TwythonError:
         await client.send_message(message.channel,
                                   "Twitter is acting up, try again later.")
+
+async def get_last_tweet(id, tweet_text, rt_text, client, message):
+    """
+    Gets the last tweet for id.
+    :param id:
+    :param tweet_text: flavor text for tweets
+    :param rt_text: flavor text for retweets
+    :param client: discord client
+    :param message: discord message
+    :return:
+    """
+
+    if id == 'realdonaldtrump':
+        global last_id
+
+    try:
+        last_tweet = twitter.get_user_timeline(
+            screen_name=id, count=1, include_retweets=True)
+    except TwythonError as e:
+        raise e
     else:
-        last_id = trumps_last_tweet[0]['id']
-        await client.send_message(
-            message.channel,
-            ':pen_ballpoint::monkey: Trump has been saying things, as '
-            'usual...\n\n'
-            'https://twitter.com/{}/status/{}'.format(
-                trumps_last_tweet[0]['user']['screen_name'],
-                str(trumps_last_tweet[0]['id'])))
+        # if it's a retweet, send the original tweet
+        if 'retweeted_status' in last_tweet[0]:
+            if id == 'realdonaldtrump':
+                last_id = last_tweet[0]['id']
+            rt_id = last_tweet[0]['retweeted_status']['id']
+            rt_screen_name = last_tweet[0]['retweeted_status']['user']['screen_name']
+            await client.send_message(
+                message.channel,
+                '{}\n\n'
+                'https://twitter.com/{}/status/{}'.format(
+                    rt_text,
+                    rt_screen_name,
+                    str(rt_id)))
+        # otherwise, send the tweet
+        else:
+            if id == 'realdonaldtrump':
+                last_id = last_tweet[0]['id']
+            await client.send_message(
+                message.channel,
+                '{}\n\n'
+                'https://twitter.com/{}/status/{}'.format(
+                    tweet_text,
+                    last_tweet[0]['user']['screen_name'],
+                    str(last_tweet[0]['id'])))
 
 
-async def run_shot_lottery(client, message):
+async def run_shot_lottery(client, message, auto_call=False):
     """
     Runs a shot-lottery
 
     :param client: The Client
     :param message: The message
+    :param auto_call: Called from win?
     :return: None
     """
     if not whos_in.is_lottery_time():
         await client.send_message(message.channel, "Too soon for shots...")
     else:
-        shot_lottery_string = shot_lottery(client, whos_in)
+        shot_lottery_string = shot_lottery(client, whos_in, auto_call)
         for x in range(4):
             await client.send_message(message.channel,
                                       shot_lottery_string.pop(0))
+            await client.send_typing(message.channel)
             await asyncio.sleep(4)
         while len(shot_lottery_string) > 0:
             await client.send_message(message.channel,
@@ -995,7 +1240,7 @@ async def record_win(client, message):
         await trigger_social(client, message)
         whos_in.consecutive = 0
     else:
-        await run_shot_lottery(client, message)
+        await run_shot_lottery(client, message, True)
 
 
 async def record_loss(client, message):
@@ -1182,20 +1427,20 @@ async def get_news(client, message):
     found_art = False
 
     while not found_art:
-        source = news_handles[0]
+        source = news_handles.pop(0)
+        news_handles.append(source)
+        tweet_text = "It looks like @" + source + " is reporting:"
+        rt_text = "It looks like @" + source + " is retweeting:"
+
         try:
-            news = twitter.get_user_timeline(screen_name=source, count=1,
-                                             include_retweets=False)
-        except:
+            await get_last_tweet(source, tweet_text, rt_text, client, message)
+        except TwythonError:
             print("Error in get_news, trying another source")
+
         else:
             found_art = True
 
-    await client.send_message(message.channel,
-                              "https://twitter.com/{0}/status/{1}"
-                              .format(news[0]['user']['screen_name'],
-                                      str(news[0]['id'])))
-
+    return
 
 async def change_trump_delay(client, message):
     """
@@ -1216,6 +1461,20 @@ async def change_trump_delay(client, message):
         await client.send_message(message.channel, "Trump delay set to {}"
                                   .format(trump_del))
 
+async def toggle_accept(client, message):
+    """
+    Logs an accept command
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    global accepted, vict_name, shot_duel_running
+
+    if shot_duel_running and message.author.display_name == vict_name:
+        accepted = True
+    else:
+        await client.send_message(message.channel, "You weren't challenged!")
 
 async def change_news_delay(client, message):
     """
@@ -1294,6 +1553,36 @@ async def owstats(client, message):
 
 
 @_client.event
+async def on_message_edit(before, after):
+    """
+    Asynchronous event handler for edit
+
+    return: None
+    """
+    await on_message(after)
+
+
+def is_me(m):
+    return m.author == _client.user
+
+
+def is_command(m):
+    return m.content.startswith("!")
+
+
+async def clear(client, message):
+    """
+    :param message:
+    :param client client to perform action
+    """
+    channel = message.channel
+    deleted = await client.purge_from(channel, limit=50, check=is_me)
+    c_ds = await client.purge_from(channel, limit=50, check=is_command)
+    await client.send_message(channel, 'Deleted {} message(s)'
+                              .format(len(deleted) + len(c_ds)))
+
+
+@_client.event
 async def on_message(message):
     """
     Asynchronous event handler for incoming message
@@ -1316,6 +1605,7 @@ async def on_message(message):
         "gametime": gametime,
         "in": in_command,
         "possible": possible_command,
+        "late": late_command,
         "out": out_command,
         "whosin": whosin_command,
         "text": send_text,
@@ -1334,7 +1624,12 @@ async def on_message(message):
         "toggle-news": toggle_news,
         'news': get_news,
         'tdelay': change_trump_delay,
-        'ndelay': change_news_delay
+        'ndelay': change_news_delay,
+        'poll': poll,
+        'vote': add_vote,
+        'duel': shot_duel,
+        'accept': toggle_accept,
+        'clear': clear
     }
 
     if message.content.startswith("!") and \
@@ -1416,6 +1711,7 @@ async def print_at_midnight():
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
         await _client.send_message(c_to_send, whos_in.whos_in())
+        whos_in.update_db()
         await asyncio.sleep(60 * 10)
 
 
@@ -1459,6 +1755,169 @@ async def handle_news():
             NEWS_FEED_CREATED = False
             print("Destroying News Feed Task")
             return
+
+async def dual_dice_roll():
+    """
+    Return two dice rolls
+    """
+
+    return randint(-1, 6), randint(-1, 6)
+
+async def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
+    """
+    :param c_name: Challenger's name
+    :param c_roll: Challenger's roll
+    :param c_life: Challenger's life
+    :param v_life: Victim's life
+    :param v_name: Victim's name
+    :param v_roll: Victim's roll
+    """
+    a_types = ["lunge", "jab", "chop", "slice", "sweep", "thrust"]
+
+    r_string = ".\n"
+    if c_roll < 0:
+        r_string += "{} fell on his own sword and did {} to himself!".format(
+            c_name, abs(c_roll))
+    elif c_roll == 0:
+        r_string += "{} misses with his attack!".format(c_name)
+    elif 0 < c_roll < 6:
+        r_string += "{} lands a {} and deals {} damage!".format(
+            c_name, choice(a_types), c_roll)
+    elif c_roll == 6:
+        r_string += "{} lands a MASSIVE strike and deals {} damage!".format(
+            c_name, c_roll)
+
+    r_string += "\n"
+    if v_roll < 0:
+        r_string += "{} fell on his own sword and did {} to himself!".format(
+            v_name, abs(v_roll))
+    elif v_roll == 0:
+        r_string += "{} misses with his attack!".format(v_name)
+    elif 0 < v_roll < 6:
+        r_string += "{} lands a {} and deals {} damage!".format(
+            v_name, choice(a_types), v_roll)
+    elif v_roll == 6:
+        r_string += "{} lands a MASSIVE strike and deals {} damage!".format(
+            v_name, v_roll)
+
+    r_string += "\n{} is at {}.\n{} is at {}.\n".format(c_name, c_life,
+                                                      v_name, v_life)
+    return r_string
+
+async def event_handle_shot_duel(challenger, victim, channel):
+    """
+    Handles a shot_duel should a victim accept.
+
+    :param challenger: Person challenging
+    :param victim: Person challenged
+    :param channel: challenge duel is taking place in
+    :return: None
+    """
+    global shot_duel_running, accepted, vict_name
+    shot_duel_running = True
+    vict_name = victim.display_name
+
+    if vict_name not in users:
+        users[vict_name] = {}
+    if challenger.display_name not in users:
+        users[challenger.display_name] = {}
+    if 'duel_record' not in users[vict_name]:
+        users[vict_name]['duel_record'] = [0, 0, 0]
+    if 'duel_record' not in users[challenger.display_name]:
+        users[challenger.display_name]['duel_record'] = [0, 0, 0]
+
+    c_rec = users[challenger.display_name]['duel_record']
+    v_rec = users[vict_name]['duel_record']
+
+    life = 12
+
+    await _client.wait_until_ready()
+    await _client.send_message(channel,
+                               '.\nThe challenge has been laid down!\n'
+                               '{}, {} has asked you to duel!\n'
+                               'Do you accept?!?!?! (!accept)\n'
+                               'You have 60 seconds to decide.'
+                               .format(victim.mention, challenger.display_name))
+
+    waited = 5
+    while waited < 60:
+        await asyncio.sleep(5)
+        waited += 5
+        if accepted:
+            await _client.send_message(channel,
+                                       ".\nDuel Accepted! Here we go!\n"
+                                       "{} is {} - {} - {}\n"
+                                       "{} is {} - {} - {}\n"
+                                       "Both Players have {} life.\n"
+                                       "Good Luck!!!"
+                                       .format(challenger.display_name,
+                                               c_rec[0], c_rec[1], c_rec[2],
+                                               vict_name, v_rec[0], v_rec[1],
+                                               v_rec[2], life))
+            c_total = []
+            v_total = []
+            round = 1
+
+            while True:
+                await _client.send_message(channel, "Round {}!".format(round))
+                await _client.send_typing(channel)
+                await asyncio.sleep(10)
+
+                c_roll, v_roll = await dual_dice_roll()
+
+                if c_roll >= 0:
+                    c_total.append(c_roll)
+                else:
+                    v_total.append(abs(c_roll))
+
+                if v_roll >= 0:
+                    v_total.append(v_roll)
+                else:
+                    c_total.append(abs(v_roll))
+
+                c_life = life - sum(v_total)
+                v_life = life - sum(c_total)
+                duel_string = await build_duel_str(challenger.display_name,
+                                                   c_roll, victim.display_name,
+                                                   v_roll, c_life, v_life)
+                if v_life < 1 and c_life < 1:
+                    duel_string += "\nBoth players have died!\n{} and {} " \
+                                   "both drink!".format(challenger.mention,
+                                                        victim.mention)
+                    users[vict_name]['duel_record'][2] += 1
+                    users[challenger.display_name]['duel_record'][2] += 1
+                elif v_life < 1:
+                    duel_string += "\n{} has died!\n{} wins the duel!\n" \
+                                   "{} drinks!".format(victim.display_name,
+                                                       challenger.display_name,
+                                                       victim.mention)
+                    users[vict_name]['duel_record'][1] += 1
+                    users[challenger.display_name]['duel_record'][0] += 1
+                elif c_life < 1:
+                    duel_string += "\n{} has died!\n{} wins the duel!\n" \
+                                   "{} drinks!".format(challenger.display_name,
+                                                       victim.display_name,
+                                                       challenger.mention)
+                    users[vict_name]['duel_record'][0] += 1
+                    users[challenger.display_name]['duel_record'][1] += 1
+                round += 1
+                await _client.send_message(channel, duel_string)
+                if v_life < 1 or c_life < 1:
+                    whos_in.update_db()
+                    break
+                await asyncio.sleep(15)
+            break
+
+    if not accepted:
+        await _client.send_message(channel,
+                                   "Shot duel not accepted! Clearly {} is "
+                                   "better than {}."
+                                   .format(challenger.display_name,
+                                           victim.display_name))
+
+    shot_duel_running = False
+    accepted = False
+    vict_name = ""
 
 
 _client.loop.create_task(check_trumps_mouth())
