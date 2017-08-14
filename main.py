@@ -1831,7 +1831,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
         users[vict_name]['a_item'] = None
     if 'inventory' not in users[challenger.display_name]:
         users[challenger.display_name]['inventory'] = {}
-        users[vict_name]['a_item'] = None
+        users[challenger.display_name]['a_item'] = None
 
     c_rec = users[challenger.display_name]['duel_record']
     v_rec = users[vict_name]['duel_record']
@@ -1864,6 +1864,30 @@ async def event_handle_shot_duel(challenger, victim, channel):
             c_total = []
             v_total = []
 
+            # Check if a player has an active item
+            v_item = None
+            c_item = None
+            if users[challenger.display_name]['a_item'] is not None:
+                c_item = DuelItem(0, users[challenger.display_name]['a_item'])
+                users[challenger.display_name]['inventory'][c_item.item_id] += 1
+                if users[challenger.display_name]['inventory'][
+                   c_item.item_id] >= c_item.uses:
+                    del(users[challenger.display_name]['inventory']
+                        [c_item.item_id])
+                await _client.send_message(channel,
+                                           "{} is using the {}."
+                                           .format(challenger.display_name,
+                                                   c_item.name))
+            if users[vict_name]['a_item'] is not None:
+                v_item = DuelItem(0, users[vict_name]['a_item'])
+                users[vict_name]['inventory'][v_item.item_id] += 1
+                if users[vict_name]['inventory'][v_item.item_id] >= v_item.uses:
+                    del(users[vict_name]['inventory'][v_item.item_id])
+                await _client.send_message(channel,
+                                           "{} is using the {}."
+                                           .format(vict_name,
+                                                   v_item.name))
+
             # item chance rolls
             item = DuelItem(randint(1, 100))
             if item.name is not None:
@@ -1872,14 +1896,14 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                            "the \"{}\"."
                                            .format(challenger.display_name,
                                                    item.name))
-                users[challenger.display_name]['inventory'][item.id] = 0
+                users[challenger.display_name]['inventory'][item.item_id] = 0
             item = DuelItem(randint(1, 100))
             if item.name is not None:
                 await _client.send_message(channel,
                                            "Congratulations {}! You received "
                                            "the \"{}\"."
                                            .format(vict_name, item.name))
-                users[vict_name]['inventory'][item.id] = 0
+                users[vict_name]['inventory'][item.item_id] = 0
 
             _round = 1
 
