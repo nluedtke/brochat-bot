@@ -68,7 +68,7 @@ class DuelItem(object):
         self.type = None
 
         if _id is not None:
-            self.item_id = _id
+            self.item_id = str(_id)
         else:
             if 5 >= item_roll > 1:
                 item = choice(list(common_items.keys()))
@@ -79,10 +79,14 @@ class DuelItem(object):
 
         if self.item_id is not None:
             print("Created " + self.item_id)
-            self.name = rare_items[self.item_id]['name']
-            self.prop = rare_items[self.item_id]['prop']
-            self.type = rare_items[self.item_id]['type']
-            self.uses = rare_items[self.item_id]['uses']
+            if int(self.item_id) < 100:
+                items = common_items
+            else:
+                items = rare_items
+            self.name = items[self.item_id]['name']
+            self.prop = items[self.item_id]['prop']
+            self.type = items[self.item_id]['type']
+            self.uses = items[self.item_id]['uses']
 
 
 if __name__ == "__main__":
