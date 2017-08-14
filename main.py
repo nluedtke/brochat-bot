@@ -1389,7 +1389,7 @@ async def whoami(client, message):
                                       "Your {} is {}.".format(k, v))
     else:
         await client.send_message(message.channel,
-                                  "You're {}, but that all I know about "
+                                  "You're {}, but that's all I know about "
                                   "you.".format(author))
 
 
