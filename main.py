@@ -17,7 +17,7 @@ from twilio.rest import Client
 import requests
 from gametime import Gametime
 from poll import Poll
-from duel_item import DuelItem
+from duel_item import DuelItem, common_items, rare_items
 
 VERSION_MAJOR = 3
 VERSION_MINOR = 0
@@ -369,7 +369,7 @@ class WeekendGames(object):
         game = self.gametimes[game_id]
 
         if game.find_player_by_name(person_to_add) and \
-           status != game.get_player_status(person_to_add):
+                        status != game.get_player_status(person_to_add):
             game.unregister_player(person_to_add)
 
         if game.find_player_by_name(person_to_add):
@@ -756,7 +756,7 @@ def get_reddit(subreddit):
         for entry in response_json['data']['children']:
             if entry['data']['stickied'] is True \
                     or (entry['data']['url'][-4:] != '.png' and
-                        entry['data']['url'][-4:] != '.jpg'):
+                                entry['data']['url'][-4:] != '.jpg'):
                 response_json['data']['children'].remove(entry)
         print(str(len(response_json['data']['children'])))
         seed = randint(0, len(response_json['data']['children']) - 1)
@@ -902,6 +902,7 @@ async def gametime(client, message):
     await client.send_message(message.channel, whos_in.gametime_actions(
         message.content))
 
+
 async def poll(client, message):
     """
     Handles poll actions
@@ -912,6 +913,7 @@ async def poll(client, message):
     """
     await client.send_message(message.channel, whos_in.poll_actions(
         message.content))
+
 
 async def in_command(client, message):
     """
@@ -933,6 +935,7 @@ async def in_command(client, message):
     else:
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
+
 
 async def add_vote(client, message):
     """
@@ -1007,6 +1010,55 @@ async def late_command(client, message):
     else:
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
+
+
+async def use_command(client, message):
+    """
+    Handles the !use command
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+
+    all_items = common_items
+    all_items.extend(rare_items)
+    arguments = argument_parser(message.content)
+    name = message.author.display_name
+    inv = users[name]['inventory']
+    if len(arguments) != 1 or arguments[0].lower() == "!use":
+        if len(inv) == 0:
+            await client.send_message(message.channel,
+                                      "You have no items!")
+        else:
+            inv_string = "Item_ID: Item_Name (Description)\n"
+            for it in inv:
+                inv_string += "{}: {} ({})\n".format(it, all_items[it].name,
+                                                     all_items[it].text)
+
+            await client.send_message(message.channel, inv_string)
+    elif len(arguments) > 1 or users[name]['a_item'] is \
+            not None:
+        await client.send_message(message.channel, "You may only use one item "
+                                                   "at a time!")
+        if users[name]['a_item'] is not None:
+            it = users[name]['a_item']
+            await client.send_message(message.channel,
+                                      "{} is currently in use!\n"
+                                      .format(all_items[it].name))
+    elif len(arguments) == 1 and arguments[0] in all_items and \
+            arguments[0] not in inv:
+        await client.send_message(message.channel, "You don't have that item!")
+    elif len(arguments) == 1 and arguments[0] in all_items and \
+            arguments[0] in inv:
+        await client.send_message(message.channel, "Item {} will be active "
+                                                   "starting with your next "
+                                                   "duel.".format(arguments[0]))
+        users[name]['a_item'] = arguments[0]
+    else:
+        await client.send_message(message.channel, "**!use <item_id>**: "
+                                                   "To use an item \n"
+                                                   "**!use**: to view your "
+                                                   "inventory")
 
 
 async def out_command(client, message):
@@ -1122,6 +1174,7 @@ async def shot_duel(client, message):
         client.loop.create_task(event_handle_shot_duel(
             message.author, map_disp_to_name[name], message.channel))
 
+
 async def get_trump(client, message):
     """
     Gets a presidential tweet
@@ -1143,6 +1196,7 @@ async def get_trump(client, message):
     except TwythonError:
         await client.send_message(message.channel,
                                   "Twitter is acting up, try again later.")
+
 
 async def get_last_tweet(id, tweet_text, rt_text, client, message):
     """
@@ -1169,7 +1223,8 @@ async def get_last_tweet(id, tweet_text, rt_text, client, message):
             if id == 'realdonaldtrump':
                 last_id = last_tweet[0]['id']
             rt_id = last_tweet[0]['retweeted_status']['id']
-            rt_screen_name = last_tweet[0]['retweeted_status']['user']['screen_name']
+            rt_screen_name = last_tweet[0]['retweeted_status']['user'][
+                'screen_name']
             await client.send_message(
                 message.channel,
                 '{}\n\n'
@@ -1355,8 +1410,8 @@ async def set_command(client, message):
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
                 (len(arguments[1]) != 12 or
-                    arguments[1][0] != '+' or not
-                    isinstance(int(arguments[1][1:]), int)):
+                         arguments[1][0] != '+' or not
+                isinstance(int(arguments[1][1:]), int)):
             await client.send_message(message.channel,
                                       "You'll need to use the format "
                                       "**+14148888888**"
@@ -1416,6 +1471,7 @@ async def toggle_news(client, message):
         await client.send_message(message.channel,
                                   "News Feed turned on.")
 
+
 async def get_news(client, message):
     """
     Handles !news
@@ -1444,6 +1500,7 @@ async def get_news(client, message):
 
     return
 
+
 async def change_trump_delay(client, message):
     """
     Handles !tdelay
@@ -1463,6 +1520,7 @@ async def change_trump_delay(client, message):
         await client.send_message(message.channel, "Trump delay set to {}"
                                   .format(trump_del))
 
+
 async def toggle_accept(client, message):
     """
     Logs an accept command
@@ -1477,6 +1535,7 @@ async def toggle_accept(client, message):
         accepted = True
     else:
         await client.send_message(message.channel, "You weren't challenged!")
+
 
 async def change_news_delay(client, message):
     """
@@ -1521,7 +1580,7 @@ async def owstats(client, message):
         print("Overwatch API returned a response code of {}".format(
             response_profile.status_code))
         if 'statusCode' in response_profile.json() or \
-           'statusCode' in response_heroes.json():
+                        'statusCode' in response_heroes.json():
             await client.send_message(message.channel,
                                       "Something went wrong. Make sure "
                                       "your battletag is set up like "
@@ -1631,11 +1690,12 @@ async def on_message(message):
         'vote': add_vote,
         'duel': shot_duel,
         'accept': toggle_accept,
-        'clear': clear
+        'clear': clear,
+        'use': use_command
     }
 
     if message.content.startswith("!") and \
-       "brochat-bot" not in str(message.author):
+                    "brochat-bot" not in str(message.author):
         cmd = message.content.lower()
         cmd = cmd.split()[0][1:]
         if cmd in commands:
@@ -1733,7 +1793,7 @@ async def handle_news():
             c_to_send = channel
             break
 
-    delay = (news_del * 60) + (randint(0, 10)*60)
+    delay = (news_del * 60) + (randint(0, 10) * 60)
     while not _client.is_closed:
         next_source = news_handles.pop(0)
         news_handles.append(next_source)
@@ -1748,15 +1808,16 @@ async def handle_news():
                 print("Error caught in news, shortening delay")
                 delay = 30
             else:
-                delay = (news_del * 60) + (randint(0, 10)*60)
+                delay = (news_del * 60) + (randint(0, 10) * 60)
                 await _client.send_message(
                     c_to_send, "https://twitter.com/{0}/status/{1}"
-                    .format(news[0]['user']['screen_name'],
-                            str(news[0]['id'])))
+                        .format(news[0]['user']['screen_name'],
+                                str(news[0]['id'])))
         else:
             NEWS_FEED_CREATED = False
             print("Destroying News Feed Task")
             return
+
 
 async def dual_dice_roll():
     """
@@ -1764,6 +1825,7 @@ async def dual_dice_roll():
     """
 
     return randint(-1, 6), randint(-1, 6)
+
 
 async def item_eff_str(item):
     """
@@ -1777,6 +1839,7 @@ async def item_eff_str(item):
         return "All damage increased by {}.".format(item.prop)
     else:
         return "This item has an unknown or not implemented effect."
+
 
 async def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     """
@@ -1816,8 +1879,9 @@ async def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
             v_name, v_roll)
 
     r_string += "\n{} is at {}.\n{} is at {}.\n".format(c_name, c_life,
-                                                      v_name, v_life)
+                                                        v_name, v_life)
     return r_string
+
 
 async def event_handle_shot_duel(challenger, victim, channel):
     """
@@ -1885,9 +1949,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 c_item = DuelItem(0, users[challenger.display_name]['a_item'])
                 users[challenger.display_name]['inventory'][c_item.item_id] += 1
                 if users[challenger.display_name]['inventory'][
-                   c_item.item_id] >= c_item.uses:
-                    del(users[challenger.display_name]['inventory']
-                        [c_item.item_id])
+                    c_item.item_id] >= c_item.uses:
+                    del (users[challenger.display_name]['inventory']
+                         [c_item.item_id])
                     users[challenger.display_name]['a_item'] = None
                 await _client.send_message(channel,
                                            "{} is using the {}."
@@ -1898,7 +1962,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 v_item = DuelItem(0, users[vict_name]['a_item'])
                 users[vict_name]['inventory'][v_item.item_id] += 1
                 if users[vict_name]['inventory'][v_item.item_id] >= v_item.uses:
-                    del(users[vict_name]['inventory'][v_item.item_id])
+                    del (users[vict_name]['inventory'][v_item.item_id])
                     users[vict_name]['a_item'] = None
                 await _client.send_message(channel,
                                            "{} is using the {}.\n{}"
