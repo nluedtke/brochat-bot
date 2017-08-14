@@ -1765,6 +1765,19 @@ async def dual_dice_roll():
 
     return randint(-1, 6), randint(-1, 6)
 
+async def item_eff_str(item):
+    """
+    Forms a string for item in use.
+    :param item: Item in use
+    :return: Sting containing info on how the round is affected
+    :rtype: str
+    """
+
+    if item.type == 'roll_effect':
+        return "All damage increased by {}.".format(item.prop)
+    else:
+        return "This item has an unknown or not implemented effect."
+
 async def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     """
     :param c_name: Challenger's name
@@ -1879,7 +1892,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 await _client.send_message(channel,
                                            "{} is using the {}."
                                            .format(challenger.display_name,
-                                                   c_item.name))
+                                                   c_item.name,
+                                                   item_eff_str(c_item)))
             if users[vict_name]['a_item'] is not None:
                 v_item = DuelItem(0, users[vict_name]['a_item'])
                 users[vict_name]['inventory'][v_item.item_id] += 1
@@ -1887,9 +1901,10 @@ async def event_handle_shot_duel(challenger, victim, channel):
                     del(users[vict_name]['inventory'][v_item.item_id])
                     users[vict_name]['a_item'] = None
                 await _client.send_message(channel,
-                                           "{} is using the {}."
+                                           "{} is using the {}.\n{}"
                                            .format(vict_name,
-                                                   v_item.name))
+                                                   v_item.name,
+                                                   item_eff_str(v_item)))
 
             # item chance rolls
             item = DuelItem(randint(1, 100))
@@ -1916,6 +1931,11 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 await asyncio.sleep(10)
 
                 c_roll, v_roll = await dual_dice_roll()
+
+                if c_item is not None and c_item.type == "roll_effect":
+                    c_roll += c_item.prop
+                if v_item is not None and v_item.type == "roll_effect":
+                    v_roll += v_item.prop
 
                 if c_roll >= 0:
                     c_total.append(c_roll)
