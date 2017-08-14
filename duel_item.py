@@ -60,6 +60,7 @@ class DuelItem(object):
         if an item should be reward and what type of item
         """
 
+        self.id = None
         self.name = None
         self.prop = None
         self.uses = None
@@ -68,6 +69,7 @@ class DuelItem(object):
         if 5 >= item_roll > 1:
             item = choice(list(common_items.keys()))
             print("Created " + item)
+            self.id = item
             self.name = common_items[item]['name']
             self.prop = common_items[item]['prop']
             self.type = common_items[item]['type']
@@ -75,6 +77,7 @@ class DuelItem(object):
         elif item_roll == 1:
             item = choice(list(rare_items.keys()))
             print("Created " + item)
+            self.id = item
             self.name = rare_items[item]['name']
             self.prop = rare_items[item]['prop']
             self.type = rare_items[item]['type']
