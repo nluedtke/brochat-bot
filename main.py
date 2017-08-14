@@ -756,7 +756,7 @@ def get_reddit(subreddit):
         for entry in response_json['data']['children']:
             if entry['data']['stickied'] is True \
                     or (entry['data']['url'][-4:] != '.png' and
-                                entry['data']['url'][-4:] != '.jpg'):
+                        entry['data']['url'][-4:] != '.jpg'):
                 response_json['data']['children'].remove(entry)
         print(str(len(response_json['data']['children'])))
         seed = randint(0, len(response_json['data']['children']) - 1)
@@ -1021,7 +1021,7 @@ async def use_command(client, message):
     """
 
     all_items = common_items
-    all_items.extend(rare_items)
+    all_items.update(rare_items)
     arguments = argument_parser(message.content)
     name = message.author.display_name
     inv = users[name]['inventory']
@@ -1032,8 +1032,8 @@ async def use_command(client, message):
         else:
             inv_string = "Item_ID: Item_Name (Description)\n"
             for it in inv:
-                inv_string += "{}: {} ({})\n".format(it, all_items[it].name,
-                                                     all_items[it].text)
+                inv_string += "{}: {} ({})\n".format(it, all_items[it]['name'],
+                                                     all_items[it]['text'])
 
             await client.send_message(message.channel, inv_string)
     elif len(arguments) > 1 or users[name]['a_item'] is \
@@ -1044,7 +1044,7 @@ async def use_command(client, message):
             it = users[name]['a_item']
             await client.send_message(message.channel,
                                       "{} is currently in use!\n"
-                                      .format(all_items[it].name))
+                                      .format(all_items[it]['name']))
     elif len(arguments) == 1 and arguments[0] in all_items and \
             arguments[0] not in inv:
         await client.send_message(message.channel, "You don't have that item!")
@@ -1198,10 +1198,10 @@ async def get_trump(client, message):
                                   "Twitter is acting up, try again later.")
 
 
-async def get_last_tweet(id, tweet_text, rt_text, client, message):
+async def get_last_tweet(_id, tweet_text, rt_text, client, message):
     """
     Gets the last tweet for id.
-    :param id:
+    :param _id: Twitter id
     :param tweet_text: flavor text for tweets
     :param rt_text: flavor text for retweets
     :param client: discord client
@@ -1214,13 +1214,13 @@ async def get_last_tweet(id, tweet_text, rt_text, client, message):
 
     try:
         last_tweet = twitter.get_user_timeline(
-            screen_name=id, count=1, include_retweets=True)
+            screen_name=_id, count=1, include_retweets=True)
     except TwythonError as e:
         raise e
     else:
         # if it's a retweet, send the original tweet
         if 'retweeted_status' in last_tweet[0]:
-            if id == 'realdonaldtrump':
+            if _id == 'realdonaldtrump':
                 last_id = last_tweet[0]['id']
             rt_id = last_tweet[0]['retweeted_status']['id']
             rt_screen_name = last_tweet[0]['retweeted_status']['user'][
@@ -1234,7 +1234,7 @@ async def get_last_tweet(id, tweet_text, rt_text, client, message):
                     str(rt_id)))
         # otherwise, send the tweet
         else:
-            if id == 'realdonaldtrump':
+            if _id == 'realdonaldtrump':
                 last_id = last_tweet[0]['id']
             await client.send_message(
                 message.channel,
@@ -1410,8 +1410,8 @@ async def set_command(client, message):
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
                 (len(arguments[1]) != 12 or
-                         arguments[1][0] != '+' or not
-                isinstance(int(arguments[1][1:]), int)):
+                 arguments[1][0] != '+' or not
+                 isinstance(int(arguments[1][1:]), int)):
             await client.send_message(message.channel,
                                       "You'll need to use the format "
                                       "**+14148888888**"
@@ -1580,7 +1580,7 @@ async def owstats(client, message):
         print("Overwatch API returned a response code of {}".format(
             response_profile.status_code))
         if 'statusCode' in response_profile.json() or \
-                        'statusCode' in response_heroes.json():
+                'statusCode' in response_heroes.json():
             await client.send_message(message.channel,
                                       "Something went wrong. Make sure "
                                       "your battletag is set up like "
@@ -1695,7 +1695,7 @@ async def on_message(message):
     }
 
     if message.content.startswith("!") and \
-                    "brochat-bot" not in str(message.author):
+            "brochat-bot" not in str(message.author):
         cmd = message.content.lower()
         cmd = cmd.split()[0][1:]
         if cmd in commands:
@@ -1819,7 +1819,7 @@ async def handle_news():
             return
 
 
-async def dual_dice_roll():
+def dual_dice_roll():
     """
     Return two dice rolls
     """
@@ -1827,7 +1827,7 @@ async def dual_dice_roll():
     return randint(-1, 6), randint(-1, 6)
 
 
-async def item_eff_str(item):
+def item_eff_str(item):
     """
     Forms a string for item in use.
     :param item: Item in use
@@ -1841,7 +1841,7 @@ async def item_eff_str(item):
         return "This item has an unknown or not implemented effect."
 
 
-async def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
+def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     """
     :param c_name: Challenger's name
     :param c_roll: Challenger's roll
@@ -1874,7 +1874,7 @@ async def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     elif 0 < v_roll < 6:
         r_string += "{} lands a {} and deals {} damage!".format(
             v_name, choice(a_types), v_roll)
-    elif v_roll == 6:
+    elif v_roll >= 6:
         r_string += "{} lands a MASSIVE strike and deals {} damage!".format(
             v_name, v_roll)
 
@@ -1949,12 +1949,12 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 c_item = DuelItem(0, users[challenger.display_name]['a_item'])
                 users[challenger.display_name]['inventory'][c_item.item_id] += 1
                 if users[challenger.display_name]['inventory'][
-                    c_item.item_id] >= c_item.uses:
+                   c_item.item_id] >= c_item.uses:
                     del (users[challenger.display_name]['inventory']
                          [c_item.item_id])
                     users[challenger.display_name]['a_item'] = None
                 await _client.send_message(channel,
-                                           "{} is using the {}."
+                                           "{} is using the {}.\n{}"
                                            .format(challenger.display_name,
                                                    c_item.name,
                                                    item_eff_str(c_item)))
@@ -1994,7 +1994,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 await _client.send_typing(channel)
                 await asyncio.sleep(10)
 
-                c_roll, v_roll = await dual_dice_roll()
+                c_roll, v_roll = dual_dice_roll()
 
                 if c_item is not None and c_item.type == "roll_effect" \
                         and c_roll >= 0:
@@ -2021,9 +2021,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
                 c_life = life - sum(v_total)
                 v_life = life - sum(c_total)
-                duel_string = await build_duel_str(challenger.display_name,
-                                                   c_roll, victim.display_name,
-                                                   v_roll, c_life, v_life)
+                duel_string = build_duel_str(challenger.display_name,
+                                             c_roll, victim.display_name,
+                                             v_roll, c_life, v_life)
                 if v_life < 1 and c_life < 1:
                     duel_string += "\nBoth players have died!\n{} and {} " \
                                    "both drink!".format(challenger.mention,

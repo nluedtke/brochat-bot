@@ -78,7 +78,6 @@ class DuelItem(object):
                 self.item_id = item
 
         if self.item_id is not None:
-            print("Created " + self.item_id)
             if int(self.item_id) < 100:
                 items = common_items
             else:
