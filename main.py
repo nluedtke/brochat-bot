@@ -1875,6 +1875,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                    c_item.item_id] >= c_item.uses:
                     del(users[challenger.display_name]['inventory']
                         [c_item.item_id])
+                    users[challenger.display_name]['a_item'] = None
                 await _client.send_message(channel,
                                            "{} is using the {}."
                                            .format(challenger.display_name,
@@ -1884,6 +1885,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 users[vict_name]['inventory'][v_item.item_id] += 1
                 if users[vict_name]['inventory'][v_item.item_id] >= v_item.uses:
                     del(users[vict_name]['inventory'][v_item.item_id])
+                    users[vict_name]['a_item'] = None
                 await _client.send_message(channel,
                                            "{} is using the {}."
                                            .format(vict_name,
