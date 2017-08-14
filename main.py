@@ -1932,10 +1932,18 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
                 c_roll, v_roll = await dual_dice_roll()
 
-                if c_item is not None and c_item.type == "roll_effect":
+                if c_item is not None and c_item.type == "roll_effect" \
+                        and c_roll >= 0:
                     c_roll += c_item.prop
-                if v_item is not None and v_item.type == "roll_effect":
+                elif c_item is not None and c_item.type == "roll_effect" \
+                        and c_roll < 0:
+                    c_roll -= c_item.prop
+                if v_item is not None and v_item.type == "roll_effect" \
+                        and v_roll >= 0:
                     v_roll += v_item.prop
+                elif v_item is not None and v_item.type == "roll_effect" \
+                        and v_roll < 0:
+                    v_roll -= v_item.prop
 
                 if c_roll >= 0:
                     c_total.append(c_roll)
