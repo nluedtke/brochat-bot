@@ -21,7 +21,7 @@ from duel_item import DuelItem
 
 VERSION_MAJOR = 3
 VERSION_MINOR = 0
-VERSION_PATCH = 5
+VERSION_PATCH = 6
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
@@ -1205,6 +1205,7 @@ async def run_shot_lottery(client, message, auto_call=False):
         for x in range(4):
             await client.send_message(message.channel,
                                       shot_lottery_string.pop(0))
+            await client.send_typing(message.channel)
             await asyncio.sleep(4)
         while len(shot_lottery_string) > 0:
             await client.send_message(message.channel,
@@ -1576,8 +1577,8 @@ async def clear(client, message):
     :param client client to perform action
     """
     channel = message.channel
-    deleted = await client.purge_from(channel, limit=100, check=is_me)
-    c_ds = await client.purge_from(channel, limit=100, check=is_command)
+    deleted = await client.purge_from(channel, limit=50, check=is_me)
+    c_ds = await client.purge_from(channel, limit=50, check=is_command)
     await client.send_message(channel, 'Deleted {} message(s)'
                               .format(len(deleted) + len(c_ds)))
 
@@ -1711,6 +1712,7 @@ async def print_at_midnight():
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
         await _client.send_message(c_to_send, whos_in.whos_in())
+        whos_in.update_db()
         await asyncio.sleep(60 * 10)
 
 
@@ -1879,7 +1881,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
             while True:
                 await _client.send_message(channel, "Round {}!".format(round))
+                await _client.send_typing(channel)
                 await asyncio.sleep(10)
+
                 c_roll, v_roll = await dual_dice_roll()
 
                 if c_roll >= 0:
