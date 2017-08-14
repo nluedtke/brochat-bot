@@ -1870,12 +1870,14 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                            "the \"{}\"."
                                            .format(challenger.display_name,
                                                    item.name))
+                users[challenger.display_name]['inventory'][item.id] = 0
             item = DuelItem(randint(1, 100))
             if item.name is not None:
                 await _client.send_message(channel,
                                            "Congratulations {}! You received "
                                            "the \"{}\"."
                                            .format(vict_name, item.name))
+                users[vict_name]['inventory'][item.id] = 0
 
             round = 1
 
