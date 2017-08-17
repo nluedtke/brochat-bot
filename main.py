@@ -17,6 +17,7 @@ from twilio.rest import Client
 import requests
 from gametime import Gametime
 from poll import Poll
+from duel_item import DuelItem, common_items, rare_items
 
 VERSION_MAJOR = 3
 VERSION_MINOR = 0
@@ -368,7 +369,7 @@ class WeekendGames(object):
         game = self.gametimes[game_id]
 
         if game.find_player_by_name(person_to_add) and \
-           status != game.get_player_status(person_to_add):
+                        status != game.get_player_status(person_to_add):
             game.unregister_player(person_to_add)
 
         if game.find_player_by_name(person_to_add):
@@ -901,6 +902,7 @@ async def gametime(client, message):
     await client.send_message(message.channel, whos_in.gametime_actions(
         message.content))
 
+
 async def poll(client, message):
     """
     Handles poll actions
@@ -911,6 +913,7 @@ async def poll(client, message):
     """
     await client.send_message(message.channel, whos_in.poll_actions(
         message.content))
+
 
 async def in_command(client, message):
     """
@@ -932,6 +935,7 @@ async def in_command(client, message):
     else:
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
+
 
 async def add_vote(client, message):
     """
@@ -1006,6 +1010,55 @@ async def late_command(client, message):
     else:
         await client.send_message(message.channel,
                                   "You'll need to be more specific :smile:")
+
+
+async def use_command(client, message):
+    """
+    Handles the !use command
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+
+    all_items = common_items
+    all_items.update(rare_items)
+    arguments = argument_parser(message.content)
+    name = message.author.display_name
+    inv = users[name]['inventory']
+    if len(arguments) != 1 or arguments[0].lower() == "!use":
+        if len(inv) == 0:
+            await client.send_message(message.channel,
+                                      "You have no items!")
+        else:
+            inv_string = "Item_ID: Item_Name (Description)\n"
+            for it in inv:
+                inv_string += "{}: {} ({})\n".format(it, all_items[it]['name'],
+                                                     all_items[it]['text'])
+
+            await client.send_message(message.channel, inv_string)
+    elif len(arguments) > 1 or users[name]['a_item'] is \
+            not None:
+        await client.send_message(message.channel, "You may only use one item "
+                                                   "at a time!")
+        if users[name]['a_item'] is not None:
+            it = users[name]['a_item']
+            await client.send_message(message.channel,
+                                      "{} is currently in use!\n"
+                                      .format(all_items[it]['name']))
+    elif len(arguments) == 1 and arguments[0] in all_items and \
+            arguments[0] not in inv:
+        await client.send_message(message.channel, "You don't have that item!")
+    elif len(arguments) == 1 and arguments[0] in all_items and \
+            arguments[0] in inv:
+        await client.send_message(message.channel, "Item {} will be active "
+                                                   "starting with your next "
+                                                   "duel.".format(arguments[0]))
+        users[name]['a_item'] = arguments[0]
+    else:
+        await client.send_message(message.channel, "**!use <item_id>**: "
+                                                   "To use an item \n"
+                                                   "**!use**: to view your "
+                                                   "inventory")
 
 
 async def out_command(client, message):
@@ -1121,6 +1174,7 @@ async def shot_duel(client, message):
         client.loop.create_task(event_handle_shot_duel(
             message.author, map_disp_to_name[name], message.channel))
 
+
 async def get_trump(client, message):
     """
     Gets a presidential tweet
@@ -1143,10 +1197,11 @@ async def get_trump(client, message):
         await client.send_message(message.channel,
                                   "Twitter is acting up, try again later.")
 
-async def get_last_tweet(id, tweet_text, rt_text, client, message):
+
+async def get_last_tweet(_id, tweet_text, rt_text, client, message):
     """
     Gets the last tweet for id.
-    :param id:
+    :param _id: Twitter id
     :param tweet_text: flavor text for tweets
     :param rt_text: flavor text for retweets
     :param client: discord client
@@ -1159,16 +1214,17 @@ async def get_last_tweet(id, tweet_text, rt_text, client, message):
 
     try:
         last_tweet = twitter.get_user_timeline(
-            screen_name=id, count=1, include_retweets=True)
+            screen_name=_id, count=1, include_retweets=True)
     except TwythonError as e:
         raise e
     else:
         # if it's a retweet, send the original tweet
         if 'retweeted_status' in last_tweet[0]:
-            if id == 'realdonaldtrump':
+            if _id == 'realdonaldtrump':
                 last_id = last_tweet[0]['id']
             rt_id = last_tweet[0]['retweeted_status']['id']
-            rt_screen_name = last_tweet[0]['retweeted_status']['user']['screen_name']
+            rt_screen_name = last_tweet[0]['retweeted_status']['user'][
+                'screen_name']
             await client.send_message(
                 message.channel,
                 '{}\n\n'
@@ -1178,7 +1234,7 @@ async def get_last_tweet(id, tweet_text, rt_text, client, message):
                     str(rt_id)))
         # otherwise, send the tweet
         else:
-            if id == 'realdonaldtrump':
+            if _id == 'realdonaldtrump':
                 last_id = last_tweet[0]['id']
             await client.send_message(
                 message.channel,
@@ -1354,8 +1410,8 @@ async def set_command(client, message):
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
                 (len(arguments[1]) != 12 or
-                    arguments[1][0] != '+' or not
-                    isinstance(int(arguments[1][1:]), int)):
+                 arguments[1][0] != '+' or not
+                 isinstance(int(arguments[1][1:]), int)):
             await client.send_message(message.channel,
                                       "You'll need to use the format "
                                       "**+14148888888**"
@@ -1415,6 +1471,7 @@ async def toggle_news(client, message):
         await client.send_message(message.channel,
                                   "News Feed turned on.")
 
+
 async def get_news(client, message):
     """
     Handles !news
@@ -1443,6 +1500,7 @@ async def get_news(client, message):
 
     return
 
+
 async def change_trump_delay(client, message):
     """
     Handles !tdelay
@@ -1462,6 +1520,7 @@ async def change_trump_delay(client, message):
         await client.send_message(message.channel, "Trump delay set to {}"
                                   .format(trump_del))
 
+
 async def toggle_accept(client, message):
     """
     Logs an accept command
@@ -1476,6 +1535,7 @@ async def toggle_accept(client, message):
         accepted = True
     else:
         await client.send_message(message.channel, "You weren't challenged!")
+
 
 async def change_news_delay(client, message):
     """
@@ -1520,7 +1580,7 @@ async def owstats(client, message):
         print("Overwatch API returned a response code of {}".format(
             response_profile.status_code))
         if 'statusCode' in response_profile.json() or \
-           'statusCode' in response_heroes.json():
+                'statusCode' in response_heroes.json():
             await client.send_message(message.channel,
                                       "Something went wrong. Make sure "
                                       "your battletag is set up like "
@@ -1630,11 +1690,12 @@ async def on_message(message):
         'vote': add_vote,
         'duel': shot_duel,
         'accept': toggle_accept,
-        'clear': clear
+        'clear': clear,
+        'use': use_command
     }
 
     if message.content.startswith("!") and \
-       "brochat-bot" not in str(message.author):
+            "brochat-bot" not in str(message.author):
         cmd = message.content.lower()
         cmd = cmd.split()[0][1:]
         if cmd in commands:
@@ -1732,7 +1793,7 @@ async def handle_news():
             c_to_send = channel
             break
 
-    delay = (news_del * 60) + (randint(0, 10)*60)
+    delay = (news_del * 60) + (randint(0, 10) * 60)
     while not _client.is_closed:
         next_source = news_handles.pop(0)
         news_handles.append(next_source)
@@ -1747,24 +1808,40 @@ async def handle_news():
                 print("Error caught in news, shortening delay")
                 delay = 30
             else:
-                delay = (news_del * 60) + (randint(0, 10)*60)
+                delay = (news_del * 60) + (randint(0, 10) * 60)
                 await _client.send_message(
                     c_to_send, "https://twitter.com/{0}/status/{1}"
-                    .format(news[0]['user']['screen_name'],
-                            str(news[0]['id'])))
+                        .format(news[0]['user']['screen_name'],
+                                str(news[0]['id'])))
         else:
             NEWS_FEED_CREATED = False
             print("Destroying News Feed Task")
             return
 
-async def dual_dice_roll():
+
+def dual_dice_roll():
     """
     Return two dice rolls
     """
 
     return randint(-1, 6), randint(-1, 6)
 
-async def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
+
+def item_eff_str(item):
+    """
+    Forms a string for item in use.
+    :param item: Item in use
+    :return: Sting containing info on how the round is affected
+    :rtype: str
+    """
+
+    if item.type == 'roll_effect':
+        return "All damage increased by {}.".format(item.prop)
+    else:
+        return "This item has an unknown or not implemented effect."
+
+
+def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     """
     :param c_name: Challenger's name
     :param c_roll: Challenger's roll
@@ -1797,13 +1874,14 @@ async def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     elif 0 < v_roll < 6:
         r_string += "{} lands a {} and deals {} damage!".format(
             v_name, choice(a_types), v_roll)
-    elif v_roll == 6:
+    elif v_roll >= 6:
         r_string += "{} lands a MASSIVE strike and deals {} damage!".format(
             v_name, v_roll)
 
     r_string += "\n{} is at {}.\n{} is at {}.\n".format(c_name, c_life,
-                                                      v_name, v_life)
+                                                        v_name, v_life)
     return r_string
+
 
 async def event_handle_shot_duel(challenger, victim, channel):
     """
@@ -1826,6 +1904,12 @@ async def event_handle_shot_duel(challenger, victim, channel):
         users[vict_name]['duel_record'] = [0, 0, 0]
     if 'duel_record' not in users[challenger.display_name]:
         users[challenger.display_name]['duel_record'] = [0, 0, 0]
+    if 'inventory' not in users[vict_name]:
+        users[vict_name]['inventory'] = {}
+        users[vict_name]['a_item'] = None
+    if 'inventory' not in users[challenger.display_name]:
+        users[challenger.display_name]['inventory'] = {}
+        users[challenger.display_name]['a_item'] = None
 
     c_rec = users[challenger.display_name]['duel_record']
     v_rec = users[vict_name]['duel_record']
@@ -1857,14 +1941,73 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                                v_rec[2], life))
             c_total = []
             v_total = []
-            round = 1
+
+            # Check if a player has an active item
+            v_item = None
+            c_item = None
+            if users[challenger.display_name]['a_item'] is not None:
+                c_item = DuelItem(0, users[challenger.display_name]['a_item'])
+                users[challenger.display_name]['inventory'][c_item.item_id] += 1
+                if users[challenger.display_name]['inventory'][
+                   c_item.item_id] >= c_item.uses:
+                    del (users[challenger.display_name]['inventory']
+                         [c_item.item_id])
+                    users[challenger.display_name]['a_item'] = None
+                await _client.send_message(channel,
+                                           "{} is using the {}.\n{}"
+                                           .format(challenger.display_name,
+                                                   c_item.name,
+                                                   item_eff_str(c_item)))
+            if users[vict_name]['a_item'] is not None:
+                v_item = DuelItem(0, users[vict_name]['a_item'])
+                users[vict_name]['inventory'][v_item.item_id] += 1
+                if users[vict_name]['inventory'][v_item.item_id] >= v_item.uses:
+                    del (users[vict_name]['inventory'][v_item.item_id])
+                    users[vict_name]['a_item'] = None
+                await _client.send_message(channel,
+                                           "{} is using the {}.\n{}"
+                                           .format(vict_name,
+                                                   v_item.name,
+                                                   item_eff_str(v_item)))
+
+            # item chance rolls
+            item = DuelItem(randint(1, 100))
+            if item.name is not None:
+                await _client.send_message(channel,
+                                           "Congratulations {}! You received "
+                                           "the \"{}\"."
+                                           .format(challenger.display_name,
+                                                   item.name))
+                users[challenger.display_name]['inventory'][item.item_id] = 0
+            item = DuelItem(randint(1, 100))
+            if item.name is not None:
+                await _client.send_message(channel,
+                                           "Congratulations {}! You received "
+                                           "the \"{}\"."
+                                           .format(vict_name, item.name))
+                users[vict_name]['inventory'][item.item_id] = 0
+
+            _round = 1
 
             while True:
-                await _client.send_message(channel, "Round {}!".format(round))
+                await _client.send_message(channel, "Round {}!".format(_round))
                 await _client.send_typing(channel)
                 await asyncio.sleep(10)
 
-                c_roll, v_roll = await dual_dice_roll()
+                c_roll, v_roll = dual_dice_roll()
+
+                if c_item is not None and c_item.type == "roll_effect" \
+                        and c_roll >= 0:
+                    c_roll += c_item.prop
+                elif c_item is not None and c_item.type == "roll_effect" \
+                        and c_roll < 0:
+                    c_roll -= c_item.prop
+                if v_item is not None and v_item.type == "roll_effect" \
+                        and v_roll >= 0:
+                    v_roll += v_item.prop
+                elif v_item is not None and v_item.type == "roll_effect" \
+                        and v_roll < 0:
+                    v_roll -= v_item.prop
 
                 if c_roll >= 0:
                     c_total.append(c_roll)
@@ -1878,9 +2021,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
                 c_life = life - sum(v_total)
                 v_life = life - sum(c_total)
-                duel_string = await build_duel_str(challenger.display_name,
-                                                   c_roll, victim.display_name,
-                                                   v_roll, c_life, v_life)
+                duel_string = build_duel_str(challenger.display_name,
+                                             c_roll, victim.display_name,
+                                             v_roll, c_life, v_life)
                 if v_life < 1 and c_life < 1:
                     duel_string += "\nBoth players have died!\n{} and {} " \
                                    "both drink!".format(challenger.mention,
@@ -1901,7 +2044,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                                        challenger.mention)
                     users[vict_name]['duel_record'][0] += 1
                     users[challenger.display_name]['duel_record'][1] += 1
-                round += 1
+                _round += 1
                 await _client.send_message(channel, duel_string)
                 if v_life < 1 or c_life < 1:
                     whos_in.update_db()
