@@ -666,7 +666,9 @@ async def on_ready():
         "I have returned to enforce...I mean encourage friendship.",
         "Here to make brochat great again!",
         "Make every breakfast a Bot-fast.",
-        "Pancakes are ***REMOVED*** ***REMOVED***."
+        "Pancakes are ***REMOVED*** ***REMOVED***.",
+        "Ask not what brochat can do for you, ask what you can do for "
+        "brochat."
     ]
     for channel in _client.get_all_channels():
         if channel.name == 'general' or channel.name == 'brochat':
