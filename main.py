@@ -709,9 +709,7 @@ async def print_help(client, message):
                   "**!set**: Tell Brochat-Bot some info about you\n" \
                   "**!battletag**: I'll tell you your battletag\n" \
                   "**!whoami**: I'll tell you what I know about you\n" \
-                  "**!toggle-news**: Turn news feed on/off\n" \
-                  "**!version**: Print the version of brochat-bot\n" \
-                  "**!uptime**: Print how long the bot has been running for\n"
+                  "**!toggle-news**: Turn news feed on/off\n"
 
     await client.send_message(message.channel, help_string)
 
