@@ -6,7 +6,7 @@ setup(
     packages=[''],
     url='',
     license='MIT',
-    author='quietcorey',
+    author='quietcorey, nluedtke',
     author_email='shelton.ca@gmail.com',
     description='A bot for bros.', requires=['twython', 'twilio', 'discord.py']
 )
