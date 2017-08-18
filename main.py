@@ -1933,12 +1933,11 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                        ".\nDuel Accepted! Here we go!\n"
                                        "{} is {} - {} - {}\n"
                                        "{} is {} - {} - {}\n"
-                                       "Both Players have {} life.\n"
                                        "Good Luck!!!"
                                        .format(challenger.display_name,
                                                c_rec[0], c_rec[1], c_rec[2],
                                                vict_name, v_rec[0], v_rec[1],
-                                               v_rec[2], life))
+                                               v_rec[2]))
             c_total = []
             v_total = []
 
@@ -1996,6 +1995,13 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 users[vict_name]['inventory'][item.item_id] = 0
 
             _round = 1
+
+            await _client.send_message(channel,
+                                       ".\n{} has {} life.\n"
+                                       "{} has {} life."
+                                       .format(challenger.display_name,
+                                               c_life_start,
+                                               vict_name, v_life_start))
 
             while True:
                 await _client.send_message(channel, "Round {}!".format(_round))
