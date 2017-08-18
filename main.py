@@ -1970,6 +1970,14 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                                    v_item.name,
                                                    item_eff_str(v_item)))
 
+            # life_effect checks
+            c_life_start = life
+            v_life_start = life
+            if c_item is not None and c_item.type == "life_effect":
+                c_life_start += c_item.prop
+            if v_item is not None and v_item.type == "life_effect":
+                v_life_start += v_item.prop
+
             # item chance rolls
             item = DuelItem(randint(1, 100))
             if item.name is not None:
@@ -2019,8 +2027,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 else:
                     c_total.append(abs(v_roll))
 
-                c_life = life - sum(v_total)
-                v_life = life - sum(c_total)
+                c_life = c_life_start - sum(v_total)
+                v_life = v_life_start - sum(c_total)
                 duel_string = build_duel_str(challenger.display_name,
                                              c_roll, victim.display_name,
                                              v_roll, c_life, v_life)
