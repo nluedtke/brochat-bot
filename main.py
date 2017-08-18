@@ -1947,27 +1947,27 @@ async def event_handle_shot_duel(challenger, victim, channel):
             if users[challenger.display_name]['a_item'] is not None:
                 c_item = DuelItem(0, users[challenger.display_name]['a_item'])
                 users[challenger.display_name]['inventory'][c_item.item_id] += 1
+                notif_str = "{} is using the {}.\n{}"\
+                            .format(challenger.display_name, c_item.name,
+                                    item_eff_str(c_item))
                 if users[challenger.display_name]['inventory'][
                    c_item.item_id] >= c_item.uses:
                     del (users[challenger.display_name]['inventory']
                          [c_item.item_id])
                     users[challenger.display_name]['a_item'] = None
-                await _client.send_message(channel,
-                                           "{} is using the {}.\n{}"
-                                           .format(challenger.display_name,
-                                                   c_item.name,
-                                                   item_eff_str(c_item)))
+                    notif_str += "\nThis is the last use for this item!"
+                await _client.send_message(channel, notif_str)
             if users[vict_name]['a_item'] is not None:
                 v_item = DuelItem(0, users[vict_name]['a_item'])
                 users[vict_name]['inventory'][v_item.item_id] += 1
+                notif_str = "{} is using the {}.\n{}"\
+                            .format(vict_name, v_item.name,
+                                    item_eff_str(v_item))
                 if users[vict_name]['inventory'][v_item.item_id] >= v_item.uses:
                     del (users[vict_name]['inventory'][v_item.item_id])
                     users[vict_name]['a_item'] = None
-                await _client.send_message(channel,
-                                           "{} is using the {}.\n{}"
-                                           .format(vict_name,
-                                                   v_item.name,
-                                                   item_eff_str(v_item)))
+                    notif_str += "\nThis is the last use for this item!"
+                await _client.send_message(channel, notif_str)
 
             # life_effect checks
             c_life_start = life
