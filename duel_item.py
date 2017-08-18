@@ -3,10 +3,13 @@
 from random import choice
 
 # Define a common item here.
+# Current guidelines for rarity are:
+#   Any item with more than 4 duels in duration is RARE.
+#   Any item with a modifier greater than 2 damage or 4 life is RARE.
 # The key is the id of the item
 # The item is a dictionary with two key:value pairs
 #   1) type: effect_type
-#   2) prop: strength or effect discripter
+#   2) prop: strength or effect descriptor
 #   3) uses: amount of uses, measured in duels
 #   4) text: text description of item
 #   5) name: name of item
