@@ -37,7 +37,22 @@ common_items = {
           "prop": 1,
           "uses": 4,
           "text": "This ring adds +1 to all damage "
-                  "for the user for four duels."}
+                  "for the user for four duels."},
+    "3": {"name": "Copper Plate",
+          "type": "life_effect",
+          "prop": 2,
+          "uses": 1,
+          "text": "This armor adds +2 life to wearer for one duel."},
+    "4": {"name": "Bronze Plate",
+          "type": "life_effect",
+          "prop": 2,
+          "uses": 2,
+          "text": "This armor adds +2 life to wearer for two duels."},
+    "5": {"name": "Steel Plate",
+          "type": "life_effect",
+          "prop": 2,
+          "uses": 4,
+          "text": "This armor adds +2 life to wearer for four duels."}
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -48,7 +63,12 @@ rare_items = {
             "prop": 1,
             "uses": 10,
             "text": "This ring adds +1 to all damage "
-                    "for the user for ten duels."}
+                    "for the user for ten duels."},
+    "101": {"name": "Heavy Steel Plate",
+            "type": "life_effect",
+            "prop": 2,
+            "uses": 10,
+            "text": "This armor adds +2 life to wearer for ten duels."}
 }
 
 
