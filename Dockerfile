@@ -6,6 +6,6 @@ RUN apt-get update && \
     apt-get remove -y python3-pip && \
     rm -rf /var/lib/apt/lists/*
 
-COPY gametime.py main.py poll.py ./
+COPY gametime.py main.py poll.py duel_item.py ./
 ENTRYPOINT ["python3", "main.py"]
 
