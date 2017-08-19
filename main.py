@@ -1196,7 +1196,7 @@ async def get_trump(client, message):
     except TwythonError:
         await client.send_message(message.channel,
                                   "Twitter is acting up, try again later.")
-    item_chance_roll(message.channel, message.author.display_name, 250)
+    await item_chance_roll(message.channel, message.author.display_name, 250)
 
 
 async def get_last_tweet(_id, tweet_text, rt_text, client, message):
