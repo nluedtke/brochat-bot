@@ -1196,6 +1196,7 @@ async def get_trump(client, message):
     except TwythonError:
         await client.send_message(message.channel,
                                   "Twitter is acting up, try again later.")
+    item_chance_roll(message.channel, message.author.display_name, 250)
 
 
 async def get_last_tweet(_id, tweet_text, rt_text, client, message):
@@ -1909,7 +1910,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
     :param challenger: Person challenging
     :param victim: Person challenged
-    :param channel: challenge duel is taking place in
+    :param channel: channel duel is taking place in
     :return: None
     """
     global shot_duel_running, accepted, vict_name
@@ -1998,8 +1999,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 v_life_start += v_item.prop
 
             # item chance rolls
-            await item_chance_roll(channel, challenger.display_name, 100)
-            await item_chance_roll(channel, vict_name, 100)
+            await item_chance_roll(channel, challenger.display_name)
+            await item_chance_roll(channel, vict_name)
 
             _round = 1
 
