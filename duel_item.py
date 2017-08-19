@@ -37,21 +37,41 @@ common_items = {
           "uses": 4,
           "text": "This ring adds +1 to all damage for the user for four "
                   "duels."},
-    "3": {"name": "Copper Plate Armor",
+    "3": {"name": "Cloth Vest",
           "type": "life_effect",
           "prop": 2,
           "uses": 1,
           "text": "This armor adds +2 life for the wearer for one duel."},
-    "4": {"name": "Bronze Plate Armor",
+    "4": {"name": "Leather Vest",
           "type": "life_effect",
           "prop": 2,
           "uses": 2,
           "text": "This armor adds +2 life for the wearer for two duels."},
-    "5": {"name": "Steel Plate Armor",
+    "5": {"name": "Reinforced Leather Vest",
           "type": "life_effect",
           "prop": 2,
           "uses": 4,
-          "text": "This armor adds +2 life for the wearer for four duels."}
+          "text": "This armor adds +2 life for the wearer for four duels."},
+    "6": {"name": "Copper Plate Armor",
+          "type": "life_effect",
+          "prop": 4,
+          "uses": 1,
+          "text": "This armor adds +4 life for the wearer for one duel."},
+    "7": {"name": "Bronze Plate Armor",
+          "type": "life_effect",
+          "prop": 4,
+          "uses": 2,
+          "text": "This armor adds +4 life for the wearer for two duels."},
+    "8": {"name": "Steel Plate Armor",
+          "type": "life_effect",
+          "prop": 4,
+          "uses": 4,
+          "text": "This armor adds +2 life for the wearer for four duels."},
+    "9": {"name": "Leotard",
+          "type": "life_effect",
+          "prop": 1,
+          "uses": 1,
+          "text": "This armor adds +1 life for the wearer for one duel."}
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -61,13 +81,14 @@ rare_items = {
             "type": "roll_effect",
             "prop": 1,
             "uses": 10,
-            "text": "This ring adds +1 to all damage "
-                    "for the user for ten duels."},
+            "text": "This ring adds +1 to all damage for the user for ten "
+                    "duels."},
+
     "101": {"name": "Heavy Steel Plate Armor",
             "type": "life_effect",
-            "prop": 2,
+            "prop": 4,
             "uses": 10,
-            "text": "This armor adds +2 life for the wearer for ten duels."}
+            "text": "This armor adds +4 life for the wearer for ten duels."}
 }
 
 
