@@ -1694,6 +1694,8 @@ async def on_member_update(before, after):
     :param before: before state
     :param after: after state
     """
+    if before.display_name == after.display_name:
+        return
 
     if before.display_name in users:
         users[after.display_name] = users[before.display_name]
