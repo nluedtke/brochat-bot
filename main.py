@@ -375,7 +375,7 @@ class WeekendGames(object):
         game = self.gametimes[game_id]
 
         if game.find_player_by_name(person_to_add) and \
-                        status != game.get_player_status(person_to_add):
+           status != game.get_player_status(person_to_add):
             game.unregister_player(person_to_add)
 
         if game.find_player_by_name(person_to_add):
@@ -1158,7 +1158,8 @@ async def shot_duel(client, message):
                         highest_index = index
                     index += 1
                 duelers_sorted.append(duelers.pop(highest_index))
-            output = "The battlefield is bloodied with the :crossed_swords: of these duelers:\n\n"
+            output = "The battlefield is bloodied with the :crossed_swords: " \
+                     "of these duelers:\n\n"
             ranking = 1
             for d in duelers_sorted:
                 output += "**Rank {}**: **{}**, at {}/{}/{}!\n".format(
@@ -1873,8 +1874,8 @@ async def handle_news():
                 delay = (news_del * 60) + (randint(0, 10) * 60)
                 await _client.send_message(
                     c_to_send, "https://twitter.com/{0}/status/{1}"
-                        .format(news[0]['user']['screen_name'],
-                                str(news[0]['id'])))
+                               .format(news[0]['user']['screen_name'],
+                                       str(news[0]['id'])))
         else:
             NEWS_FEED_CREATED = False
             print("Destroying News Feed Task")
@@ -1918,32 +1919,34 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
 
     r_string = ".\n"
     if c_roll < 0:
-        r_string += "{} fell on his own sword and did {} to himself!".format(
-            c_name, abs(c_roll))
+        r_string += ":banana: **{}** fell on his own sword and did {} to " \
+                    "himself!".format(c_name, abs(c_roll))
     elif c_roll == 0:
-        r_string += "{} misses with his attack!".format(c_name)
+        r_string += ":cloud_tornado: **{}** misses with his attack!"\
+                    .format(c_name)
     elif 0 < c_roll < 6:
-        r_string += "{} lands a {} and deals {} damage!".format(
+        r_string += ":dagger: **{}** lands a {} and deals {} damage!".format(
             c_name, choice(a_types), c_roll)
     elif c_roll == 6:
-        r_string += "{} lands a MASSIVE strike and deals {} damage!".format(
-            c_name, c_roll)
+        r_string += ":knife: **{}** lands a **MASSIVE** strike and deals {} " \
+                    "damage!".format(c_name, c_roll)
 
     r_string += "\n"
     if v_roll < 0:
-        r_string += "{} fell on his own sword and did {} to himself!".format(
-            v_name, abs(v_roll))
+        r_string += ":banana: **{}** fell on his own sword and did {} to " \
+                    "himself!".format(v_name, abs(v_roll))
     elif v_roll == 0:
-        r_string += "{} misses with his attack!".format(v_name)
+        r_string += ":cloud_tornado: **{}** misses with his attack!"\
+                    .format(v_name)
     elif 0 < v_roll < 6:
-        r_string += "{} lands a {} and deals {} damage!".format(
+        r_string += ":dagger: **{}** lands a {} and deals {} damage!".format(
             v_name, choice(a_types), v_roll)
     elif v_roll >= 6:
-        r_string += "{} lands a MASSIVE strike and deals {} damage!".format(
-            v_name, v_roll)
+        r_string += ":knife: **{}** lands a **MASSIVE** strike and deals {}" \
+                    "damage!".format(v_name, v_roll)
 
-    r_string += "\n{} is at {}.\n{} is at {}.\n".format(c_name, c_life,
-                                                        v_name, v_life)
+    r_string += "\n**{}** is at {}.\n**{}** is at {}.\n"\
+                .format(c_name, c_life, v_name, v_life)
     return r_string
 
 
