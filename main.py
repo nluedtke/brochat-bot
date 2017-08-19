@@ -1174,10 +1174,6 @@ async def shot_duel(client, message):
 
         return
 
-
-
-
-
     members = client.get_all_members()
 
     map_disp_to_name = {}
