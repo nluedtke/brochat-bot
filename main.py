@@ -29,11 +29,12 @@ NEWS_FEED_CREATED = False
 
 # Delays for Newsfeed and Check_trump, These are in minutes
 # remember that news_del is fuzzed + (0-10)
-trump_del = 30
+trump_del = 20
 news_del = 55
 
 # Variable hold trumps last tweet id
 last_id = 0
+trump_chance_roll_rdy = False
 
 # News handles to pull from
 news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
@@ -1183,6 +1184,7 @@ async def get_trump(client, message):
     :param message: The message
     :return: None
     """
+    global trump_chance_roll_rdy
     twitter_id = 'realdonaldtrump'
     tweet_text = \
         ':pen_ballpoint::monkey: Trump has been saying things, as ' \
@@ -1196,7 +1198,11 @@ async def get_trump(client, message):
     except TwythonError:
         await client.send_message(message.channel,
                                   "Twitter is acting up, try again later.")
-    await item_chance_roll(message.channel, message.author.display_name, 250)
+
+    if trump_chance_roll_rdy:
+        await item_chance_roll(message.channel, message.author.display_name,
+                               250)
+        trump_chance_roll_rdy = False
 
 
 async def get_last_tweet(_id, tweet_text, rt_text, client, message):
@@ -1722,7 +1728,7 @@ async def check_trumps_mouth():
     Waits for an update from the prez
     :return: None
     """
-    global last_id
+    global last_id, trump_chance_roll_rdy
     c_to_send = None
     await _client.wait_until_ready()
     last_id = twitter.get_user_timeline(
@@ -1752,6 +1758,7 @@ async def check_trumps_mouth():
                 await _client.send_message(c_to_send, "New Message from the "
                                                       "prez! Try !trump")
                 last_id = trumps_lt_id
+                trump_chance_roll_rdy = True
 
 
 async def print_at_midnight():
