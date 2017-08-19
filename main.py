@@ -1657,10 +1657,6 @@ async def on_message(message):
     :return: None
     """
 
-    if "Jim" in message.content and "brochat-bot" not in str(message.author):
-        await _client.send_message(message.channel,
-                                   'Jim, you mean fat ***REMOVED*** boy?')
-
     commands = {
         "test": run_test,
         "uptime": get_uptime,
