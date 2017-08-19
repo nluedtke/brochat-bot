@@ -1837,6 +1837,8 @@ def item_eff_str(item):
 
     if item.type == 'roll_effect':
         return "All damage increased by {}.".format(item.prop)
+    elif item.type == 'life_effect':
+        return "Life increased by {}".format(item.prop)
     else:
         return "This item has an unknown or not implemented effect."
 
