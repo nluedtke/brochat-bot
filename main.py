@@ -1945,7 +1945,7 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
         r_string += ":dagger: **{}** lands a {} and deals {} damage!".format(
             v_name, choice(a_types), v_roll)
     elif v_roll >= 6:
-        r_string += ":knife: **{}** lands a **MASSIVE** strike and deals {}" \
+        r_string += ":knife: **{}** lands a **MASSIVE** strike and deals {} " \
                     "damage!".format(v_name, v_roll)
 
     r_string += "\n**{}** is at {}.\n**{}** is at {}.\n"\
