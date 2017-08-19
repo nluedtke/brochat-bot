@@ -688,7 +688,6 @@ async def print_help(client, message):
     :return: None
     """
     help_string = "Here are some things I can help you with:\n\n" \
-                  "**!ham**: I'll tell you what we're gonna get\n" \
                   "**!gametime**: I'll add, list, and manage gametimes!\n" \
                   "**!in/!possible/!late <sessionid>**: Sign up for a game " \
                   "session\n" \
@@ -843,19 +842,6 @@ async def sleep(client, message):
     """
     await asyncio.sleep(10)
     await client.send_message(message.channel, 'Done sleeping')
-
-
-async def go_ham(client, message):
-    """
-    goes ham
-
-    :param client: The Client
-    :param message: The message
-    :return: None
-    """
-    await client.send_message(message.channel,
-                              '@here Let\'s get retarded, {}'.format(
-                                  message.author.display_name))
 
 
 async def dankmeme(client, message):
@@ -1703,15 +1689,10 @@ async def on_message(message):
     :return: None
     """
 
-    if "Jim" in message.content and "brochat-bot" not in str(message.author):
-        await _client.send_message(message.channel,
-                                   'Jim, you mean fat ***REMOVED*** boy?')
-
     commands = {
         "test": run_test,
         "uptime": get_uptime,
         "sleep": sleep,
-        "ham": go_ham,
         "dankmeme": dankmeme,
         "bertstrip": bertstrip,
         "summary": summary,
