@@ -1650,6 +1650,17 @@ async def clear(client, message):
 
 
 @_client.event
+async def on_member_update(before, after):
+    """
+    Updates a user's db entry if they change their nickname.
+
+    :param before: before state
+    :param after: after state
+    """
+
+
+
+@_client.event
 async def on_message(message):
     """
     Asynchronous event handler for incoming message
