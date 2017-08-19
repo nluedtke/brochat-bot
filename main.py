@@ -1658,6 +1658,19 @@ async def on_member_update(before, after):
     :param after: after state
     """
 
+    if before.display_name in users:
+        users[after.display_name] = users[before.display_name]
+        del(users[before.display_name])
+
+    for gt in whos_in.gametimes:
+        for player in gt.players:
+            if player['name'] == before.display_name:
+                player['name'] = after.display_name
+
+    if whos_in.last_shot == before.display_name:
+        whos_in.last_shot = after.display_name
+
+    whos_in.update_db()
 
 
 @_client.event
