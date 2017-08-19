@@ -1168,7 +1168,7 @@ async def shot_duel(client, message):
                         d['user'],
                         d['duel_record'][0],
                         d['duel_record'][1],
-                        d['duel_record'][1],
+                        d['duel_record'][2],
                         )
                 ranking += 1
 
