@@ -100,8 +100,8 @@ class DuelItem(object):
     def __init__(self, item_roll, _id=None):
         """
         :param item_roll: Int representing the roll value used to determine
-        :param _id: Create item from id number
-        if an item should be reward and what type of item
+        :param _id: Create item from id number if an item should be reward
+        and what type of item
         """
 
         self.item_id = None
