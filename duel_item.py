@@ -3,10 +3,13 @@
 from random import choice
 
 # Define a common item here.
+# Current guidelines for rarity are:
+#   Any item with more than 4 duels in duration is RARE.
+#   Any item with a modifier greater than 2 damage or 4 life is RARE.
 # The key is the id of the item
 # The item is a dictionary with two key:value pairs
 #   1) type: effect_type
-#   2) prop: strength or effect discripter
+#   2) prop: strength or effect descriptor
 #   3) uses: amount of uses, measured in duels
 #   4) text: text description of item
 #   5) name: name of item
@@ -21,20 +24,54 @@ common_items = {
           "type": "roll_effect",
           "prop": 1,
           "uses": 1,
-          "text": "This ring adds +1 to all damage "
-                  "for the user for one duel."},
+          "text": "This ring adds +1 to all damage for the user for one duel."},
     "1": {"name": "Bronze Ring of One Better",
           "type": "roll_effect",
           "prop": 1,
           "uses": 2,
-          "text": "This ring adds +1 to all damage "
-                  "for the user for two duels."},
+          "text": "This ring adds +1 to all damage for the user for two "
+                  "duels."},
     "2": {"name": "Steel Ring of One Better",
           "type": "roll_effect",
           "prop": 1,
           "uses": 4,
-          "text": "This ring adds +1 to all damage "
-                  "for the user for four duels."}
+          "text": "This ring adds +1 to all damage for the user for four "
+                  "duels."},
+    "3": {"name": "Cloth Vest",
+          "type": "life_effect",
+          "prop": 2,
+          "uses": 1,
+          "text": "This armor adds +2 life for the wearer for one duel."},
+    "4": {"name": "Leather Vest",
+          "type": "life_effect",
+          "prop": 2,
+          "uses": 2,
+          "text": "This armor adds +2 life for the wearer for two duels."},
+    "5": {"name": "Reinforced Leather Vest",
+          "type": "life_effect",
+          "prop": 2,
+          "uses": 4,
+          "text": "This armor adds +2 life for the wearer for four duels."},
+    "6": {"name": "Copper Plate Armor",
+          "type": "life_effect",
+          "prop": 4,
+          "uses": 1,
+          "text": "This armor adds +4 life for the wearer for one duel."},
+    "7": {"name": "Bronze Plate Armor",
+          "type": "life_effect",
+          "prop": 4,
+          "uses": 2,
+          "text": "This armor adds +4 life for the wearer for two duels."},
+    "8": {"name": "Steel Plate Armor",
+          "type": "life_effect",
+          "prop": 4,
+          "uses": 4,
+          "text": "This armor adds +2 life for the wearer for four duels."},
+    "9": {"name": "Leotard",
+          "type": "life_effect",
+          "prop": 1,
+          "uses": 1,
+          "text": "This armor adds +1 life for the wearer for one duel."}
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -44,8 +81,14 @@ rare_items = {
             "type": "roll_effect",
             "prop": 1,
             "uses": 10,
-            "text": "This ring adds +1 to all damage "
-                    "for the user for ten duels."}
+            "text": "This ring adds +1 to all damage for the user for ten "
+                    "duels."},
+
+    "101": {"name": "Heavy Steel Plate Armor",
+            "type": "life_effect",
+            "prop": 4,
+            "uses": 10,
+            "text": "This armor adds +4 life for the wearer for ten duels."}
 }
 
 
@@ -70,7 +113,7 @@ class DuelItem(object):
         if _id is not None:
             self.item_id = str(_id)
         else:
-            if 5 >= item_roll > 1:
+            if 9 >= item_roll > 1:
                 item = choice(list(common_items.keys()))
                 self.item_id = item
             elif item_roll == 1:

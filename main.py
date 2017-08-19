@@ -1196,6 +1196,7 @@ async def get_trump(client, message):
     except TwythonError:
         await client.send_message(message.channel,
                                   "Twitter is acting up, try again later.")
+    await item_chance_roll(message.channel, message.author.display_name, 250)
 
 
 async def get_last_tweet(_id, tweet_text, rt_text, client, message):
@@ -1837,6 +1838,8 @@ def item_eff_str(item):
 
     if item.type == 'roll_effect':
         return "All damage increased by {}.".format(item.prop)
+    elif item.type == 'life_effect':
+        return "Life increased by {}.".format(item.prop)
     else:
         return "This item has an unknown or not implemented effect."
 
@@ -1883,13 +1886,31 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     return r_string
 
 
+async def item_chance_roll(channel, player, max_roll=100):
+    """
+    Rolls for a chance at an item
+
+    :param channel: channel roll is taking place in
+    :param player: Person rolling
+    :param max_roll: max roll to use
+    """
+
+    item = DuelItem(randint(1, max_roll))
+    if item.name is not None:
+        await _client.send_message(channel,
+                                   "Congratulations {}! You received "
+                                   "the \"{}\"."
+                                   .format(player, item.name))
+        users[player]['inventory'][item.item_id] = 0
+
+
 async def event_handle_shot_duel(challenger, victim, channel):
     """
     Handles a shot_duel should a victim accept.
 
     :param challenger: Person challenging
     :param victim: Person challenged
-    :param channel: challenge duel is taking place in
+    :param channel: channel duel is taking place in
     :return: None
     """
     global shot_duel_running, accepted, vict_name
@@ -1933,12 +1954,11 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                        ".\nDuel Accepted! Here we go!\n"
                                        "{} is {} - {} - {}\n"
                                        "{} is {} - {} - {}\n"
-                                       "Both Players have {} life.\n"
                                        "Good Luck!!!"
                                        .format(challenger.display_name,
                                                c_rec[0], c_rec[1], c_rec[2],
                                                vict_name, v_rec[0], v_rec[1],
-                                               v_rec[2], life))
+                                               v_rec[2]))
             c_total = []
             v_total = []
 
@@ -1948,46 +1968,48 @@ async def event_handle_shot_duel(challenger, victim, channel):
             if users[challenger.display_name]['a_item'] is not None:
                 c_item = DuelItem(0, users[challenger.display_name]['a_item'])
                 users[challenger.display_name]['inventory'][c_item.item_id] += 1
+                notif_str = "{} is using the {}.\n{}"\
+                            .format(challenger.display_name, c_item.name,
+                                    item_eff_str(c_item))
                 if users[challenger.display_name]['inventory'][
                    c_item.item_id] >= c_item.uses:
                     del (users[challenger.display_name]['inventory']
                          [c_item.item_id])
                     users[challenger.display_name]['a_item'] = None
-                await _client.send_message(channel,
-                                           "{} is using the {}.\n{}"
-                                           .format(challenger.display_name,
-                                                   c_item.name,
-                                                   item_eff_str(c_item)))
+                    notif_str += "\nThis is the last use for this item!"
+                await _client.send_message(channel, notif_str)
             if users[vict_name]['a_item'] is not None:
                 v_item = DuelItem(0, users[vict_name]['a_item'])
                 users[vict_name]['inventory'][v_item.item_id] += 1
+                notif_str = "{} is using the {}.\n{}"\
+                            .format(vict_name, v_item.name,
+                                    item_eff_str(v_item))
                 if users[vict_name]['inventory'][v_item.item_id] >= v_item.uses:
                     del (users[vict_name]['inventory'][v_item.item_id])
                     users[vict_name]['a_item'] = None
-                await _client.send_message(channel,
-                                           "{} is using the {}.\n{}"
-                                           .format(vict_name,
-                                                   v_item.name,
-                                                   item_eff_str(v_item)))
+                    notif_str += "\nThis is the last use for this item!"
+                await _client.send_message(channel, notif_str)
+
+            # life_effect checks
+            c_life_start = life
+            v_life_start = life
+            if c_item is not None and c_item.type == "life_effect":
+                c_life_start += c_item.prop
+            if v_item is not None and v_item.type == "life_effect":
+                v_life_start += v_item.prop
 
             # item chance rolls
-            item = DuelItem(randint(1, 100))
-            if item.name is not None:
-                await _client.send_message(channel,
-                                           "Congratulations {}! You received "
-                                           "the \"{}\"."
-                                           .format(challenger.display_name,
-                                                   item.name))
-                users[challenger.display_name]['inventory'][item.item_id] = 0
-            item = DuelItem(randint(1, 100))
-            if item.name is not None:
-                await _client.send_message(channel,
-                                           "Congratulations {}! You received "
-                                           "the \"{}\"."
-                                           .format(vict_name, item.name))
-                users[vict_name]['inventory'][item.item_id] = 0
+            await item_chance_roll(channel, challenger.display_name)
+            await item_chance_roll(channel, vict_name)
 
             _round = 1
+
+            await _client.send_message(channel,
+                                       ".\n{} has {} life.\n"
+                                       "{} has {} life."
+                                       .format(challenger.display_name,
+                                               c_life_start,
+                                               vict_name, v_life_start))
 
             while True:
                 await _client.send_message(channel, "Round {}!".format(_round))
@@ -2019,8 +2041,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 else:
                     c_total.append(abs(v_roll))
 
-                c_life = life - sum(v_total)
-                v_life = life - sum(c_total)
+                c_life = c_life_start - sum(v_total)
+                v_life = v_life_start - sum(c_total)
                 duel_string = build_duel_str(challenger.display_name,
                                              c_roll, victim.display_name,
                                              v_roll, c_life, v_life)
