@@ -1006,6 +1006,26 @@ async def late_command(client, message):
                                   "You'll need to be more specific :smile:")
 
 
+async def unequip_command(client, message):
+    """
+    Unequips an item in use
+
+    :param client: The Client
+    :param message: The message
+    """
+    if users[message.author.display_name]['a_item'] is None:
+        await client.send_message(message.channel,
+                                  "You don't have an item equiped!")
+    else:
+        all_items = common_items
+        all_items.update(rare_items)
+        item_num = users[message.author.display_name]['a_item']
+        await client.send_message(
+            message.channel,
+            "You have unquiped the {}".format(all_items[item_num]['name']))
+        users[message.author.display_name]['a_item'] = None
+
+
 async def use_command(client, message):
     """
     Handles the !use command
@@ -1028,6 +1048,13 @@ async def use_command(client, message):
             for it in inv:
                 inv_string += "{}: {} ({})\n".format(it, all_items[it]['name'],
                                                      all_items[it]['text'])
+            if users[name]['a_item'] is not None:
+                item_num = users[name]['a_item']
+                used_amount = inv[item_num]
+                inv_string += "Your current active item is {}.\n" \
+                              "It has {} use(s) remaining."\
+                              .format(item_num, (all_items[item_num]['uses'] -
+                                                 used_amount))
 
             await client.send_message(message.channel, inv_string)
     elif len(arguments) > 1 or users[name]['a_item'] is \
@@ -1044,9 +1071,10 @@ async def use_command(client, message):
         await client.send_message(message.channel, "You don't have that item!")
     elif len(arguments) == 1 and arguments[0] in all_items and \
             arguments[0] in inv:
-        await client.send_message(message.channel, "Item {} will be active "
-                                                   "starting with your next "
-                                                   "duel.".format(arguments[0]))
+        await client.send_message(message.channel,
+                                  "Item \"{}\" will be active starting with "
+                                  "your next duel."
+                                  .format(all_items[arguments[0]]['name']))
         users[name]['a_item'] = arguments[0]
     else:
         await client.send_message(message.channel, "**!use <item_id>**: "
@@ -1755,7 +1783,8 @@ async def on_message(message):
         'duel': shot_duel,
         'accept': toggle_accept,
         'clear': clear,
-        'use': use_command
+        'use': use_command,
+        'unequip': unequip_command
     }
 
     if message.content.startswith("!") and \
