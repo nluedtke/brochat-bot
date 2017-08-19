@@ -1885,6 +1885,24 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     return r_string
 
 
+async def item_chance_roll(channel, player, max_roll=100):
+    """
+    Rolls for a chance at an item
+
+    :param channel: channel roll is taking place in
+    :param player: Person rolling
+    :param max_roll: max roll to use
+    """
+
+    item = DuelItem(randint(1, max_roll))
+    if item.name is not None:
+        await _client.send_message(channel,
+                                   "Congratulations {}! You received "
+                                   "the \"{}\"."
+                                   .format(player, item.name))
+        users[player]['inventory'][item.item_id] = 0
+
+
 async def event_handle_shot_duel(challenger, victim, channel):
     """
     Handles a shot_duel should a victim accept.
@@ -1980,21 +1998,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 v_life_start += v_item.prop
 
             # item chance rolls
-            item = DuelItem(randint(1, 100))
-            if item.name is not None:
-                await _client.send_message(channel,
-                                           "Congratulations {}! You received "
-                                           "the \"{}\"."
-                                           .format(challenger.display_name,
-                                                   item.name))
-                users[challenger.display_name]['inventory'][item.item_id] = 0
-            item = DuelItem(randint(1, 100))
-            if item.name is not None:
-                await _client.send_message(channel,
-                                           "Congratulations {}! You received "
-                                           "the \"{}\"."
-                                           .format(vict_name, item.name))
-                users[vict_name]['inventory'][item.item_id] = 0
+            await item_chance_roll(channel, challenger.display_name, 100)
+            await item_chance_roll(channel, vict_name, 100)
 
             _round = 1
 
