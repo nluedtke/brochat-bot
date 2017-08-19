@@ -1901,6 +1901,10 @@ async def item_chance_roll(channel, player, max_roll=100):
                                    "Congratulations {}! You received "
                                    "the \"{}\"."
                                    .format(player, item.name))
+        if item.item_id in users[player]['inventory']:
+            await _client.send_message(channel,
+                                       "You already have that item, its uses "
+                                       "have been reset!")
         users[player]['inventory'][item.item_id] = 0
 
 
