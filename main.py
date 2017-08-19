@@ -50,6 +50,11 @@ vict_name = ""
 # Location of db.json and tokens.config
 data_dir = "/data"
 
+# Runtime stats
+items_awarded = 0
+duels_conducted = 0
+trump_tweets_seen = 0
+
 
 def shot_lottery(client_obj, wg_games, auto_call=False):
     """
@@ -688,7 +693,6 @@ async def print_help(client, message):
     :return: None
     """
     help_string = "Here are some things I can help you with:\n\n" \
-                  "**!ham**: I'll tell you what we're gonna get\n" \
                   "**!gametime**: I'll add, list, and manage gametimes!\n" \
                   "**!in/!possible/!late <sessionid>**: Sign up for a game " \
                   "session\n" \
@@ -810,11 +814,13 @@ async def get_uptime(client, message):
     hours, mins = divmod(mins, 60)
     days, hours = divmod(hours, 24)
 
-    ret_str = "{:.0f} days, {:.0f} hours, {:.0f} minutes, {:.0f} " \
-              "seconds".format(days, hours, mins, secs)
-    await client.send_message(message.channel, 'Uptime: {}'
-                              .format(ret_str))
-
+    ret_str = "Uptime: {:.0f} days, {:.0f} hours, {:.0f} minutes, {:.0f} " \
+              "seconds\n".format(days, hours, mins, secs)
+    stat_str = "# of duels conducted: {}\n" \
+               "# of items awarded   : {}\n" \
+               "# of trump twts seen: {}\n"\
+               .format(duels_conducted, items_awarded, trump_tweets_seen)
+    await client.send_message(message.channel, (ret_str + stat_str))
 
 async def run_test(client, message):
     """
@@ -843,19 +849,6 @@ async def sleep(client, message):
     """
     await asyncio.sleep(10)
     await client.send_message(message.channel, 'Done sleeping')
-
-
-async def go_ham(client, message):
-    """
-    goes ham
-
-    :param client: The Client
-    :param message: The message
-    :return: None
-    """
-    await client.send_message(message.channel,
-                              '@here Let\'s get retarded, {}'.format(
-                                  message.author.display_name))
 
 
 async def dankmeme(client, message):
@@ -1187,10 +1180,6 @@ async def shot_duel(client, message):
                 "Ain't nobody been duelin' round these parts.")
 
         return
-
-
-
-
 
     members = client.get_all_members()
 
@@ -1696,6 +1685,30 @@ async def clear(client, message):
 
 
 @_client.event
+async def on_member_update(before, after):
+    """
+    Updates a user's db entry if they change their nickname.
+
+    :param before: before state
+    :param after: after state
+    """
+
+    if before.display_name in users:
+        users[after.display_name] = users[before.display_name]
+        del(users[before.display_name])
+
+    for gt in whos_in.gametimes:
+        for player in gt.players:
+            if player['name'] == before.display_name:
+                player['name'] = after.display_name
+
+    if whos_in.last_shot == before.display_name:
+        whos_in.last_shot = after.display_name
+
+    whos_in.update_db()
+
+
+@_client.event
 async def on_message(message):
     """
     Asynchronous event handler for incoming message
@@ -1703,15 +1716,10 @@ async def on_message(message):
     :return: None
     """
 
-    if "Jim" in message.content and "brochat-bot" not in str(message.author):
-        await _client.send_message(message.channel,
-                                   'Jim, you mean fat ***REMOVED*** boy?')
-
     commands = {
         "test": run_test,
         "uptime": get_uptime,
         "sleep": sleep,
-        "ham": go_ham,
         "dankmeme": dankmeme,
         "bertstrip": bertstrip,
         "summary": summary,
@@ -1773,7 +1781,7 @@ async def check_trumps_mouth():
     Waits for an update from the prez
     :return: None
     """
-    global last_id, trump_chance_roll_rdy
+    global last_id, trump_chance_roll_rdy, trump_tweets_seen
     c_to_send = None
     await _client.wait_until_ready()
     last_id = twitter.get_user_timeline(
@@ -1800,6 +1808,7 @@ async def check_trumps_mouth():
         else:
             delay = trump_del * 60
             if trumps_lt_id != last_id:
+                trump_tweets_seen += 1
                 await _client.send_message(c_to_send, "New Message from the "
                                                       "prez! Try !trump")
                 last_id = trumps_lt_id
@@ -1949,6 +1958,8 @@ async def item_chance_roll(channel, player, max_roll=100):
 
     item = DuelItem(randint(1, max_roll))
     if item.name is not None:
+        global items_awarded
+        items_awarded += 1
         await _client.send_message(channel,
                                    "Congratulations {}! You received "
                                    "the \"{}\"."
@@ -1969,7 +1980,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
     :param channel: channel duel is taking place in
     :return: None
     """
-    global shot_duel_running, accepted, vict_name
+    global shot_duel_running, accepted, vict_name, duels_conducted
     shot_duel_running = True
     vict_name = victim.display_name
 
@@ -2006,6 +2017,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
         await asyncio.sleep(5)
         waited += 5
         if accepted:
+            duels_conducted += 1
             await _client.send_message(channel,
                                        ".\nDuel Accepted! Here we go!\n"
                                        "{} is {} - {} - {}\n"
