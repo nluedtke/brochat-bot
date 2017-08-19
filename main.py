@@ -1909,31 +1909,31 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
 
     r_string = ".\n"
     if c_roll < 0:
-        r_string += "{} fell on his own sword and did {} to himself!".format(
+        r_string += ":banana: **{}** fell on his own sword and did {} to himself!".format(
             c_name, abs(c_roll))
     elif c_roll == 0:
-        r_string += "{} misses with his attack!".format(c_name)
+        r_string += ":cloud_tornado: **{}** misses with his attack!".format(c_name)
     elif 0 < c_roll < 6:
-        r_string += "{} lands a {} and deals {} damage!".format(
+        r_string += ":dagger: **{}** lands a {} and deals {} damage!".format(
             c_name, choice(a_types), c_roll)
     elif c_roll == 6:
-        r_string += "{} lands a MASSIVE strike and deals {} damage!".format(
+        r_string += ":knife: **{}** lands a **MASSIVE** strike and deals {} damage!".format(
             c_name, c_roll)
 
     r_string += "\n"
     if v_roll < 0:
-        r_string += "{} fell on his own sword and did {} to himself!".format(
+        r_string += ":banana: **{}** fell on his own sword and did {} to himself!".format(
             v_name, abs(v_roll))
     elif v_roll == 0:
-        r_string += "{} misses with his attack!".format(v_name)
+        r_string += ":cloud_tornado: **{}** misses with his attack!".format(v_name)
     elif 0 < v_roll < 6:
-        r_string += "{} lands a {} and deals {} damage!".format(
+        r_string += ":dagger: **{}** lands a {} and deals {} damage!".format(
             v_name, choice(a_types), v_roll)
     elif v_roll >= 6:
-        r_string += "{} lands a MASSIVE strike and deals {} damage!".format(
+        r_string += ":knife: **{}** lands a **MASSIVE** strike and deals {} damage!".format(
             v_name, v_roll)
 
-    r_string += "\n{} is at {}.\n{} is at {}.\n".format(c_name, c_life,
+    r_string += "\n**{}** is at {}.\n**{}** is at {}.\n".format(c_name, c_life,
                                                         v_name, v_life)
     return r_string
 
