@@ -2103,5 +2103,3 @@ _client.run(token)
 
 
 # TODO weekend gaming session management
-# TODO !snapshot to get stats at the beginning of the session via OWAPI
-# TODO command handler
