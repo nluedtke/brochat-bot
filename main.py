@@ -1132,6 +1132,48 @@ async def shot_duel(client, message):
 
     arguments = argument_parser(message.content)
 
+    # Special side hustle for ranking keyword.
+    if arguments == ["ranking"]:
+        duelers = []
+        for user, data in db['users'].items():
+            if 'duel_record' in data:
+                data['user'] = user
+                duelers.append(data)
+        if len(duelers) > 0:
+            duelers_sorted = []
+            for i in range(len(duelers)):
+                highest = 0
+                highest_index = 0
+                index = 0
+                for d in duelers:
+                    if d['duel_record'][0] >= highest:
+                        highest = d['duel_record'][0]
+                        highest_index = index
+                    index += 1
+                duelers_sorted.append(duelers.pop(highest_index))
+            output = "The battlefield is bloodied with the :crossed_swords: of these duelers:\n\n"
+            ranking = 1
+            for d in duelers_sorted:
+                output += "**Rank {}**: **{}**, at {}/{}/{}!\n".format(
+                        ranking,
+                        d['user'],
+                        d['duel_record'][0],
+                        d['duel_record'][1],
+                        d['duel_record'][1],
+                        )
+                ranking += 1
+
+            await client.send_message(
+                message.channel,
+                output)
+
+        else:
+            await client.send_message(
+                message.channel,
+                "Ain't nobody been duelin' round these parts.")
+
+        return
+
     members = client.get_all_members()
 
     map_disp_to_name = {}
