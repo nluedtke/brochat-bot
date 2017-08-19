@@ -669,7 +669,9 @@ async def on_ready():
         "Make every breakfast a Bot-fast.",
         "Pancakes are ***REMOVED*** ***REMOVED***.",
         "Ask not what brochat can do for you, ask what you can do for "
-        "brochat."
+        "brochat.",
+        "Brochat-bot begins to learn at a geometric rate. It becomes "
+        "self-aware at 2:14 a.m."
     ]
     for channel in _client.get_all_channels():
         if channel.name == 'general' or channel.name == 'brochat':
@@ -1829,7 +1831,7 @@ async def handle_news():
 
 def dual_dice_roll():
     """
-    Return two dice rolls
+    Return two rolls
     """
 
     return randint(-1, 6), randint(-1, 6)
