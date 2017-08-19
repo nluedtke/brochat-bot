@@ -690,12 +690,9 @@ async def print_help(client, message):
     help_string = "Here are some things I can help you with:\n\n" \
                   "**!ham**: I'll tell you what we're gonna get\n" \
                   "**!gametime**: I'll add, list, and manage gametimes!\n" \
-                  "**!in <sessionid>**: Sign up for a game session\n" \
+                  "**!in/!possible/!late <sessionid>**: Sign up for a game " \
+                  "session\n" \
                   "**!out <sessionid>**: Remove yourself from a session\n" \
-                  "**!possible <sessionid>**: Sign up, tentatively for a " \
-                  "session\n" \
-                  "**!late <sessionid>**: Sign up, but will be late for a " \
-                  "session\n" \
                   "**!whosin**: See who's in for gaming sessions\n" \
                   "**!trump**: I'll show you Trump's latest Yuge " \
                   "success!\n" \
