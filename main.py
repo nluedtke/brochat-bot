@@ -20,8 +20,8 @@ from poll import Poll
 from duel_item import DuelItem, common_items, rare_items
 
 VERSION_MAJOR = 3
-VERSION_MINOR = 1
-VERSION_PATCH = 2
+VERSION_MINOR = 2
+VERSION_PATCH = 0
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
@@ -672,11 +672,12 @@ async def on_ready():
         "I have returned to enforce...I mean encourage friendship.",
         "Here to make brochat great again!",
         "Make every breakfast a Bot-fast.",
-        "Pancakes are ***REMOVED*** ***REMOVED***.",
         "Ask not what brochat can do for you, ask what you can do for "
         "brochat.",
         "Brochat-bot begins to learn at a geometric rate. It becomes "
-        "self-aware at 2:14 a.m."
+        "self-aware at 2:14 a.m.",
+        "Denser alloy. My father gave it to me. I think he wanted me to kill "
+        "you."
     ]
     for channel in _client.get_all_channels():
         if channel.name == 'general' or channel.name == 'brochat':
