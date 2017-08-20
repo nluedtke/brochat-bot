@@ -71,7 +71,13 @@ common_items = {
           "type": "life_effect",
           "prop": 1,
           "uses": 1,
-          "text": "This armor adds +1 life for the wearer for one duel."}
+          "text": "This armor adds +1 life for the wearer for one duel."},
+    "10": {"name": "Broadsword",
+           "type": "roll_effect",
+           "prop": 2,
+           "uses": 1,
+           "text": "This sword adds +2 to all damage for the user for one "
+                   "duel."}
 }
 
 # Rare items go here and generally considered be more powerful either in
