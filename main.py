@@ -1265,7 +1265,7 @@ async def get_trump(client, message):
 
     if trump_chance_roll_rdy:
         await item_chance_roll(message.channel, message.author.display_name,
-                               250)
+                               200)
         trump_chance_roll_rdy = False
 
 
@@ -1934,6 +1934,8 @@ def item_eff_str(item):
         return "All damage increased by {}.".format(item.prop)
     elif item.type == 'life_effect':
         return "Life increased by {}.".format(item.prop)
+    elif item.type == 'spec_effect':
+        return item.spec_text
     else:
         return "This item has an unknown or not implemented effect."
 
@@ -2005,6 +2007,76 @@ async def item_chance_roll(channel, player, max_roll=100):
                                        "have been reset!")
         users[player]['inventory'][item.item_id] = 0
 
+async def item_disarm_hook_check(channel, c_item, v_item, c_name, v_name):
+    """
+    Handles the Disarming spec_effect
+
+    :param channel: Channel the duel is taking place in
+    :param c_item: Challenger's item
+    :param v_item: Victim's item
+    :param c_name: Challenger's Display name
+    :param v_name: Victim's Display name
+    """
+    c_item_ret = c_item
+    v_item_ret = v_item
+    if c_item is not None and c_item.item_id == '11':
+        if v_item is not None and v_item.item_id != '11':
+            if v_item.item_id in users[v_name]['inventory']:
+                users[v_name]['inventory'][v_item.item_id] -= 1
+            else:
+                users[v_name]['inventory'][v_item.item_id] = v_item.uses - 1
+            await _client.send_message(channel,
+                                       "{}'s {} has been removed by "
+                                       "the Disarming Hook!"
+                                       .format(v_name, v_item.name))
+            v_item_ret = None
+        elif v_item is not None and v_item.item_id == '11':
+            await _client.send_message(channel,
+                                       "Both players are using a "
+                                       "Disarming Hook, they will "
+                                       "have no effect!")
+            if c_item.item_id in users[c_name]['inventory']:
+                users[c_name]['inventory'][c_item.item_id] -= 1
+            else:
+                users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
+        else:
+            await _client.send_message(channel,
+                                       "{} has nothing to disarm, "
+                                       "the Disarming Hook has no "
+                                       "effect!".format(v_name))
+            if c_item.item_id in users[c_name]['inventory']:
+                users[c_name]['inventory'][c_item.item_id] -= 1
+            else:
+                users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
+
+    if v_item is not None and v_item.item_id == '11':
+        if c_item is not None and c_item.item_id != '11':
+            if c_item.item_id in users[c_name]['inventory']:
+                users[c_name]['inventory'][c_item.item_id] -= 1
+            else:
+                users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
+            await _client.send_message(channel,
+                                       "{}'s {} has been removed by "
+                                       "the Disarming Hook!"
+                                       .format(c_name, c_item.name))
+            c_item_ret = None
+        elif c_item is not None and c_item.item_id == '11':
+            if v_item.item_id in users[v_name]['inventory']:
+                users[v_name]['inventory'][v_item.item_id] -= 1
+            else:
+                users[v_name]['inventory'][v_item.item_id] = v_item.uses - 1
+        else:
+            await _client.send_message(channel,
+                                       "{} has nothing to disarm, "
+                                       "the Disarming Hook has no "
+                                       "effect!".format(c_name))
+            if v_item.item_id in users[v_name]['inventory']:
+                users[v_name]['inventory'][v_item.item_id] -= 1
+            else:
+                users[v_name]['inventory'][v_item.item_id] = v_item.uses - 1
+
+    return c_item_ret, v_item_ret
+
 
 async def event_handle_shot_duel(challenger, victim, channel):
     """
@@ -2018,23 +2090,24 @@ async def event_handle_shot_duel(challenger, victim, channel):
     global shot_duel_running, accepted, vict_name, duels_conducted
     shot_duel_running = True
     vict_name = victim.display_name
+    chal_name = challenger.display_name
 
     if vict_name not in users:
         users[vict_name] = {}
-    if challenger.display_name not in users:
-        users[challenger.display_name] = {}
+    if chal_name not in users:
+        users[chal_name] = {}
     if 'duel_record' not in users[vict_name]:
         users[vict_name]['duel_record'] = [0, 0, 0]
-    if 'duel_record' not in users[challenger.display_name]:
-        users[challenger.display_name]['duel_record'] = [0, 0, 0]
+    if 'duel_record' not in users[chal_name]:
+        users[chal_name]['duel_record'] = [0, 0, 0]
     if 'inventory' not in users[vict_name]:
         users[vict_name]['inventory'] = {}
         users[vict_name]['a_item'] = None
-    if 'inventory' not in users[challenger.display_name]:
-        users[challenger.display_name]['inventory'] = {}
-        users[challenger.display_name]['a_item'] = None
+    if 'inventory' not in users[chal_name]:
+        users[chal_name]['inventory'] = {}
+        users[chal_name]['a_item'] = None
 
-    c_rec = users[challenger.display_name]['duel_record']
+    c_rec = users[chal_name]['duel_record']
     v_rec = users[vict_name]['duel_record']
 
     life = 12
@@ -2045,7 +2118,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                '{}, {} has asked you to duel!\n'
                                'Do you accept?!?!?! (!accept)\n'
                                'You have 60 seconds to decide.'
-                               .format(victim.mention, challenger.display_name))
+                               .format(victim.mention, chal_name))
 
     waited = 5
     while waited < 60:
@@ -2058,27 +2131,24 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                        "{} is {} - {} - {}\n"
                                        "{} is {} - {} - {}\n"
                                        "Good Luck!!!"
-                                       .format(challenger.display_name,
-                                               c_rec[0], c_rec[1], c_rec[2],
-                                               vict_name, v_rec[0], v_rec[1],
-                                               v_rec[2]))
+                                       .format(chal_name, c_rec[0], c_rec[1],
+                                               c_rec[2], vict_name, v_rec[0],
+                                               v_rec[1], v_rec[2]))
             c_total = []
             v_total = []
 
             # Check if a player has an active item
             v_item = None
             c_item = None
-            if users[challenger.display_name]['a_item'] is not None:
-                c_item = DuelItem(0, users[challenger.display_name]['a_item'])
-                users[challenger.display_name]['inventory'][c_item.item_id] += 1
+            if users[chal_name]['a_item'] is not None:
+                c_item = DuelItem(0, users[chal_name]['a_item'])
+                users[chal_name]['inventory'][c_item.item_id] += 1
                 notif_str = "{} is using the {}.\n{}"\
-                            .format(challenger.display_name, c_item.name,
+                            .format(chal_name, c_item.name,
                                     item_eff_str(c_item))
-                if users[challenger.display_name]['inventory'][
-                   c_item.item_id] >= c_item.uses:
-                    del (users[challenger.display_name]['inventory']
-                         [c_item.item_id])
-                    users[challenger.display_name]['a_item'] = None
+                if users[chal_name]['inventory'][c_item.item_id] >= c_item.uses:
+                    del (users[chal_name]['inventory'][c_item.item_id])
+                    users[chal_name]['a_item'] = None
                     notif_str += "\nThis is the last use for this item!"
                 await _client.send_message(channel, notif_str)
             if users[vict_name]['a_item'] is not None:
@@ -2093,6 +2163,13 @@ async def event_handle_shot_duel(challenger, victim, channel):
                     notif_str += "\nThis is the last use for this item!"
                 await _client.send_message(channel, notif_str)
 
+            # spec_effect check (HOOK id #11)
+            if (c_item is not None and c_item.item_id == '11') \
+                    or (v_item is not None and v_item.item_id == '11'):
+                c_item, v_item = await item_disarm_hook_check(channel, c_item,
+                                                              v_item, chal_name,
+                                                              vict_name)
+
             # life_effect checks
             c_life_start = life
             v_life_start = life
@@ -2102,7 +2179,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 v_life_start += v_item.prop
 
             # item chance rolls
-            await item_chance_roll(channel, challenger.display_name)
+            await item_chance_roll(channel, chal_name)
             await item_chance_roll(channel, vict_name)
 
             _round = 1
@@ -2110,8 +2187,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
             await _client.send_message(channel,
                                        ".\n{} has {} life.\n"
                                        "{} has {} life."
-                                       .format(challenger.display_name,
-                                               c_life_start,
+                                       .format(chal_name, c_life_start,
                                                vict_name, v_life_start))
 
             while True:
@@ -2146,29 +2222,26 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
                 c_life = c_life_start - sum(v_total)
                 v_life = v_life_start - sum(c_total)
-                duel_string = build_duel_str(challenger.display_name,
-                                             c_roll, victim.display_name,
+                duel_string = build_duel_str(chal_name, c_roll, vict_name,
                                              v_roll, c_life, v_life)
                 if v_life < 1 and c_life < 1:
                     duel_string += "\nBoth players have died!\n{} and {} " \
                                    "both drink!".format(challenger.mention,
                                                         victim.mention)
                     users[vict_name]['duel_record'][2] += 1
-                    users[challenger.display_name]['duel_record'][2] += 1
+                    users[chal_name]['duel_record'][2] += 1
                 elif v_life < 1:
                     duel_string += "\n{} has died!\n{} wins the duel!\n" \
-                                   "{} drinks!".format(victim.display_name,
-                                                       challenger.display_name,
+                                   "{} drinks!".format(vict_name, chal_name,
                                                        victim.mention)
                     users[vict_name]['duel_record'][1] += 1
-                    users[challenger.display_name]['duel_record'][0] += 1
+                    users[chal_name]['duel_record'][0] += 1
                 elif c_life < 1:
                     duel_string += "\n{} has died!\n{} wins the duel!\n" \
-                                   "{} drinks!".format(challenger.display_name,
-                                                       victim.display_name,
+                                   "{} drinks!".format(chal_name, vict_name,
                                                        challenger.mention)
                     users[vict_name]['duel_record'][0] += 1
-                    users[challenger.display_name]['duel_record'][1] += 1
+                    users[chal_name]['duel_record'][1] += 1
                 _round += 1
                 await _client.send_message(channel, duel_string)
                 if v_life < 1 or c_life < 1:
@@ -2181,8 +2254,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
         await _client.send_message(channel,
                                    "Shot duel not accepted! Clearly {} is "
                                    "better than {}."
-                                   .format(challenger.display_name,
-                                           victim.display_name))
+                                   .format(chal_name, vict_name))
 
     shot_duel_running = False
     accepted = False

@@ -66,7 +66,7 @@ common_items = {
           "type": "life_effect",
           "prop": 4,
           "uses": 4,
-          "text": "This armor adds +2 life for the wearer for four duels."},
+          "text": "This armor adds +4 life for the wearer for four duels."},
     "9": {"name": "Leotard",
           "type": "life_effect",
           "prop": 1,
@@ -77,7 +77,16 @@ common_items = {
            "prop": 2,
            "uses": 1,
            "text": "This sword adds +2 to all damage for the user for one "
-                   "duel."}
+                   "duel."},
+    "11": {"name": "Disarming Hook",
+           "type": "spec_effect",
+           "prop": 0,
+           "uses": 1,
+           "text": "This item will remove your opponent's item. Note: This "
+                   "simply unequips the item, it does not destroy it.",
+           "spec_text": "The opponent's item will be removed if there is one "
+                        "equiped."}
+
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -135,6 +144,8 @@ class DuelItem(object):
             self.prop = items[self.item_id]['prop']
             self.type = items[self.item_id]['type']
             self.uses = items[self.item_id]['uses']
+            if self.type == 'spec_effect':
+                self.spec_text = items[self.item_id]['spec_text']
 
 
 if __name__ == "__main__":
@@ -150,6 +161,12 @@ if __name__ == "__main__":
     print(i.name)
     print(i.prop)
     print(i.uses)
+
+    i = DuelItem(11, 11)
+    print(i.name)
+    print(i.prop)
+    print(i.uses)
+    print(i.spec_text)
 
     i = DuelItem(99)
     if i.name is None:
