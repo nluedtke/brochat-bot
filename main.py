@@ -2163,6 +2163,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
                     notif_str += "\nThis is the last use for this item!"
                 await _client.send_message(channel, notif_str)
 
+            # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
+
             # spec_effect check (HOOK id #11)
             if (c_item is not None and c_item.item_id == '11') \
                     or (v_item is not None and v_item.item_id == '11'):
@@ -2170,7 +2172,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                                               v_item, chal_name,
                                                               vict_name)
 
-            # life_effect checks
+            # END OF PRECOMBAT PHASE
+
+            # LIFE EFFECT CHECK
             c_life_start = life
             v_life_start = life
             if c_item is not None and c_item.type == "life_effect":
@@ -2178,11 +2182,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
             if v_item is not None and v_item.type == "life_effect":
                 v_life_start += v_item.prop
 
-            # item chance rolls
+            # ITEM CHANCE ROLLS (If needed modify chance rolls here)
             await item_chance_roll(channel, chal_name)
             await item_chance_roll(channel, vict_name)
-
-            _round = 1
 
             await _client.send_message(channel,
                                        ".\n{} has {} life.\n"
@@ -2190,11 +2192,15 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                        .format(chal_name, c_life_start,
                                                vict_name, v_life_start))
 
+            # COMBAT PHASE
+            _round = 1
             while True:
                 await _client.send_message(channel, "Round {}!".format(_round))
+                # PRE ATTACK PHASE (spec_effect check here)
+
+                # ATTACK PHASE (Both attacks happen at same time!)
                 await _client.send_typing(channel)
                 await asyncio.sleep(10)
-
                 c_roll, v_roll = dual_dice_roll()
 
                 if c_item is not None and c_item.type == "roll_effect" \
@@ -2210,6 +2216,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                         and v_roll < 0:
                     v_roll -= v_item.prop
 
+                # DAMAGE APPLIED HERE
                 if c_roll >= 0:
                     c_total.append(c_roll)
                 else:
@@ -2224,6 +2231,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 v_life = v_life_start - sum(c_total)
                 duel_string = build_duel_str(chal_name, c_roll, vict_name,
                                              v_roll, c_life, v_life)
+
+                # POST COMBAT PHASE (Damage resolved here, on_death effects
+                # should be implemented here)
                 if v_life < 1 and c_life < 1:
                     duel_string += "\nBoth players have died!\n{} and {} " \
                                    "both drink!".format(challenger.mention,
@@ -2245,8 +2255,11 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 _round += 1
                 await _client.send_message(channel, duel_string)
                 if v_life < 1 or c_life < 1:
+                    # END OF DUEL PHASE
                     whos_in.update_db()
                     break
+
+                # END OF ROUND PHASE
                 await asyncio.sleep(15)
             break
 
