@@ -1225,7 +1225,12 @@ async def shot_duel(client, message):
 
     name = " ".join(arguments)
     print(name)
-    if name not in map_disp_to_name:
+    if name == message.author.display_name and message.channel.name != \
+            'general':
+        await client.send_message(message.channel, "Why not just drink your "
+                                                   "tears away, instead of "
+                                                   "including this channel?")
+    elif name not in map_disp_to_name:
         await client.send_message(message.channel,
                                   'That\'s not a real person...')
     elif name == 'brochat-bot':
