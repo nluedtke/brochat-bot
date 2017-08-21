@@ -2403,8 +2403,10 @@ async def event_handle_shot_duel(challenger, victim, channel):
                         reg_tot = c_item.prop['regen']
                     v_total.append(-reg_tot)
                     await _client.send_message(channel,
-                                               "{} has regen'd {} life!"
-                                               .format(chal_name, reg_tot))
+                                               "{} has regen'd {} life and "
+                                               "is now at {}."
+                                               .format(chal_name, reg_tot,
+                                                       (c_life + reg_tot)))
 
                 if v_item is not None and "regen_effect" in v_item.type \
                         and v_life < v_life_start:
@@ -2414,8 +2416,10 @@ async def event_handle_shot_duel(challenger, victim, channel):
                         reg_tot = v_item.prop['regen']
                     c_total.append(-reg_tot)
                     await _client.send_message(channel,
-                                               "{} has regen'd {} life!"
-                                               .format(vict_name, reg_tot))
+                                               "{} has regen'd {} life and is "
+                                               "now at {}."
+                                               .format(vict_name, reg_tot,
+                                                       (v_life + reg_tot)))
 
                 await asyncio.sleep(15)
             break
