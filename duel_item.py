@@ -88,8 +88,7 @@ common_items = {
            "type": ["disarm_effect"],
            "prop": {},
            "uses": 1,
-           "text": "This item will remove your opponent's item. Note: This "
-                   "simply unequips the item, it does not destroy it."},
+           "text": "This item will remove your opponent's item."},
     "12": {"name": "Copper Pendant of Regeneration",
            "type": ["regen_effect"],
            "prop": {'regen': 1},
@@ -100,8 +99,8 @@ common_items = {
            "type": ["luck_effect"],
            "prop": {'luck': 50},
            "uses": 4,
-           "text": "This item increases the chance the user will receive an "
-                   "item at the start of a duel for four duels."
+           "text": "This item greatly increases the chance the user will "
+                   "receive an item at the start of a duel for four duels."
            },
     "14": {"name": "Hook Sword",
            "type": ["roll_effect", "disarm_effect"],
@@ -109,7 +108,13 @@ common_items = {
            "uses": 2,
            "text": "This sword adds +2 to all damage for the user and disarms "
                    "the opponent's item for two duels."
-           }
+           },
+    "15": {"name": "Glistening Leather Vest",
+           "type": ["life_effect", "luck_effect"],
+           "prop": {'life': 2, "luck": 20},
+           "uses": 2,
+           "text": "This armor adds +2 life for the wearer and moderately "
+                   "increases chance for an item for two duels."}
 }
 
 # Rare items go here and generally considered be more powerful either in
