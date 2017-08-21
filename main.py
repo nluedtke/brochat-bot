@@ -1269,8 +1269,7 @@ async def get_trump(client, message):
                                   "Twitter is acting up, try again later.")
 
     if trump_chance_roll_rdy:
-        await item_chance_roll(message.channel, message.author.display_name,
-                               200)
+        await item_chance_roll(message.channel, message.author.display_name)
         trump_chance_roll_rdy = False
 
 

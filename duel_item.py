@@ -193,13 +193,6 @@ if __name__ == "__main__":
     print(i.uses)
     print(i.text)
 
-    i = DuelItem(11, 11)
-    print(i.name)
-    print(i.prop)
-    print(i.uses)
-    print(i.text)
-    print(i.spec_text)
-
     i = DuelItem(99)
     if i.name is None:
         print("True")
