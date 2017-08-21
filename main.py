@@ -1945,6 +1945,8 @@ def item_eff_str(item):
     if 'regen_effect' in item.type:
         ret_str += "Will regen {} life at the end of each round.\n"\
                    .format(item.prop)
+    if 'luck_effect' in item.type:
+        ret_str += "Item chance luck increased!\n"
     if len(ret_str) > 1:
         return ret_str
     else:
