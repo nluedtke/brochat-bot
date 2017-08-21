@@ -2012,7 +2012,7 @@ async def item_chance_roll(channel, player, max_roll=100):
                                        "have been reset!")
         users[player]['inventory'][item.item_id] = 0
 
-async def item_disarm_hook_check(channel, c_item, v_item, c_name, v_name):
+async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
     """
     Handles the Disarming spec_effect
 
@@ -2024,21 +2024,22 @@ async def item_disarm_hook_check(channel, c_item, v_item, c_name, v_name):
     """
     c_item_ret = c_item
     v_item_ret = v_item
-    if c_item is not None and c_item.item_id == '11':
-        if v_item is not None and v_item.item_id != '11':
+    if c_item is not None and c_item.type == 'disarm_effect':
+        if v_item is not None and v_item.type != 'disarm_effect':
             if v_item.item_id in users[v_name]['inventory']:
                 users[v_name]['inventory'][v_item.item_id] -= 1
             else:
                 users[v_name]['inventory'][v_item.item_id] = v_item.uses - 1
             await _client.send_message(channel,
                                        "{}'s {} has been removed by "
-                                       "the Disarming Hook!"
-                                       .format(v_name, v_item.name))
+                                       "the {}!"
+                                       .format(v_name, v_item.name,
+                                               c_item.name))
             v_item_ret = None
-        elif v_item is not None and v_item.item_id == '11':
+        elif v_item is not None and v_item.type == 'disarm_effect':
             await _client.send_message(channel,
                                        "Both players are using a "
-                                       "Disarming Hook, they will "
+                                       "disarming item, they will "
                                        "have no effect!")
             if c_item.item_id in users[c_name]['inventory']:
                 users[c_name]['inventory'][c_item.item_id] -= 1
@@ -2047,25 +2048,26 @@ async def item_disarm_hook_check(channel, c_item, v_item, c_name, v_name):
         else:
             await _client.send_message(channel,
                                        "{} has nothing to disarm, "
-                                       "the Disarming Hook has no "
-                                       "effect!".format(v_name))
+                                       "the {} has no "
+                                       "effect!".format(v_name, c_item.name))
             if c_item.item_id in users[c_name]['inventory']:
                 users[c_name]['inventory'][c_item.item_id] -= 1
             else:
                 users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
 
-    if v_item is not None and v_item.item_id == '11':
-        if c_item is not None and c_item.item_id != '11':
+    if v_item is not None and v_item.type == 'disarm_effect':
+        if c_item is not None and c_item.type != 'disarm_effect':
             if c_item.item_id in users[c_name]['inventory']:
                 users[c_name]['inventory'][c_item.item_id] -= 1
             else:
                 users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
             await _client.send_message(channel,
                                        "{}'s {} has been removed by "
-                                       "the Disarming Hook!"
-                                       .format(c_name, c_item.name))
+                                       "the {}!"
+                                       .format(c_name, c_item.name,
+                                               v_item.name))
             c_item_ret = None
-        elif c_item is not None and c_item.item_id == '11':
+        elif c_item is not None and c_item.type == 'disarm_effect':
             if v_item.item_id in users[v_name]['inventory']:
                 users[v_name]['inventory'][v_item.item_id] -= 1
             else:
@@ -2073,8 +2075,8 @@ async def item_disarm_hook_check(channel, c_item, v_item, c_name, v_name):
         else:
             await _client.send_message(channel,
                                        "{} has nothing to disarm, "
-                                       "the Disarming Hook has no "
-                                       "effect!".format(c_name))
+                                       "the {} has no "
+                                       "effect!".format(c_name, v_item.name))
             if v_item.item_id in users[v_name]['inventory']:
                 users[v_name]['inventory'][v_item.item_id] -= 1
             else:
@@ -2170,12 +2172,12 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
             # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
 
-            # spec_effect check (HOOK id #11)
-            if (c_item is not None and c_item.item_id == '11') \
-                    or (v_item is not None and v_item.item_id == '11'):
-                c_item, v_item = await item_disarm_hook_check(channel, c_item,
-                                                              v_item, chal_name,
-                                                              vict_name)
+            # spec_effect check (disarm_effect)
+            if (c_item is not None and c_item.type == 'disarm_effect') \
+                    or (v_item is not None and v_item.type == 'disarm_effect'):
+                c_item, v_item = await item_disarm_check(channel, c_item,
+                                                         v_item, chal_name,
+                                                         vict_name)
 
             # END OF PRECOMBAT PHASE
 
