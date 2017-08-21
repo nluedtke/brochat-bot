@@ -1937,9 +1937,9 @@ def item_eff_str(item):
 
     if hasattr(item, 'spec_text'):
         return item.spec_text
-    elif item.type == 'roll_effect':
+    elif "roll_effect" in item.type:
         return "All damage increased by {}.".format(item.prop)
-    elif item.type == 'life_effect':
+    elif 'life_effect' in item.type:
         return "Life increased by {}.".format(item.prop)
     else:
         return "This item has an unknown or not implemented effect."
@@ -2024,8 +2024,8 @@ async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
     """
     c_item_ret = c_item
     v_item_ret = v_item
-    if c_item is not None and c_item.type == 'disarm_effect':
-        if v_item is not None and v_item.type != 'disarm_effect':
+    if c_item is not None and 'disarm_effect' in c_item.type:
+        if v_item is not None and 'disarm_effect' not in v_item.type:
             if v_item.item_id in users[v_name]['inventory']:
                 users[v_name]['inventory'][v_item.item_id] -= 1
             else:
@@ -2036,7 +2036,7 @@ async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
                                        .format(v_name, v_item.name,
                                                c_item.name))
             v_item_ret = None
-        elif v_item is not None and v_item.type == 'disarm_effect':
+        elif v_item is not None and 'disarm_effect' in v_item.type:
             await _client.send_message(channel,
                                        "Both players are using a "
                                        "disarming item, they will "
@@ -2055,8 +2055,8 @@ async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
             else:
                 users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
 
-    if v_item is not None and v_item.type == 'disarm_effect':
-        if c_item is not None and c_item.type != 'disarm_effect':
+    if v_item is not None and 'disarm_effect' in v_item.type:
+        if c_item is not None and 'disarm_effect' not in c_item.type:
             if c_item.item_id in users[c_name]['inventory']:
                 users[c_name]['inventory'][c_item.item_id] -= 1
             else:
@@ -2067,7 +2067,7 @@ async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
                                        .format(c_name, c_item.name,
                                                v_item.name))
             c_item_ret = None
-        elif c_item is not None and c_item.type == 'disarm_effect':
+        elif c_item is not None and 'disarm_effect' in c_item.type:
             if v_item.item_id in users[v_name]['inventory']:
                 users[v_name]['inventory'][v_item.item_id] -= 1
             else:
@@ -2173,8 +2173,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
             # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
 
             # spec_effect check (disarm_effect)
-            if (c_item is not None and c_item.type == 'disarm_effect') \
-                    or (v_item is not None and v_item.type == 'disarm_effect'):
+            if (c_item is not None and 'disarm_effect' in c_item.type) \
+                    or (v_item is not None and 'disarm_effect' in v_item.type):
                 c_item, v_item = await item_disarm_check(channel, c_item,
                                                          v_item, chal_name,
                                                          vict_name)
@@ -2184,9 +2184,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
             # LIFE EFFECT CHECK
             c_life_start = life
             v_life_start = life
-            if c_item is not None and c_item.type == "life_effect":
+            if c_item is not None and "life_effect" in c_item.type:
                 c_life_start += c_item.prop
-            if v_item is not None and v_item.type == "life_effect":
+            if v_item is not None and "life_effect" in v_item.type:
                 v_life_start += v_item.prop
 
             # ITEM CHANCE ROLLS (If needed modify chance rolls here)
@@ -2210,16 +2210,16 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 await asyncio.sleep(10)
                 c_roll, v_roll = dual_dice_roll()
 
-                if c_item is not None and c_item.type == "roll_effect" \
+                if c_item is not None and "roll_effect" in c_item.type \
                         and c_roll >= 0:
                     c_roll += c_item.prop
-                elif c_item is not None and c_item.type == "roll_effect" \
+                elif c_item is not None and "roll_effect" in c_item.type \
                         and c_roll < 0:
                     c_roll -= c_item.prop
-                if v_item is not None and v_item.type == "roll_effect" \
+                if v_item is not None and "roll_effect" in v_item.type \
                         and v_roll >= 0:
                     v_roll += v_item.prop
-                elif v_item is not None and v_item.type == "roll_effect" \
+                elif v_item is not None and "roll_effect" in v_item.type \
                         and v_roll < 0:
                     v_roll -= v_item.prop
 
