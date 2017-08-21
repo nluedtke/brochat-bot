@@ -2196,8 +2196,14 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 v_life_start += v_item.prop
 
             # ITEM CHANCE ROLLS (If needed modify chance rolls here)
-            await item_chance_roll(channel, chal_name)
-            await item_chance_roll(channel, vict_name)
+            if c_item is not None and "luck_effect" in c_item.type:
+                await item_chance_roll(channel, chal_name, (100 - c_item.prop))
+            else:
+                await item_chance_roll(channel, chal_name)
+            if v_item is not None and "luck_effect" in v_item.type:
+                await item_chance_roll(channel, vict_name, (100 - v_item.prop))
+            else:
+                await item_chance_roll(channel, vict_name)
 
             await _client.send_message(channel,
                                        ".\n{} has {} life.\n"

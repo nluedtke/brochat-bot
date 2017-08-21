@@ -20,6 +20,11 @@ from random import choice
 #   2) life_effect = This effect modifies a life total at the start of a duel
 #   3) disarm_effect = This effect disarms the opponent's item provided its not
 #   a disarm_effect itself.
+#   4) regen_effect = The effect adds life at the end of the round, this
+#   happens after the death check goes into effect.
+#   5) luck_effect = This modifies the item chance roll at the start of the
+#   duel, this does not effect the other random luck effects that happen with
+#   other bot interactions.
 common_items = {
     "0": {"name": "Copper Ring of One Better",
           "type": ["roll_effect"],
@@ -93,6 +98,13 @@ common_items = {
            "uses": 1,
            "text": "This item allows the wearer to regenerate 1 life at the "
                    "end of each round for one duel."
+           },
+    "13": {"name": "Metal Detector",
+           "type": ["luck_effect"],
+           "prop": 50,
+           "uses": 4,
+           "text": "This item increases the chance the user will receive an "
+                   "item at the start of a duel for four duels."
            }
 }
 
