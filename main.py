@@ -599,20 +599,32 @@ else:
 token = tokens['token']
 
 # Twitter tokens
-twitter_api_key = tokens['twitter_api_key']
-twitter_api_secret = tokens['twitter_api_secret']
-twitter = Twython(twitter_api_key, twitter_api_secret)
-auth = twitter.get_authentication_tokens()
-OAUTH_TOKEN = auth['oauth_token']
-OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
+if 'twitter_api_key' not in tokens or 'twitter_api_secret' not in tokens:
+    twitter = None
+    print("No twitter functionality!")
+else:
+    twitter_api_key = tokens['twitter_api_key']
+    twitter_api_secret = tokens['twitter_api_secret']
+    twitter = Twython(twitter_api_key, twitter_api_secret)
+    auth = twitter.get_authentication_tokens()
+    OAUTH_TOKEN = auth['oauth_token']
+    OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
 
 # SMMRY tokens
-smmry_api_key = tokens['smmry_api_key']
+if 'smmry_api_key' in tokens:
+    smmry_api_key = tokens['smmry_api_key']
+else:
+    smmry_api_key = None
+    print("No summary functionality!")
 
 # Twilio Tokens
-account_sid = tokens['twilio_account_sid']
-auth_token = tokens['twilio_auth_token']
-twilio_client = Client(account_sid, auth_token)
+if 'twilio_account_sid' not in tokens or 'twilio_auth_token' not in tokens:
+    twilio_client = None
+    print("No twilio functionality!")
+else:
+    account_sid = tokens['twilio_account_sid']
+    auth_token = tokens['twilio_auth_token']
+    twilio_client = Client(account_sid, auth_token)
 
 # Create/Load Local Database
 db_file = '{}/db.json'.format(data_dir)
@@ -783,6 +795,8 @@ def get_smmry(message):
     :param message:
     :return: a string summarizing the URL
     """
+    if smmry_api_key is None:
+        return "No smmry API key, not activated!"
     arguments = argument_parser(message)
 
     if len(arguments) != 1 or arguments[0] == "!summary":
@@ -1124,6 +1138,10 @@ async def send_text(client, message):
     :param message: The message
     :return: None
     """
+    if twilio_client is None:
+        await client.send_message(message.channel,
+                                  'Text functionality turned off.')
+        return
     arguments = argument_parser(message.content)
 
     if len(arguments) != 1 or arguments[0] == '!text':
@@ -1253,6 +1271,11 @@ async def get_trump(client, message):
     :param message: The message
     :return: None
     """
+    if twitter is None:
+        await client.send_message(message.channel,
+                                  "Twitter not activated.")
+        return
+
     global trump_chance_roll_rdy
     twitter_id = 'realdonaldtrump'
     tweet_text = \
@@ -1283,6 +1306,10 @@ async def get_last_tweet(_id, tweet_text, rt_text, client, message):
     :param message: discord message
     :return:
     """
+    if twitter is None:
+        await client.send_message(message.channel,
+                                  "Twitter not activated.")
+        return
 
     if id == 'realdonaldtrump':
         global last_id
@@ -1555,6 +1582,9 @@ async def get_news(client, message):
     :param message: The message
     :return: None
     """
+    if twitter is None:
+        return
+
     global news_handles
     shuffle(news_handles)
     found_art = False
@@ -1631,7 +1661,7 @@ async def change_news_delay(client, message):
         await client.send_message(message.channel, "News delay set to {}"
                                   .format(news_del))
 
-
+# TODO: Remove this unused/legacy code???
 async def owstats(client, message):
     """
     Handles !owstats
@@ -1821,14 +1851,20 @@ async def check_trumps_mouth():
     global last_id, trump_chance_roll_rdy, trump_tweets_seen
     c_to_send = None
     await _client.wait_until_ready()
-    last_id = twitter.get_user_timeline(
-        screen_name='realdonaldtrump',
-        count=1, include_retweets=False)[0]['id']
 
     for channel in _client.get_all_channels():
         if channel.name == 'gen_testing' or channel.name == 'brochat':
             c_to_send = channel
             break
+
+    if twitter is None:
+        await _client.send_message(c_to_send,
+                                   "Twitter not activated.")
+        return
+
+    last_id = twitter.get_user_timeline(
+        screen_name='realdonaldtrump',
+        count=1, include_retweets=False)[0]['id']
 
     delay = trump_del * 60
 
@@ -1891,6 +1927,11 @@ async def handle_news():
         if channel.name == 'gen_testing' or channel.name == 'newsfeed':
             c_to_send = channel
             break
+
+    if twitter is None:
+        await _client.send_message(c_to_send,
+                                   "Twitter not activated.")
+        return
 
     delay = (news_del * 60) + (randint(0, 10) * 60)
     while not _client.is_closed:
