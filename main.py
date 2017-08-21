@@ -1935,12 +1935,12 @@ def item_eff_str(item):
     :rtype: str
     """
 
-    if item.type == 'roll_effect':
+    if hasattr(item, 'spec_text'):
+        return item.spec_text
+    elif item.type == 'roll_effect':
         return "All damage increased by {}.".format(item.prop)
     elif item.type == 'life_effect':
         return "Life increased by {}.".format(item.prop)
-    elif item.type == 'spec_effect':
-        return item.spec_text
     else:
         return "This item has an unknown or not implemented effect."
 

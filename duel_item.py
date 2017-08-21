@@ -14,11 +14,11 @@ from random import choice
 #   4) text: text description of item
 #   5) name: name of item
 # effect_type: effect
-# Currently there are three effect_types:
+# Currently these effect_types are implemented:
 #   1) roll_effect = This effect modifies a roll
 #   2) life_effect = This effect modifies a life total at the start of a duel
-#   3) spec_effect = This effect does something different other than the two
-#           above and takes places after rolls go into effect.
+#   3) disarm_effect = This effect disarms the opponent's item provided its not
+#   a disarm_effect itself.
 common_items = {
     "0": {"name": "Copper Ring of One Better",
           "type": "roll_effect",
@@ -79,7 +79,7 @@ common_items = {
            "text": "This sword adds +2 to all damage for the user for one "
                    "duel."},
     "11": {"name": "Disarming Hook",
-           "type": "spec_effect",
+           "type": "disarm_effect",
            "prop": 0,
            "uses": 1,
            "text": "This item will remove your opponent's item. Note: This "
@@ -144,7 +144,7 @@ class DuelItem(object):
             self.prop = items[self.item_id]['prop']
             self.type = items[self.item_id]['type']
             self.uses = items[self.item_id]['uses']
-            if self.type == 'spec_effect':
+            if 'spec_text' in items[self.item_id]:
                 self.spec_text = items[self.item_id]['spec_text']
 
 
