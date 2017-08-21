@@ -1939,12 +1939,12 @@ def item_eff_str(item):
     if hasattr(item, 'spec_text'):
         return item.spec_text
     if "roll_effect" in item.type:
-        ret_str += "All damage increased by {}.\n".format(item.prop)
+        ret_str += "All damage increased by {}.\n".format(item.prop['roll'])
     if 'life_effect' in item.type:
-        ret_str += "Life increased by {}.\n".format(item.prop)
+        ret_str += "Life increased by {}.\n".format(item.prop['roll'])
     if 'regen_effect' in item.type:
         ret_str += "Will regen {} life at the end of each round.\n"\
-                   .format(item.prop)
+                   .format(item.prop['regen'])
     if 'luck_effect' in item.type:
         ret_str += "Item chance luck increased!\n"
     if len(ret_str) > 1:
@@ -2193,17 +2193,19 @@ async def event_handle_shot_duel(challenger, victim, channel):
             c_life_start = life
             v_life_start = life
             if c_item is not None and "life_effect" in c_item.type:
-                c_life_start += c_item.prop
+                c_life_start += c_item.prop['life']
             if v_item is not None and "life_effect" in v_item.type:
-                v_life_start += v_item.prop
+                v_life_start += v_item.prop['life']
 
             # ITEM CHANCE ROLLS (If needed modify chance rolls here)
             if c_item is not None and "luck_effect" in c_item.type:
-                await item_chance_roll(channel, chal_name, (100 - c_item.prop))
+                await item_chance_roll(channel, chal_name,
+                                       (100 - c_item.prop['luck']))
             else:
                 await item_chance_roll(channel, chal_name)
             if v_item is not None and "luck_effect" in v_item.type:
-                await item_chance_roll(channel, vict_name, (100 - v_item.prop))
+                await item_chance_roll(channel, vict_name,
+                                       (100 - v_item.prop['luck']))
             else:
                 await item_chance_roll(channel, vict_name)
 
@@ -2226,16 +2228,16 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
                 if c_item is not None and "roll_effect" in c_item.type \
                         and c_roll >= 0:
-                    c_roll += c_item.prop
+                    c_roll += c_item.prop['roll']
                 elif c_item is not None and "roll_effect" in c_item.type \
                         and c_roll < 0:
-                    c_roll -= c_item.prop
+                    c_roll -= c_item.prop['roll']
                 if v_item is not None and "roll_effect" in v_item.type \
                         and v_roll >= 0:
-                    v_roll += v_item.prop
+                    v_roll += v_item.prop['roll']
                 elif v_item is not None and "roll_effect" in v_item.type \
                         and v_roll < 0:
-                    v_roll -= v_item.prop
+                    v_roll -= v_item.prop['roll']
 
                 # DAMAGE APPLIED HERE
                 if c_roll >= 0:
@@ -2284,10 +2286,10 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 # regen checks
                 if c_item is not None and "regen_effect" in c_item.type \
                         and c_life < c_life_start:
-                    if (c_life_start - c_life) < c_item.prop:
+                    if (c_life_start - c_life) < c_item.prop['regen']:
                         reg_tot = c_life_start - c_life
                     else:
-                        reg_tot = c_item.prop
+                        reg_tot = c_item.prop['regen']
                     v_total.append(-reg_tot)
                     await _client.send_message(channel,
                                                "{} has regen'd {} life!"
@@ -2295,10 +2297,10 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
                 if v_item is not None and "regen_effect" in v_item.type \
                         and v_life < v_life_start:
-                    if (v_life_start - v_life) < v_item.prop:
+                    if (v_life_start - v_life) < v_item.prop['regen']:
                         reg_tot = v_life_start - v_life
                     else:
-                        reg_tot = c_item.prop
+                        reg_tot = c_item.prop['regen']
                     c_total.append(-reg_tot)
                     await _client.send_message(channel,
                                                "{} has regen'd {} life!"
