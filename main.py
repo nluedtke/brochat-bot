@@ -845,13 +845,20 @@ async def run_test(client, message):
     :param message: The message
     :return: None
     """
-    counter = 0
-    tmp = await client.send_message(message.channel, 'Calculating messages...')
-    async for log in client.logs_from(message.channel, limit=100):
-        if log.author == message.author:
-            counter += 1
-
-    await client.edit_message(tmp, 'You have {} messages.'.format(counter))
+    if message.channel.name == 'gen_testing':
+        await client.send_message(message.channel, "Starting Automated Tests.")
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, "Printing help.")
+        await print_help(client, message)
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, "Running duel.")
+        t_message = message
+        t_message.content = "!duel {}".format(message.author.display_name)
+        await shot_duel(client, t_message)
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, "Simulating Trump Call")
+        await get_trump(client, message)
+        await client.send_message(message.channel, "Test Complete.")
 
 
 async def sleep(client, message):
