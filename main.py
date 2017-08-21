@@ -1999,6 +1999,20 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     return r_string
 
 
+def init_player_duel_db(player):
+    """
+    Inits a player's DB for items and dueling.
+
+    :param player: player to init
+    :return: None
+    """
+
+    if 'inventory' not in users[player]:
+        users[player]['inventory'] = {}
+        users[player]['a_item'] = None
+    if 'duel_record' not in users[player]:
+        users[player]['duel_record'] = [0, 0, 0]
+
 async def item_chance_roll(channel, player, max_roll=100):
     """
     Rolls for a chance at an item
@@ -2008,7 +2022,11 @@ async def item_chance_roll(channel, player, max_roll=100):
     :param max_roll: max roll to use
     """
 
-    item = DuelItem(randint(1, max_roll))
+    if player not in users:
+        users[player] = {}
+    init_player_duel_db(player)
+
+    item = DuelItem(randint(1, max_roll + len(users[player]['inventory'])))
     if item.name is not None:
         global items_awarded
         items_awarded += 1
@@ -2117,16 +2135,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
         users[vict_name] = {}
     if chal_name not in users:
         users[chal_name] = {}
-    if 'duel_record' not in users[vict_name]:
-        users[vict_name]['duel_record'] = [0, 0, 0]
-    if 'duel_record' not in users[chal_name]:
-        users[chal_name]['duel_record'] = [0, 0, 0]
-    if 'inventory' not in users[vict_name]:
-        users[vict_name]['inventory'] = {}
-        users[vict_name]['a_item'] = None
-    if 'inventory' not in users[chal_name]:
-        users[chal_name]['inventory'] = {}
-        users[chal_name]['a_item'] = None
+    init_player_duel_db(vict_name)
+    init_player_duel_db(chal_name)
 
     c_rec = users[chal_name]['duel_record']
     v_rec = users[vict_name]['duel_record']
