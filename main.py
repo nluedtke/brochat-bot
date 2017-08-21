@@ -1947,6 +1947,9 @@ def item_eff_str(item):
                    .format(item.prop['regen'])
     if 'luck_effect' in item.type:
         ret_str += "Item chance luck increased!\n"
+    if 'disarm_effect' in item.type:
+        ret_str += "The opponent's item will be removed if there is one " \
+                   "equiped.\n"
     if len(ret_str) > 1:
         return ret_str
     else:
@@ -2049,18 +2052,20 @@ async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
                                        "Both players are using a "
                                        "disarming item, they will "
                                        "have no effect!")
-            if c_item.item_id in users[c_name]['inventory']:
+            if c_item.item_id in users[c_name]['inventory'] \
+                    and len(c_item.type) == 1:
                 users[c_name]['inventory'][c_item.item_id] -= 1
-            else:
+            elif len(c_item.type) == 1:
                 users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
         else:
             await _client.send_message(channel,
                                        "{} has nothing to disarm, "
                                        "the {} has no "
                                        "effect!".format(v_name, c_item.name))
-            if c_item.item_id in users[c_name]['inventory']:
+            if c_item.item_id in users[c_name]['inventory'] \
+                    and len(c_item.type) == 1:
                 users[c_name]['inventory'][c_item.item_id] -= 1
-            else:
+            elif len(c_item.type) == 1:
                 users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
 
     if v_item is not None and 'disarm_effect' in v_item.type:
@@ -2076,18 +2081,20 @@ async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
                                                v_item.name))
             c_item_ret = None
         elif c_item is not None and 'disarm_effect' in c_item.type:
-            if v_item.item_id in users[v_name]['inventory']:
+            if v_item.item_id in users[v_name]['inventory'] \
+                    and len(v_item.type) == 1:
                 users[v_name]['inventory'][v_item.item_id] -= 1
-            else:
+            elif len(v_item.type) == 1:
                 users[v_name]['inventory'][v_item.item_id] = v_item.uses - 1
         else:
             await _client.send_message(channel,
                                        "{} has nothing to disarm, "
                                        "the {} has no "
                                        "effect!".format(c_name, v_item.name))
-            if v_item.item_id in users[v_name]['inventory']:
+            if v_item.item_id in users[v_name]['inventory'] \
+                    and len(v_item.type) == 1:
                 users[v_name]['inventory'][v_item.item_id] -= 1
-            else:
+            elif len(v_item.type) == 1:
                 users[v_name]['inventory'][v_item.item_id] = v_item.uses - 1
 
     return c_item_ret, v_item_ret

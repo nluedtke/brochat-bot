@@ -89,9 +89,7 @@ common_items = {
            "prop": {},
            "uses": 1,
            "text": "This item will remove your opponent's item. Note: This "
-                   "simply unequips the item, it does not destroy it.",
-           "spec_text": "The opponent's item will be removed if there is one "
-                        "equiped."},
+                   "simply unequips the item, it does not destroy it."},
     "12": {"name": "Copper Pendant of Regeneration",
            "type": ["regen_effect"],
            "prop": {'regen': 1},
@@ -104,6 +102,13 @@ common_items = {
            "uses": 4,
            "text": "This item increases the chance the user will receive an "
                    "item at the start of a duel for four duels."
+           },
+    "14": {"name": "Hook Sword",
+           "type": ["roll_effect", "disarm_effect"],
+           "prop": {"roll", 2},
+           "uses": 2,
+           "text": "This sword adds +2 to all damage for the user and disarms "
+                   "the opponent's item for two duels."
            }
 }
 
