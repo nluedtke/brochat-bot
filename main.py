@@ -680,7 +680,7 @@ async def on_ready():
         "you."
     ]
     for channel in _client.get_all_channels():
-        if channel.name == 'general' or channel.name == 'brochat':
+        if channel.name == 'gen_testing' or channel.name == 'brochat':
             await _client.send_message(channel, connect_strings[
                 randint(0, len(connect_strings) - 1)])
 
@@ -1226,7 +1226,7 @@ async def shot_duel(client, message):
     name = " ".join(arguments)
     print(name)
     if name == message.author.display_name and message.channel.name != \
-            'general':
+            'gen_testing':
         await client.send_message(message.channel, "Why not just drink your "
                                                    "tears away, instead of "
                                                    "including this channel?")
@@ -1826,7 +1826,7 @@ async def check_trumps_mouth():
         count=1, include_retweets=False)[0]['id']
 
     for channel in _client.get_all_channels():
-        if channel.name == 'general' or channel.name == 'brochat':
+        if channel.name == 'gen_testing' or channel.name == 'brochat':
             c_to_send = channel
             break
 
@@ -1860,7 +1860,7 @@ async def print_at_midnight():
     c_to_send = None
     await _client.wait_until_ready()
     for channel in _client.get_all_channels():
-        if channel.name == 'general' or channel.name == 'brochat':
+        if channel.name == 'gen_testing' or channel.name == 'brochat':
             c_to_send = channel
             break
 
@@ -1888,7 +1888,7 @@ async def handle_news():
     await _client.wait_until_ready()
 
     for channel in _client.get_all_channels():
-        if channel.name == 'general' or channel.name == 'newsfeed':
+        if channel.name == 'gen_testing' or channel.name == 'newsfeed':
             c_to_send = channel
             break
 
