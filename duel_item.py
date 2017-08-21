@@ -104,7 +104,7 @@ common_items = {
            },
     "14": {"name": "Hook Sword",
            "type": ["roll_effect", "disarm_effect"],
-           "prop": {"roll", 2},
+           "prop": {"roll": 2},
            "uses": 2,
            "text": "This sword adds +2 to all damage for the user and disarms "
                    "the opponent's item for two duels."
