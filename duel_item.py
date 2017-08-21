@@ -6,6 +6,7 @@ from random import choice
 # Current guidelines for rarity are:
 #   Any item with more than 4 duels in duration is RARE.
 #   Any item with a modifier greater than 2 damage or 4 life is RARE.
+#   Any item with life_regen greater than 2 is RARE.
 # The key is the id of the item
 # The item is a dictionary with two key:value pairs
 #   1) type: effect types SEE NOTE BELOW
@@ -85,8 +86,14 @@ common_items = {
            "text": "This item will remove your opponent's item. Note: This "
                    "simply unequips the item, it does not destroy it.",
            "spec_text": "The opponent's item will be removed if there is one "
-                        "equiped."}
-
+                        "equiped."},
+    "12": {"name": "Copper Pendant of Regeneration",
+           "type": ["regen_effect"],
+           "prop": 1,
+           "uses": 1,
+           "text": "This item allows the wearer to regenerate 1 life at the "
+                   "end of each round for one duel."
+           }
 }
 
 # Rare items go here and generally considered be more powerful either in

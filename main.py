@@ -1935,12 +1935,18 @@ def item_eff_str(item):
     :rtype: str
     """
 
+    ret_str = ""
     if hasattr(item, 'spec_text'):
         return item.spec_text
-    elif "roll_effect" in item.type:
-        return "All damage increased by {}.".format(item.prop)
-    elif 'life_effect' in item.type:
-        return "Life increased by {}.".format(item.prop)
+    if "roll_effect" in item.type:
+        ret_str += "All damage increased by {}.\n".format(item.prop)
+    if 'life_effect' in item.type:
+        ret_str += "Life increased by {}.\n".format(item.prop)
+    if 'regen_effect' in item.type:
+        ret_str += "Will regen {} life at the end of each round.\n"\
+                   .format(item.prop)
+    if len(ret_str) > 1:
+        return ret_str
     else:
         return "This item has an unknown or not implemented effect."
 
@@ -2267,6 +2273,29 @@ async def event_handle_shot_duel(challenger, victim, channel):
                     break
 
                 # END OF ROUND PHASE
+                # regen checks
+                if c_item is not None and "regen_effect" in c_item.type \
+                        and c_life < c_life_start:
+                    if (c_life_start - c_life) < c_item.prop:
+                        reg_tot = c_life_start - c_life
+                    else:
+                        reg_tot = c_item.prop
+                    v_total.append(-reg_tot)
+                    await _client.send_message(channel,
+                                               "{} has regen'd {} life!"
+                                               .format(chal_name, reg_tot))
+
+                if v_item is not None and "regen_effect" in v_item.type \
+                        and v_life < v_life_start:
+                    if (v_life_start - v_life) < v_item.prop:
+                        reg_tot = v_life_start - v_life
+                    else:
+                        reg_tot = c_item.prop
+                    c_total.append(-reg_tot)
+                    await _client.send_message(channel,
+                                               "{} has regen'd {} life!"
+                                               .format(vict_name, reg_tot))
+
                 await asyncio.sleep(15)
             break
 
