@@ -1941,7 +1941,7 @@ def item_eff_str(item):
     if "roll_effect" in item.type:
         ret_str += "All damage increased by {}.\n".format(item.prop['roll'])
     if 'life_effect' in item.type:
-        ret_str += "Life increased by {}.\n".format(item.prop['roll'])
+        ret_str += "Life increased by {}.\n".format(item.prop['life'])
     if 'regen_effect' in item.type:
         ret_str += "Will regen {} life at the end of each round.\n"\
                    .format(item.prop['regen'])
