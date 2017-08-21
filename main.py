@@ -862,9 +862,9 @@ async def run_test(client, message):
         await use_command(client, t_message)
         await asyncio.sleep(5)
         await client.send_message(message.channel, "Equiping first item")
+        inv = users[message.author.display_name]['inventory']
         t_message = message
-        t_message.content = "!use {}".format(users[message.author.display_name]
-                                             ['inventory'][0])
+        t_message.content = "!use {}".format(str(list(inv)[0]))
         await use_command(client, t_message)
         await asyncio.sleep(5)
         await client.send_message(message.channel, "Running duel.")
@@ -872,6 +872,9 @@ async def run_test(client, message):
         t_message.content = "!duel {}".format(message.author.display_name)
         await shot_duel(client, t_message)
         await asyncio.sleep(5)
+        await toggle_accept(client, message)
+        while shot_duel_running:
+            await asyncio.sleep(10)
         await client.send_message(message.channel, "Simulating Trump Call")
         await get_trump(client, message)
         await client.send_message(message.channel, "Test Complete.")
