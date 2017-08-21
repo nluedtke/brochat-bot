@@ -851,6 +851,22 @@ async def run_test(client, message):
         await client.send_message(message.channel, "Printing help.")
         await print_help(client, message)
         await asyncio.sleep(5)
+        await client.send_message(message.channel, "Populating inventory.")
+        await item_chance_roll(message.channel, message.author.display_name, 10)
+        await item_chance_roll(message.channel, message.author.display_name, 10)
+        await item_chance_roll(message.channel, message.author.display_name, 10)
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, "Calling !use")
+        t_message = message
+        t_message.content = "!use"
+        await use_command(client, t_message)
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, "Equiping first item")
+        t_message = message
+        t_message.content = "!use {}".format(users[message.author.display_name]
+                                             ['inventory'][0])
+        await use_command(client, t_message)
+        await asyncio.sleep(5)
         await client.send_message(message.channel, "Running duel.")
         t_message = message
         t_message.content = "!duel {}".format(message.author.display_name)
