@@ -877,6 +877,34 @@ async def run_test(client, message):
             await asyncio.sleep(10)
         await client.send_message(message.channel, "Simulating Trump Call")
         await get_trump(client, message)
+        await asyncio.sleep(10)
+        await client.send_message(message.channel, "Setting test duel")
+        test_id1 = '13'
+        test_id2 = '12'
+        users['palu']['inventory'] = {}
+        users['csh']['inventory'] = {}
+        users['palu']['a_item'] = test_id1
+        users['csh']['a_item'] = test_id2
+        users['palu']['inventory'][test_id1] = 0
+        users['csh']['inventory'][test_id2] = 0
+        whos_in.update_db()
+        await asyncio.sleep(5)
+        for p in client.get_all_members():
+            if p.display_name == 'palu':
+                player2 = p
+            elif p.display_name == 'csh':
+                player1 = p
+        client.loop.create_task(event_handle_shot_duel(player1, player2,
+                                                       message.channel))
+        global accepted
+        accepted = True
+        await asyncio.sleep(20)
+        while shot_duel_running:
+            await asyncio.sleep(10)
+        users['palu']['inventory'] = {}
+        users['csh']['inventory'] = {}
+        users['palu']['a_item'] = None
+        users['csh']['a_item'] = None
         await client.send_message(message.channel, "Test Complete.")
 
 
@@ -2043,7 +2071,7 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     elif 0 < c_roll < 6:
         r_string += ":dagger: **{}** lands a {} and deals {} damage!".format(
             c_name, choice(a_types), c_roll)
-    elif c_roll == 6:
+    elif c_roll >= 6:
         r_string += ":knife: **{}** lands a **MASSIVE** strike and deals {} " \
                     "damage!".format(c_name, c_roll)
 
@@ -2383,7 +2411,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                     if (v_life_start - v_life) < v_item.prop['regen']:
                         reg_tot = v_life_start - v_life
                     else:
-                        reg_tot = c_item.prop['regen']
+                        reg_tot = v_item.prop['regen']
                     c_total.append(-reg_tot)
                     await _client.send_message(channel,
                                                "{} has regen'd {} life!"
