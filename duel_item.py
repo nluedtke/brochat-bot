@@ -131,7 +131,13 @@ rare_items = {
             "type": ["life_effect"],
             "prop": {'life': 4},
             "uses": 10,
-            "text": "This armor adds +4 life for the wearer for ten duels."}
+            "text": "This armor adds +4 life for the wearer for ten duels."},
+    "102": {"name": "Exceptional Broadsword",
+            "type": ["roll_effect"],
+            "prop": {'roll': 2},
+            "uses": 5,
+            "text": "This sword adds +2 to all damage for the user for five "
+                    "duels."},
 }
 
 
