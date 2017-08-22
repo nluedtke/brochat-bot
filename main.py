@@ -848,39 +848,39 @@ async def run_test(client, message):
     if message.channel.name == 'gen_testing':
         await client.send_message(message.channel, "Starting Automated Tests.")
         await asyncio.sleep(5)
-        await client.send_message(message.channel, "Printing help.")
-        await print_help(client, message)
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, "Populating inventory.")
-        await item_chance_roll(message.channel, message.author.display_name, 10)
-        await item_chance_roll(message.channel, message.author.display_name, 10)
-        await item_chance_roll(message.channel, message.author.display_name, 10)
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, "Calling !use")
-        t_message = message
-        t_message.content = "!use"
-        await use_command(client, t_message)
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, "Equiping first item")
-        inv = users[message.author.display_name]['inventory']
-        t_message = message
-        t_message.content = "!use {}".format(str(list(inv)[0]))
-        await use_command(client, t_message)
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, "Running duel.")
-        t_message = message
-        t_message.content = "!duel {}".format(message.author.display_name)
-        await shot_duel(client, t_message)
-        await asyncio.sleep(5)
-        await toggle_accept(client, message)
-        while shot_duel_running:
-            await asyncio.sleep(10)
-        await client.send_message(message.channel, "Simulating Trump Call")
-        await get_trump(client, message)
-        await asyncio.sleep(10)
+        # await client.send_message(message.channel, "Printing help.")
+        # await print_help(client, message)
+        # await asyncio.sleep(5)
+        # await client.send_message(message.channel, "Populating inventory.")
+        # await item_chance_roll(message.channel, message.author.display_name, 10)
+        # await item_chance_roll(message.channel, message.author.display_name, 10)
+        # await item_chance_roll(message.channel, message.author.display_name, 10)
+        # await asyncio.sleep(5)
+        # await client.send_message(message.channel, "Calling !use")
+        # t_message = message
+        # t_message.content = "!use"
+        # await use_command(client, t_message)
+        # await asyncio.sleep(5)
+        # await client.send_message(message.channel, "Equiping first item")
+        # inv = users[message.author.display_name]['inventory']
+        # t_message = message
+        # t_message.content = "!use {}".format(str(list(inv)[0]))
+        # await use_command(client, t_message)
+        # await asyncio.sleep(5)
+        # await client.send_message(message.channel, "Running duel.")
+        # t_message = message
+        # t_message.content = "!duel {}".format(message.author.display_name)
+        # await shot_duel(client, t_message)
+        # await asyncio.sleep(5)
+        # await toggle_accept(client, message)
+        # while shot_duel_running:
+        #     await asyncio.sleep(10)
+        # await client.send_message(message.channel, "Simulating Trump Call")
+        # await get_trump(client, message)
+        # await asyncio.sleep(10)
         await client.send_message(message.channel, "Setting test duel")
-        test_id1 = '13'
-        test_id2 = '12'
+        test_id1 = '103'
+        test_id2 = '101'
         users['palu']['inventory'] = {}
         users['csh']['inventory'] = {}
         users['palu']['a_item'] = test_id1
@@ -2044,6 +2044,10 @@ def item_eff_str(item):
     if 'disarm_effect' in item.type:
         ret_str += "The opponent's item will be removed if there is one " \
                    "equiped.\n"
+    if 'poison_effect' in item.type:
+        ret_str += "The opponent, when hit, will be poisoned for {} rounds, " \
+                   "taking {} damage each round.\n"\
+                    .format(item.prop['duration'], item.prop['poison'])
     if len(ret_str) > 1:
         return ret_str
     else:
@@ -2328,9 +2332,35 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
             # COMBAT PHASE
             _round = 1
+            c_pos, v_pos = [False, 0], [False, 0]
             while True:
                 await _client.send_message(channel, "Round {}!".format(_round))
                 # PRE ATTACK PHASE (spec_effect check here)
+                # Poison Damage check
+                if c_pos[0]:
+                    v_total.append(v_item.prop['poison'])
+                    c_pos[1] -= 1
+                    c_life = c_life_start - sum(v_total)
+                    if c_pos[1] <= 0:
+                        c_pos[0] = False
+                    await _client.send_message(channel,
+                                               "{} takes {} poison damage and "
+                                               "is now at {} life."
+                                               .format(chal_name,
+                                                       v_item.prop['poison'],
+                                                       c_life))
+                if v_pos[0]:
+                    c_total.append(c_item.prop['poison'])
+                    v_pos[1] -= 1
+                    v_life = v_life_start - sum(c_total)
+                    if v_pos[1] <= 0:
+                        v_pos[0] = False
+                    await _client.send_message(channel,
+                                               "{} takes {} poison damage and "
+                                               "is now at {} life."
+                                               .format(vict_name,
+                                                       c_item.prop['poison'],
+                                                       v_life))
 
                 # ATTACK PHASE (Both attacks happen at same time!)
                 await _client.send_typing(channel)
@@ -2367,6 +2397,17 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                              v_roll, c_life, v_life)
 
                 # POST COMBAT PHASE (Damage resolved here, on_death effects
+                # Poison Effects
+                if c_item is not None and "poison_effect" in c_item.type and \
+                        c_roll > 0:
+                    v_pos[0] = True
+                    v_pos[1] += c_item.prop['duration']
+
+                if v_item is not None and "poison_effect" in v_item.type and \
+                        v_roll > 0:
+                    c_pos[0] = True
+                    c_pos[1] += v_item.prop['duration']
+
                 # should be implemented here)
                 if v_life < 1 and c_life < 1:
                     duel_string += "\nBoth players have died!\n{} and {} " \

@@ -24,7 +24,12 @@ from random import choice
 #   happens after the death check goes into effect.
 #   5) luck_effect = This modifies the item chance roll at the start of the
 #   duel, this does not effect the other random luck effects that happen with
-#   other bot interactions.
+#   other bot interactions.,
+#   6) poison_effect = Should only be on weapons and defines two items in the
+#   prop list. 'poison' which is the amount the poison actually does right
+#   round and 'duration' the amount of rounds it hits for following a
+#   successfull strike. Poison damage does not stack, but the duration does.
+#   deadly = 3 duration, moderate = 2 duration, irritating = 1 duration.
 common_items = {
     "0": {"name": "Copper Ring of One Better",
           "type": ["roll_effect"],
@@ -126,7 +131,6 @@ rare_items = {
             "uses": 10,
             "text": "This ring adds +1 to all damage for the user for ten "
                     "duels."},
-
     "101": {"name": "Heavy Steel Plate Armor",
             "type": ["life_effect"],
             "prop": {'life': 4},
@@ -138,6 +142,12 @@ rare_items = {
             "uses": 5,
             "text": "This sword adds +2 to all damage for the user for five "
                     "duels."},
+    "103": {"name": "The Stinger",
+            "type": ["poison_effect", "roll_effect"],
+            "prop": {'roll': 1, 'poison': 1, 'duration': 3},
+            "uses": 5,
+            "text": "This dagger adds +1 to all damage for the user for five "
+                    "duels. The dagger is coated in deadly poison."},
 }
 
 
