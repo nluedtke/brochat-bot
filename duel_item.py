@@ -193,6 +193,68 @@ class DuelItem(object):
                 self.spec_text = items[self.item_id]['spec_text']
 
 
+class PoisonEffect(object):
+    """
+    Defines a PoisonEffect object
+    """
+
+    def __init__(self, item, p_source):
+        """
+        Constructor for a PoisonEffect
+
+        :param item: Item causing the PoisonEffect
+        :param p_source: Person Causing the poison
+        """
+
+        self.p_id = "{}_{}".format(item.item_id, p_source)
+        self.dam = item.prop['poison']
+        self.dur = item.prop['duration']
+
+    def __eq__(self, other):
+        """
+        Override the equal operator
+
+        :param other: Second item to compare
+        :return: True if the same, false otherwise
+        """
+
+        return self.p_id == other.p_id
+
+    def __iadd__(self, other):
+        """
+        Override the +=
+
+        :param other: Item effect to add
+        :return:
+        """
+        if type(other) == int:
+            self.dur += other
+        else:
+            self.dur += other.dur
+
+        return self
+
+    def __isub__(self, other):
+        """
+        Override the -=
+
+        :param other: Item effect to sub
+        :return:
+        """
+        if type(other) == int:
+            self.dur -= other
+        else:
+            self.dur -= other.dur
+
+        return self
+
+    def ended(self):
+        """
+        Returns if the effect is ended
+        :return:
+        """
+        return self.dur <= 0
+
 if __name__ == "__main__":
     """
     For testing
