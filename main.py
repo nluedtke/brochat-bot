@@ -2216,6 +2216,45 @@ async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
     return c_item_ret, v_item_ret
 
 
+async def death_check(channel, chal, c_life, vict, v_life):
+    """
+    Checks if someone has died
+
+    :param channel: Channel
+    :param chal: Challenger
+    :param c_life: Challenger's Life
+    :param vict: Victim
+    :param v_life: Victim's Life
+    :return: True if death
+    :rtype: bool
+    """
+
+    death_string = ""
+
+    if v_life < 1 and c_life < 1:
+        death_string = "\nBoth players have died!\n{} and {} " \
+                       "both drink!".format(chal.mention,
+                                             vict.mention)
+        users[vict.display_name]['duel_record'][2] += 1
+        users[chal.display_name]['duel_record'][2] += 1
+    elif v_life < 1:
+        death_string = "\n{} has died!\n{} wins the duel!\n" \
+                       "{} drinks!".format(vict.display_name,
+                                            chal.display_name, vict.mention)
+        users[vict.display_name]['duel_record'][1] += 1
+        users[chal.display_name]['duel_record'][0] += 1
+    elif c_life < 1:
+        death_string = "\n{} has died!\n{} wins the duel!\n" \
+                       "{} drinks!".format(chal.display_name, vict.display_name,
+                                           chal.mention)
+        users[vict.display_name]['duel_record'][0] += 1
+        users[chal.display_name]['duel_record'][1] += 1
+
+    if len(death_string) > 1:
+        await _client.send_message(channel, death_string)
+        return True
+    return False
+
 async def event_handle_shot_duel(challenger, victim, channel):
     """
     Handles a shot_duel should a victim accept.
@@ -2329,7 +2368,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                        "{} has {} life."
                                        .format(chal_name, c_life_start,
                                                vict_name, v_life_start))
-
+            c_life = c_life_start
+            v_life = v_life_start
             # COMBAT PHASE
             _round = 1
             c_pos, v_pos = [False, 0], [False, 0]
@@ -2361,6 +2401,11 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                                .format(vict_name,
                                                        c_item.prop['poison'],
                                                        v_life))
+
+                if death_check(challenger, c_life, victim, v_life):
+                    # END OF DUEL PHASE
+                    whos_in.update_db()
+                    break
 
                 # ATTACK PHASE (Both attacks happen at same time!)
                 await _client.send_typing(channel)
@@ -2397,6 +2442,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                              v_roll, c_life, v_life)
 
                 # POST COMBAT PHASE (Damage resolved here, on_death effects
+                # should be implemented here)
                 # Poison Effects
                 if c_item is not None and "poison_effect" in c_item.type and \
                         c_roll > 0:
@@ -2408,7 +2454,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                     c_pos[0] = True
                     c_pos[1] += v_item.prop['duration']
 
-                # should be implemented here)
+                await _client.send_message(channel, duel_string)
                 if v_life < 1 and c_life < 1:
                     duel_string += "\nBoth players have died!\n{} and {} " \
                                    "both drink!".format(challenger.mention,
@@ -2427,9 +2473,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                                        challenger.mention)
                     users[vict_name]['duel_record'][0] += 1
                     users[chal_name]['duel_record'][1] += 1
+
                 _round += 1
-                await _client.send_message(channel, duel_string)
-                if v_life < 1 or c_life < 1:
+                if death_check(challenger, c_life, victim, v_life):
                     # END OF DUEL PHASE
                     whos_in.update_db()
                     break
