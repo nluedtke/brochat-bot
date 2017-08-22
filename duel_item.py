@@ -6,104 +6,138 @@ from random import choice
 # Current guidelines for rarity are:
 #   Any item with more than 4 duels in duration is RARE.
 #   Any item with a modifier greater than 2 damage or 4 life is RARE.
+#   Any item with life_regen greater than 2 is RARE.
 # The key is the id of the item
 # The item is a dictionary with two key:value pairs
-#   1) type: effect_type
-#   2) prop: strength or effect descriptor
+#   1) type: effect types SEE NOTE BELOW
+#   2) prop: strength or effect descriptor, this is a dictionary with "eff: str"
 #   3) uses: amount of uses, measured in duels
 #   4) text: text description of item
 #   5) name: name of item
 # effect_type: effect
-# Currently there are three effect_types:
+# Currently these effect_types are implemented:
 #   1) roll_effect = This effect modifies a roll
 #   2) life_effect = This effect modifies a life total at the start of a duel
-#   3) spec_effect = This effect does something different other than the two
-#           above and takes places after rolls go into effect.
+#   3) disarm_effect = This effect disarms the opponent's item provided its not
+#   a disarm_effect itself.
+#   4) regen_effect = The effect adds life at the end of the round, this
+#   happens after the death check goes into effect.
+#   5) luck_effect = This modifies the item chance roll at the start of the
+#   duel, this does not effect the other random luck effects that happen with
+#   other bot interactions.
 common_items = {
     "0": {"name": "Copper Ring of One Better",
-          "type": "roll_effect",
-          "prop": 1,
+          "type": ["roll_effect"],
+          "prop": {'roll': 1},
           "uses": 1,
           "text": "This ring adds +1 to all damage for the user for one duel."},
     "1": {"name": "Bronze Ring of One Better",
-          "type": "roll_effect",
-          "prop": 1,
+          "type": ["roll_effect"],
+          "prop": {'roll': 1},
           "uses": 2,
           "text": "This ring adds +1 to all damage for the user for two "
                   "duels."},
     "2": {"name": "Steel Ring of One Better",
-          "type": "roll_effect",
-          "prop": 1,
+          "type": ["roll_effect"],
+          "prop": {'roll': 1},
           "uses": 4,
           "text": "This ring adds +1 to all damage for the user for four "
                   "duels."},
     "3": {"name": "Cloth Vest",
-          "type": "life_effect",
-          "prop": 2,
+          "type": ["life_effect"],
+          "prop": {'life': 2},
           "uses": 1,
           "text": "This armor adds +2 life for the wearer for one duel."},
     "4": {"name": "Leather Vest",
-          "type": "life_effect",
-          "prop": 2,
+          "type": ["life_effect"],
+          "prop": {'life': 2},
           "uses": 2,
           "text": "This armor adds +2 life for the wearer for two duels."},
     "5": {"name": "Reinforced Leather Vest",
-          "type": "life_effect",
-          "prop": 2,
+          "type": ["life_effect"],
+          "prop": {'life': 2},
           "uses": 4,
           "text": "This armor adds +2 life for the wearer for four duels."},
     "6": {"name": "Copper Plate Armor",
-          "type": "life_effect",
-          "prop": 4,
+          "type": ["life_effect"],
+          "prop": {'life': 4},
           "uses": 1,
           "text": "This armor adds +4 life for the wearer for one duel."},
     "7": {"name": "Bronze Plate Armor",
-          "type": "life_effect",
-          "prop": 4,
+          "type": ["life_effect"],
+          "prop": {'life': 4},
           "uses": 2,
           "text": "This armor adds +4 life for the wearer for two duels."},
     "8": {"name": "Steel Plate Armor",
-          "type": "life_effect",
-          "prop": 4,
+          "type": ["life_effect"],
+          "prop": {'life': 4},
           "uses": 4,
           "text": "This armor adds +4 life for the wearer for four duels."},
     "9": {"name": "Leotard",
-          "type": "life_effect",
-          "prop": 1,
+          "type": ["life_effect"],
+          "prop": {'life': 1},
           "uses": 1,
           "text": "This armor adds +1 life for the wearer for one duel."},
     "10": {"name": "Broadsword",
-           "type": "roll_effect",
-           "prop": 2,
+           "type": ["roll_effect"],
+           "prop": {'roll': 2},
            "uses": 1,
            "text": "This sword adds +2 to all damage for the user for one "
                    "duel."},
     "11": {"name": "Disarming Hook",
-           "type": "spec_effect",
-           "prop": 0,
+           "type": ["disarm_effect"],
+           "prop": {},
            "uses": 1,
-           "text": "This item will remove your opponent's item. Note: This "
-                   "simply unequips the item, it does not destroy it.",
-           "spec_text": "The opponent's item will be removed if there is one "
-                        "equiped."}
-
+           "text": "This item will remove your opponent's item."},
+    "12": {"name": "Copper Pendant of Regeneration",
+           "type": ["regen_effect"],
+           "prop": {'regen': 1},
+           "uses": 1,
+           "text": "This item allows the wearer to regenerate 1 life at the "
+                   "end of each round for one duel."},
+    "13": {"name": "Metal Detector",
+           "type": ["luck_effect"],
+           "prop": {'luck': 50},
+           "uses": 4,
+           "text": "This item greatly increases the chance the user will "
+                   "receive an item at the start of a duel for four duels."
+           },
+    "14": {"name": "Hook Sword",
+           "type": ["roll_effect", "disarm_effect"],
+           "prop": {"roll": 2},
+           "uses": 2,
+           "text": "This sword adds +2 to all damage for the user and disarms "
+                   "the opponent's item for two duels."
+           },
+    "15": {"name": "Glistening Leather Vest",
+           "type": ["life_effect", "luck_effect"],
+           "prop": {'life': 2, "luck": 20},
+           "uses": 2,
+           "text": "This armor adds +2 life for the wearer and moderately "
+                   "increases chance for an item for two duels."}
 }
 
 # Rare items go here and generally considered be more powerful either in
 # strength or duration
 rare_items = {
     "100": {"name": "Gold Ring of One Better",
-            "type": "roll_effect",
-            "prop": 1,
+            "type": ["roll_effect"],
+            "prop": {'roll': 1},
             "uses": 10,
             "text": "This ring adds +1 to all damage for the user for ten "
                     "duels."},
 
     "101": {"name": "Heavy Steel Plate Armor",
-            "type": "life_effect",
-            "prop": 4,
+            "type": ["life_effect"],
+            "prop": {'life': 4},
             "uses": 10,
-            "text": "This armor adds +4 life for the wearer for ten duels."}
+            "text": "This armor adds +4 life for the wearer for ten duels."},
+    "102": {"name": "Exceptional Broadsword",
+            "type": ["roll_effect"],
+            "prop": {'roll': 2},
+            "uses": 5,
+            "text": "This sword adds +2 to all damage for the user for five "
+                    "duels."},
 }
 
 
@@ -144,7 +178,8 @@ class DuelItem(object):
             self.prop = items[self.item_id]['prop']
             self.type = items[self.item_id]['type']
             self.uses = items[self.item_id]['uses']
-            if self.type == 'spec_effect':
+            self.text = items[self.item_id]['text']
+            if 'spec_text' in items[self.item_id]:
                 self.spec_text = items[self.item_id]['spec_text']
 
 
@@ -156,17 +191,13 @@ if __name__ == "__main__":
     print(i.name)
     print(i.prop)
     print(i.uses)
+    print(i.text)
 
     i = DuelItem(1)
     print(i.name)
     print(i.prop)
     print(i.uses)
-
-    i = DuelItem(11, 11)
-    print(i.name)
-    print(i.prop)
-    print(i.uses)
-    print(i.spec_text)
+    print(i.text)
 
     i = DuelItem(99)
     if i.name is None:

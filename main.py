@@ -599,20 +599,32 @@ else:
 token = tokens['token']
 
 # Twitter tokens
-twitter_api_key = tokens['twitter_api_key']
-twitter_api_secret = tokens['twitter_api_secret']
-twitter = Twython(twitter_api_key, twitter_api_secret)
-auth = twitter.get_authentication_tokens()
-OAUTH_TOKEN = auth['oauth_token']
-OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
+if 'twitter_api_key' not in tokens or 'twitter_api_secret' not in tokens:
+    twitter = None
+    print("No twitter functionality!")
+else:
+    twitter_api_key = tokens['twitter_api_key']
+    twitter_api_secret = tokens['twitter_api_secret']
+    twitter = Twython(twitter_api_key, twitter_api_secret)
+    auth = twitter.get_authentication_tokens()
+    OAUTH_TOKEN = auth['oauth_token']
+    OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
 
 # SMMRY tokens
-smmry_api_key = tokens['smmry_api_key']
+if 'smmry_api_key' in tokens:
+    smmry_api_key = tokens['smmry_api_key']
+else:
+    smmry_api_key = None
+    print("No summary functionality!")
 
 # Twilio Tokens
-account_sid = tokens['twilio_account_sid']
-auth_token = tokens['twilio_auth_token']
-twilio_client = Client(account_sid, auth_token)
+if 'twilio_account_sid' not in tokens or 'twilio_auth_token' not in tokens:
+    twilio_client = None
+    print("No twilio functionality!")
+else:
+    account_sid = tokens['twilio_account_sid']
+    auth_token = tokens['twilio_auth_token']
+    twilio_client = Client(account_sid, auth_token)
 
 # Create/Load Local Database
 db_file = '{}/db.json'.format(data_dir)
@@ -680,7 +692,7 @@ async def on_ready():
         "you."
     ]
     for channel in _client.get_all_channels():
-        if channel.name == 'general' or channel.name == 'brochat':
+        if channel.name == 'gen_testing' or channel.name == 'brochat':
             await _client.send_message(channel, connect_strings[
                 randint(0, len(connect_strings) - 1)])
 
@@ -783,6 +795,8 @@ def get_smmry(message):
     :param message:
     :return: a string summarizing the URL
     """
+    if smmry_api_key is None:
+        return "No smmry API key, not activated!"
     arguments = argument_parser(message)
 
     if len(arguments) != 1 or arguments[0] == "!summary":
@@ -831,13 +845,67 @@ async def run_test(client, message):
     :param message: The message
     :return: None
     """
-    counter = 0
-    tmp = await client.send_message(message.channel, 'Calculating messages...')
-    async for log in client.logs_from(message.channel, limit=100):
-        if log.author == message.author:
-            counter += 1
-
-    await client.edit_message(tmp, 'You have {} messages.'.format(counter))
+    if message.channel.name == 'gen_testing':
+        await client.send_message(message.channel, "Starting Automated Tests.")
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, "Printing help.")
+        await print_help(client, message)
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, "Populating inventory.")
+        await item_chance_roll(message.channel, message.author.display_name, 10)
+        await item_chance_roll(message.channel, message.author.display_name, 10)
+        await item_chance_roll(message.channel, message.author.display_name, 10)
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, "Calling !use")
+        t_message = message
+        t_message.content = "!use"
+        await use_command(client, t_message)
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, "Equiping first item")
+        inv = users[message.author.display_name]['inventory']
+        t_message = message
+        t_message.content = "!use {}".format(str(list(inv)[0]))
+        await use_command(client, t_message)
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, "Running duel.")
+        t_message = message
+        t_message.content = "!duel {}".format(message.author.display_name)
+        await shot_duel(client, t_message)
+        await asyncio.sleep(5)
+        await toggle_accept(client, message)
+        while shot_duel_running:
+            await asyncio.sleep(10)
+        await client.send_message(message.channel, "Simulating Trump Call")
+        await get_trump(client, message)
+        await asyncio.sleep(10)
+        await client.send_message(message.channel, "Setting test duel")
+        test_id1 = '13'
+        test_id2 = '12'
+        users['palu']['inventory'] = {}
+        users['csh']['inventory'] = {}
+        users['palu']['a_item'] = test_id1
+        users['csh']['a_item'] = test_id2
+        users['palu']['inventory'][test_id1] = 0
+        users['csh']['inventory'][test_id2] = 0
+        whos_in.update_db()
+        await asyncio.sleep(5)
+        for p in client.get_all_members():
+            if p.display_name == 'palu':
+                player2 = p
+            elif p.display_name == 'csh':
+                player1 = p
+        client.loop.create_task(event_handle_shot_duel(player1, player2,
+                                                       message.channel))
+        global accepted
+        accepted = True
+        await asyncio.sleep(20)
+        while shot_duel_running:
+            await asyncio.sleep(10)
+        users['palu']['inventory'] = {}
+        users['csh']['inventory'] = {}
+        users['palu']['a_item'] = None
+        users['csh']['a_item'] = None
+        await client.send_message(message.channel, "Test Complete.")
 
 
 async def sleep(client, message):
@@ -1124,6 +1192,10 @@ async def send_text(client, message):
     :param message: The message
     :return: None
     """
+    if twilio_client is None:
+        await client.send_message(message.channel,
+                                  'Text functionality turned off.')
+        return
     arguments = argument_parser(message.content)
 
     if len(arguments) != 1 or arguments[0] == '!text':
@@ -1226,7 +1298,7 @@ async def shot_duel(client, message):
     name = " ".join(arguments)
     print(name)
     if name == message.author.display_name and message.channel.name != \
-            'general':
+            'gen_testing':
         await client.send_message(message.channel, "Why not just drink your "
                                                    "tears away, instead of "
                                                    "including this channel?")
@@ -1253,6 +1325,11 @@ async def get_trump(client, message):
     :param message: The message
     :return: None
     """
+    if twitter is None:
+        await client.send_message(message.channel,
+                                  "Twitter not activated.")
+        return
+
     global trump_chance_roll_rdy
     twitter_id = 'realdonaldtrump'
     tweet_text = \
@@ -1269,8 +1346,7 @@ async def get_trump(client, message):
                                   "Twitter is acting up, try again later.")
 
     if trump_chance_roll_rdy:
-        await item_chance_roll(message.channel, message.author.display_name,
-                               200)
+        await item_chance_roll(message.channel, message.author.display_name)
         trump_chance_roll_rdy = False
 
 
@@ -1284,6 +1360,10 @@ async def get_last_tweet(_id, tweet_text, rt_text, client, message):
     :param message: discord message
     :return:
     """
+    if twitter is None:
+        await client.send_message(message.channel,
+                                  "Twitter not activated.")
+        return
 
     if id == 'realdonaldtrump':
         global last_id
@@ -1556,6 +1636,9 @@ async def get_news(client, message):
     :param message: The message
     :return: None
     """
+    if twitter is None:
+        return
+
     global news_handles
     shuffle(news_handles)
     found_art = False
@@ -1632,7 +1715,7 @@ async def change_news_delay(client, message):
         await client.send_message(message.channel, "News delay set to {}"
                                   .format(news_del))
 
-
+# TODO: Remove this unused/legacy code???
 async def owstats(client, message):
     """
     Handles !owstats
@@ -1822,14 +1905,20 @@ async def check_trumps_mouth():
     global last_id, trump_chance_roll_rdy, trump_tweets_seen
     c_to_send = None
     await _client.wait_until_ready()
+
+    for channel in _client.get_all_channels():
+        if channel.name == 'gen_testing' or channel.name == 'brochat':
+            c_to_send = channel
+            break
+
+    if twitter is None:
+        await _client.send_message(c_to_send,
+                                   "Twitter not activated.")
+        return
+
     last_id = twitter.get_user_timeline(
         screen_name='realdonaldtrump',
         count=1, include_retweets=False)[0]['id']
-
-    for channel in _client.get_all_channels():
-        if channel.name == 'general' or channel.name == 'brochat':
-            c_to_send = channel
-            break
 
     delay = trump_del * 60
 
@@ -1861,7 +1950,7 @@ async def print_at_midnight():
     c_to_send = None
     await _client.wait_until_ready()
     for channel in _client.get_all_channels():
-        if channel.name == 'general' or channel.name == 'brochat':
+        if channel.name == 'gen_testing' or channel.name == 'brochat':
             c_to_send = channel
             break
 
@@ -1889,9 +1978,14 @@ async def handle_news():
     await _client.wait_until_ready()
 
     for channel in _client.get_all_channels():
-        if channel.name == 'general' or channel.name == 'newsfeed':
+        if channel.name == 'gen_testing' or channel.name == 'newsfeed':
             c_to_send = channel
             break
+
+    if twitter is None:
+        await _client.send_message(c_to_send,
+                                   "Twitter not activated.")
+        return
 
     delay = (news_del * 60) + (randint(0, 10) * 60)
     while not _client.is_closed:
@@ -1935,12 +2029,23 @@ def item_eff_str(item):
     :rtype: str
     """
 
-    if item.type == 'roll_effect':
-        return "All damage increased by {}.".format(item.prop)
-    elif item.type == 'life_effect':
-        return "Life increased by {}.".format(item.prop)
-    elif item.type == 'spec_effect':
+    ret_str = ""
+    if hasattr(item, 'spec_text'):
         return item.spec_text
+    if "roll_effect" in item.type:
+        ret_str += "All damage increased by {}.\n".format(item.prop['roll'])
+    if 'life_effect' in item.type:
+        ret_str += "Life increased by {}.\n".format(item.prop['life'])
+    if 'regen_effect' in item.type:
+        ret_str += "Will regen {} life at the end of each round.\n"\
+                   .format(item.prop['regen'])
+    if 'luck_effect' in item.type:
+        ret_str += "Item chance luck increased!\n"
+    if 'disarm_effect' in item.type:
+        ret_str += "The opponent's item will be removed if there is one " \
+                   "equiped.\n"
+    if len(ret_str) > 1:
+        return ret_str
     else:
         return "This item has an unknown or not implemented effect."
 
@@ -1966,7 +2071,7 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     elif 0 < c_roll < 6:
         r_string += ":dagger: **{}** lands a {} and deals {} damage!".format(
             c_name, choice(a_types), c_roll)
-    elif c_roll == 6:
+    elif c_roll >= 6:
         r_string += ":knife: **{}** lands a **MASSIVE** strike and deals {} " \
                     "damage!".format(c_name, c_roll)
 
@@ -1989,6 +2094,20 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     return r_string
 
 
+def init_player_duel_db(player):
+    """
+    Inits a player's DB for items and dueling.
+
+    :param player: player to init
+    :return: None
+    """
+
+    if 'inventory' not in users[player]:
+        users[player]['inventory'] = {}
+        users[player]['a_item'] = None
+    if 'duel_record' not in users[player]:
+        users[player]['duel_record'] = [0, 0, 0]
+
 async def item_chance_roll(channel, player, max_roll=100):
     """
     Rolls for a chance at an item
@@ -1998,7 +2117,11 @@ async def item_chance_roll(channel, player, max_roll=100):
     :param max_roll: max roll to use
     """
 
-    item = DuelItem(randint(1, max_roll))
+    if player not in users:
+        users[player] = {}
+    init_player_duel_db(player)
+
+    item = DuelItem(randint(1, max_roll + len(users[player]['inventory'])))
     if item.name is not None:
         global items_awarded
         items_awarded += 1
@@ -2012,7 +2135,7 @@ async def item_chance_roll(channel, player, max_roll=100):
                                        "have been reset!")
         users[player]['inventory'][item.item_id] = 0
 
-async def item_disarm_hook_check(channel, c_item, v_item, c_name, v_name):
+async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
     """
     Handles the Disarming spec_effect
 
@@ -2024,60 +2147,66 @@ async def item_disarm_hook_check(channel, c_item, v_item, c_name, v_name):
     """
     c_item_ret = c_item
     v_item_ret = v_item
-    if c_item is not None and c_item.item_id == '11':
-        if v_item is not None and v_item.item_id != '11':
+    if c_item is not None and 'disarm_effect' in c_item.type:
+        if v_item is not None and 'disarm_effect' not in v_item.type:
             if v_item.item_id in users[v_name]['inventory']:
                 users[v_name]['inventory'][v_item.item_id] -= 1
             else:
                 users[v_name]['inventory'][v_item.item_id] = v_item.uses - 1
             await _client.send_message(channel,
                                        "{}'s {} has been removed by "
-                                       "the Disarming Hook!"
-                                       .format(v_name, v_item.name))
+                                       "the {}!"
+                                       .format(v_name, v_item.name,
+                                               c_item.name))
             v_item_ret = None
-        elif v_item is not None and v_item.item_id == '11':
+        elif v_item is not None and 'disarm_effect' in v_item.type:
             await _client.send_message(channel,
                                        "Both players are using a "
-                                       "Disarming Hook, they will "
+                                       "disarming item, they will "
                                        "have no effect!")
-            if c_item.item_id in users[c_name]['inventory']:
+            if c_item.item_id in users[c_name]['inventory'] \
+                    and len(c_item.type) == 1:
                 users[c_name]['inventory'][c_item.item_id] -= 1
-            else:
+            elif len(c_item.type) == 1:
                 users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
         else:
             await _client.send_message(channel,
                                        "{} has nothing to disarm, "
-                                       "the Disarming Hook has no "
-                                       "effect!".format(v_name))
-            if c_item.item_id in users[c_name]['inventory']:
+                                       "the {} has no "
+                                       "effect!".format(v_name, c_item.name))
+            if c_item.item_id in users[c_name]['inventory'] \
+                    and len(c_item.type) == 1:
                 users[c_name]['inventory'][c_item.item_id] -= 1
-            else:
+            elif len(c_item.type) == 1:
                 users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
 
-    if v_item is not None and v_item.item_id == '11':
-        if c_item is not None and c_item.item_id != '11':
+    if v_item is not None and 'disarm_effect' in v_item.type:
+        if c_item is not None and 'disarm_effect' not in c_item.type:
             if c_item.item_id in users[c_name]['inventory']:
                 users[c_name]['inventory'][c_item.item_id] -= 1
             else:
                 users[c_name]['inventory'][c_item.item_id] = c_item.uses - 1
             await _client.send_message(channel,
                                        "{}'s {} has been removed by "
-                                       "the Disarming Hook!"
-                                       .format(c_name, c_item.name))
+                                       "the {}!"
+                                       .format(c_name, c_item.name,
+                                               v_item.name))
             c_item_ret = None
-        elif c_item is not None and c_item.item_id == '11':
-            if v_item.item_id in users[v_name]['inventory']:
+        elif c_item is not None and 'disarm_effect' in c_item.type:
+            if v_item.item_id in users[v_name]['inventory'] \
+                    and len(v_item.type) == 1:
                 users[v_name]['inventory'][v_item.item_id] -= 1
-            else:
+            elif len(v_item.type) == 1:
                 users[v_name]['inventory'][v_item.item_id] = v_item.uses - 1
         else:
             await _client.send_message(channel,
                                        "{} has nothing to disarm, "
-                                       "the Disarming Hook has no "
-                                       "effect!".format(c_name))
-            if v_item.item_id in users[v_name]['inventory']:
+                                       "the {} has no "
+                                       "effect!".format(c_name, v_item.name))
+            if v_item.item_id in users[v_name]['inventory'] \
+                    and len(v_item.type) == 1:
                 users[v_name]['inventory'][v_item.item_id] -= 1
-            else:
+            elif len(v_item.type) == 1:
                 users[v_name]['inventory'][v_item.item_id] = v_item.uses - 1
 
     return c_item_ret, v_item_ret
@@ -2101,16 +2230,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
         users[vict_name] = {}
     if chal_name not in users:
         users[chal_name] = {}
-    if 'duel_record' not in users[vict_name]:
-        users[vict_name]['duel_record'] = [0, 0, 0]
-    if 'duel_record' not in users[chal_name]:
-        users[chal_name]['duel_record'] = [0, 0, 0]
-    if 'inventory' not in users[vict_name]:
-        users[vict_name]['inventory'] = {}
-        users[vict_name]['a_item'] = None
-    if 'inventory' not in users[chal_name]:
-        users[chal_name]['inventory'] = {}
-        users[chal_name]['a_item'] = None
+    init_player_duel_db(vict_name)
+    init_player_duel_db(chal_name)
 
     c_rec = users[chal_name]['duel_record']
     v_rec = users[vict_name]['duel_record']
@@ -2170,26 +2291,34 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
             # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
 
-            # spec_effect check (HOOK id #11)
-            if (c_item is not None and c_item.item_id == '11') \
-                    or (v_item is not None and v_item.item_id == '11'):
-                c_item, v_item = await item_disarm_hook_check(channel, c_item,
-                                                              v_item, chal_name,
-                                                              vict_name)
+            # spec_effect check (disarm_effect)
+            if (c_item is not None and 'disarm_effect' in c_item.type) \
+                    or (v_item is not None and 'disarm_effect' in v_item.type):
+                c_item, v_item = await item_disarm_check(channel, c_item,
+                                                         v_item, chal_name,
+                                                         vict_name)
 
             # END OF PRECOMBAT PHASE
 
             # LIFE EFFECT CHECK
             c_life_start = life
             v_life_start = life
-            if c_item is not None and c_item.type == "life_effect":
-                c_life_start += c_item.prop
-            if v_item is not None and v_item.type == "life_effect":
-                v_life_start += v_item.prop
+            if c_item is not None and "life_effect" in c_item.type:
+                c_life_start += c_item.prop['life']
+            if v_item is not None and "life_effect" in v_item.type:
+                v_life_start += v_item.prop['life']
 
             # ITEM CHANCE ROLLS (If needed modify chance rolls here)
-            await item_chance_roll(channel, chal_name)
-            await item_chance_roll(channel, vict_name)
+            if c_item is not None and "luck_effect" in c_item.type:
+                await item_chance_roll(channel, chal_name,
+                                       (100 - c_item.prop['luck']))
+            else:
+                await item_chance_roll(channel, chal_name)
+            if v_item is not None and "luck_effect" in v_item.type:
+                await item_chance_roll(channel, vict_name,
+                                       (100 - v_item.prop['luck']))
+            else:
+                await item_chance_roll(channel, vict_name)
 
             await _client.send_message(channel,
                                        ".\n{} has {} life.\n"
@@ -2208,18 +2337,18 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 await asyncio.sleep(10)
                 c_roll, v_roll = dual_dice_roll()
 
-                if c_item is not None and c_item.type == "roll_effect" \
+                if c_item is not None and "roll_effect" in c_item.type \
                         and c_roll >= 0:
-                    c_roll += c_item.prop
-                elif c_item is not None and c_item.type == "roll_effect" \
+                    c_roll += c_item.prop['roll']
+                elif c_item is not None and "roll_effect" in c_item.type \
                         and c_roll < 0:
-                    c_roll -= c_item.prop
-                if v_item is not None and v_item.type == "roll_effect" \
+                    c_roll -= c_item.prop['roll']
+                if v_item is not None and "roll_effect" in v_item.type \
                         and v_roll >= 0:
-                    v_roll += v_item.prop
-                elif v_item is not None and v_item.type == "roll_effect" \
+                    v_roll += v_item.prop['roll']
+                elif v_item is not None and "roll_effect" in v_item.type \
                         and v_roll < 0:
-                    v_roll -= v_item.prop
+                    v_roll -= v_item.prop['roll']
 
                 # DAMAGE APPLIED HERE
                 if c_roll >= 0:
@@ -2265,6 +2394,33 @@ async def event_handle_shot_duel(challenger, victim, channel):
                     break
 
                 # END OF ROUND PHASE
+                # regen checks
+                if c_item is not None and "regen_effect" in c_item.type \
+                        and c_life < c_life_start:
+                    if (c_life_start - c_life) < c_item.prop['regen']:
+                        reg_tot = c_life_start - c_life
+                    else:
+                        reg_tot = c_item.prop['regen']
+                    v_total.append(-reg_tot)
+                    await _client.send_message(channel,
+                                               "{} has regen'd {} life and "
+                                               "is now at {}."
+                                               .format(chal_name, reg_tot,
+                                                       (c_life + reg_tot)))
+
+                if v_item is not None and "regen_effect" in v_item.type \
+                        and v_life < v_life_start:
+                    if (v_life_start - v_life) < v_item.prop['regen']:
+                        reg_tot = v_life_start - v_life
+                    else:
+                        reg_tot = v_item.prop['regen']
+                    c_total.append(-reg_tot)
+                    await _client.send_message(channel,
+                                               "{} has regen'd {} life and is "
+                                               "now at {}."
+                                               .format(vict_name, reg_tot,
+                                                       (v_life + reg_tot)))
+
                 await asyncio.sleep(15)
             break
 
