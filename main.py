@@ -20,8 +20,8 @@ from poll import Poll
 from duel_item import DuelItem, common_items, rare_items
 
 VERSION_MAJOR = 3
-VERSION_MINOR = 2
-VERSION_PATCH = 4
+VERSION_MINOR = 3
+VERSION_PATCH = 0
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
