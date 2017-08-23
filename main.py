@@ -588,7 +588,7 @@ if not os.path.exists('{}/tokens.config'.format(data_dir)) and not \
         os.path.exists('tokens.config'):
     print("No tokens config file found.", file=stderr)
     tokens = {}
-    if os.environ.get['DISCORD_BOT_TOKEN'] is None:
+    if os.environ.get('DISCORD_BOT_TOKEN') is None:
         exit(-1)
 elif os.path.exists('tokens.config'):
     print("Using local token file")
@@ -602,7 +602,7 @@ else:
 if 'token' in tokens:
     token = tokens['token']
 else:
-    token = os.environ.get['DISCORD_BOT_TOKEN']
+    token = os.environ.get('DISCORD_BOT_TOKEN')
 
 # Twitter tokens
 if 'twitter_api_key' not in tokens or 'twitter_api_secret' not in tokens:
