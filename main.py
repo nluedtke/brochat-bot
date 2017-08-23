@@ -24,8 +24,6 @@ VERSION_MONTH = 8
 VERSION_DAY = 23
 VERSION_REV = 0
 
-test_instance = False
-
 # Global toggle for news feed
 NEWS_FEED_ON = False
 NEWS_FEED_CREATED = False
@@ -604,7 +602,6 @@ else:
 if 'token' in tokens:
     token = tokens['token']
 else:
-    test_instance = True
     token = os.environ.get('DISCORD_BOT_TOKEN')
 
 # Twitter tokens
@@ -2446,9 +2443,10 @@ async def event_handle_shot_duel(challenger, victim, channel):
 _client.loop.create_task(check_trumps_mouth())
 _client.loop.create_task(print_at_midnight())
 startTime = time()
-_client.run(token)
-if test_instance:
+
+if os.environ.get("TEST_TRAVIS_NL"):
     exit(0)
+_client.run(token)
 
 
 # TODO weekend gaming session management
