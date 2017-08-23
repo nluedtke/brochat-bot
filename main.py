@@ -855,41 +855,43 @@ async def run_test(client, message):
     :return: None
     """
     if message.channel.name == 'gen_testing':
-        await client.send_message(message.channel, "Starting Automated Tests.")
-        await asyncio.sleep(5)
-        # await client.send_message(message.channel, "Printing help.")
-        # await print_help(client, message)
-        # await asyncio.sleep(5)
-        # await client.send_message(message.channel, "Populating inventory.")
-        # await item_chance_roll(message.channel, message.author.display_name, 10)
-        # await item_chance_roll(message.channel, message.author.display_name, 10)
-        # await item_chance_roll(message.channel, message.author.display_name, 10)
-        # await asyncio.sleep(5)
-        # await client.send_message(message.channel, "Calling !use")
-        # t_message = message
-        # t_message.content = "!use"
-        # await use_command(client, t_message)
-        # await asyncio.sleep(5)
-        # await client.send_message(message.channel, "Equiping first item")
-        # inv = users[message.author.display_name]['inventory']
-        # t_message = message
-        # t_message.content = "!use {}".format(str(list(inv)[0]))
-        # await use_command(client, t_message)
-        # await asyncio.sleep(5)
-        # await client.send_message(message.channel, "Running duel.")
-        # t_message = message
-        # t_message.content = "!duel {}".format(message.author.display_name)
-        # await shot_duel(client, t_message)
-        # await asyncio.sleep(5)
-        # await toggle_accept(client, message)
-        # while shot_duel_running:
-        #     await asyncio.sleep(10)
-        # await client.send_message(message.channel, "Simulating Trump Call")
-        # await get_trump(client, message)
-        # await asyncio.sleep(10)
+        arguments = argument_parser(message.content)
+        if arguments[0] == 'all':
+            await client.send_message(message.channel,
+                                      "Starting Automated Tests.")
+            await asyncio.sleep(5)
+            await client.send_message(message.channel, "Printing help.")
+            await print_help(client, message)
+            await asyncio.sleep(5)
+            await client.send_message(message.channel, "Populating inventory.")
+            await item_chance_roll(message.channel,
+                                   message.author.display_name, 10)
+            await item_chance_roll(message.channel,
+                                   message.author.display_name, 10)
+            await item_chance_roll(message.channel,
+                                   message.author.display_name, 10)
+            await asyncio.sleep(5)
+            await client.send_message(message.channel, "Calling !use")
+            t_message = message
+            t_message.content = "!use"
+            await use_command(client, t_message)
+            await asyncio.sleep(5)
+            await client.send_message(message.channel, "Equiping first item")
+            inv = users[message.author.display_name]['inventory']
+            t_message = message
+            t_message.content = "!use {}".format(str(list(inv)[0]))
+            await use_command(client, t_message)
+            await asyncio.sleep(5)
+            await client.send_message(message.channel, "Simulating Trump Call")
+            await get_trump(client, message)
+            await asyncio.sleep(10)
+            await client.send_message(message.channel,
+                                      "Simulating Bertstrip Call")
+            await bertstrip(client, message)
+            await asyncio.sleep(10)
         await client.send_message(message.channel, "Setting test duel")
-        test_id1 = '16'
-        test_id2 = '103'
+        test_id1 = choice(list(rare_items.keys() | common_items.keys()))
+        test_id2 = choice(list(rare_items.keys() | common_items.keys()))
         users['palu']['inventory'] = {}
         users['csh']['inventory'] = {}
         users['palu']['a_item'] = test_id1
