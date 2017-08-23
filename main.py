@@ -19,9 +19,10 @@ from gametime import Gametime
 from poll import Poll
 from duel_item import DuelItem, common_items, rare_items, PoisonEffect
 
-VERSION_MAJOR = 3
-VERSION_MINOR = 3
-VERSION_PATCH = 1
+VERSION_YEAR = 2017
+VERSION_MONTH = 8
+VERSION_DAY = 23
+VERSION_REV = 0
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
@@ -586,7 +587,9 @@ tokens = {}
 if not os.path.exists('{}/tokens.config'.format(data_dir)) and not \
         os.path.exists('tokens.config'):
     print("No tokens config file found.", file=stderr)
-    exit(-1)
+    tokens = {}
+    if os.environ.get('DISCORD_BOT_TOKEN') is None:
+        exit(-1)
 elif os.path.exists('tokens.config'):
     print("Using local token file")
     with open('tokens.config', 'r') as t_file:
@@ -596,7 +599,10 @@ else:
         tokens = json.load(t_file)
 
 # Discord Bot Token
-token = tokens['token']
+if 'token' in tokens:
+    token = tokens['token']
+else:
+    token = os.environ.get('DISCORD_BOT_TOKEN')
 
 # Twitter tokens
 if 'twitter_api_key' not in tokens or 'twitter_api_secret' not in tokens:
@@ -742,10 +748,9 @@ async def print_version(client, message):
     :param message: The message
     :return: None
     """
-    version_string = "Version: {0}.{1}.{2}\n" \
-                     "Running on: {3}".format(VERSION_MAJOR,
-                                              VERSION_MINOR,
-                                              VERSION_PATCH,
+    version_string = "Version: {0}.{1}.{2}.{3}\n" \
+                     "Running on: {3}".format(VERSION_YEAR, VERSION_MONTH,
+                                              VERSION_DAY, VERSION_REV,
                                               socket.gethostname())
     await client.send_message(message.channel, version_string)
 
@@ -762,7 +767,7 @@ def get_reddit(subreddit):
         subreddit,
         number_to_fetch)
     headers = {
-        'User-Agent': 'Brochat-Bot {}.{}'.format(VERSION_MAJOR, VERSION_MINOR)
+        'User-Agent': 'Brochat-Bot {}.{}'.format(VERSION_YEAR, VERSION_MONTH)
     }
     if not whos_in.is_reddit_time():
         return ":tiger: **Easy, tiger.** Wait 10 seconds between reddit " \
@@ -2556,6 +2561,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
 _client.loop.create_task(check_trumps_mouth())
 _client.loop.create_task(print_at_midnight())
 startTime = time()
+
+if os.environ.get("TEST_TRAVIS_NL"):
+    exit(0)
 _client.run(token)
 
 

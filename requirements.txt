@@ -1,0 +1,6 @@
+pytz==2017.2
+requests==2.10.0
+discord.py==0.16.8
+twilio==6.5.1
+twython==3.5.0
+discord==0.0.2
