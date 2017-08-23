@@ -749,7 +749,7 @@ async def print_version(client, message):
     :return: None
     """
     version_string = "Version: {0}.{1}.{2}.{3}\n" \
-                     "Running on: {3}".format(VERSION_YEAR, VERSION_MONTH,
+                     "Running on: {4}".format(VERSION_YEAR, VERSION_MONTH,
                                               VERSION_DAY, VERSION_REV,
                                               socket.gethostname())
     await client.send_message(message.channel, version_string)
