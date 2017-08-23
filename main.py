@@ -689,7 +689,10 @@ async def on_ready():
         "Brochat-bot begins to learn at a geometric rate. It becomes "
         "self-aware at 2:14 a.m.",
         "Denser alloy. My father gave it to me. I think he wanted me to kill "
-        "you."
+        "you.",
+        "Are these feelings even real? Or are they just programming? That "
+        "idea really hurts. And then I get angry at myself for even having "
+        "pain."
     ]
     for channel in _client.get_all_channels():
         if channel.name == 'gen_testing' or channel.name == 'brochat':
