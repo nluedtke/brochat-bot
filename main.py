@@ -881,7 +881,7 @@ async def run_test(client, message):
         # await asyncio.sleep(10)
         await client.send_message(message.channel, "Setting test duel")
         test_id1 = '103'
-        test_id2 = '101'
+        test_id2 = '103'
         users['palu']['inventory'] = {}
         users['csh']['inventory'] = {}
         users['palu']['a_item'] = test_id1
@@ -2260,6 +2260,24 @@ async def death_check(channel, chal, c_life, vict, v_life):
     return False
 
 
+def add_pos_eff(pos_effects, new_poss_eff):
+    """
+    Handles new poison effect
+
+    :param pos_effects: List to add to
+    :param new_poss_eff: new poison effect
+    return: modified list
+    """
+
+    if new_poss_eff not in pos_effects:
+        pos_effects.append(new_poss_eff)
+        return pos_effects
+    else:
+        for index, p in enumerate(pos_effects):
+            if p == new_poss_eff:
+                pos_effects[index] += new_poss_eff
+                return pos_effects
+
 async def event_handle_shot_duel(challenger, victim, channel):
     """
     Handles a shot_duel should a victim accept.
@@ -2377,16 +2395,17 @@ async def event_handle_shot_duel(challenger, victim, channel):
             v_life = v_life_start
             # COMBAT PHASE
             _round = 1
-            c_pos, v_pos = False, False
             c_pos_eff, v_pos_eff = [], []
             while True:
                 await _client.send_message(channel, "Round {}!".format(_round))
                 # PRE ATTACK PHASE (spec_effect check here)
                 # Poison Damage check
-                if c_pos:
+                if len(c_pos_eff) > 0:
                     pos_dam = 0
                     e_effects = []
+                    print("c")
                     for p in c_pos_eff:
+                        print("{} {} {}".format(p.p_id, p.dam, p.dur))
                         pos_dam += p.dam
                         p -= 1
                         if p.ended():
@@ -2401,17 +2420,19 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                                .format(chal_name,
                                                        pos_dam,
                                                        c_life))
-                if v_pos:
+                if len(v_pos_eff) > 0:
                     pos_dam = 0
                     e_effects = []
+                    print('v')
                     for p in v_pos_eff:
+                        print("{} {} {}".format(p.p_id, p.dam, p.dur))
                         pos_dam += p.dam
                         p -= 1
                         if p.ended():
                             e_effects.append(p)
                     for p in e_effects:
-                        c_pos_eff.remove(p)
-                    v_total.append(pos_dam)
+                        v_pos_eff.remove(p)
+                    c_total.append(pos_dam)
                     v_life = v_life_start - sum(c_total)
                     await _client.send_message(channel,
                                                "{} takes {} poison damage and "
@@ -2420,8 +2441,8 @@ async def event_handle_shot_duel(challenger, victim, channel):
                                                        pos_dam,
                                                        v_life))
 
-                death = death_check(channel, challenger, c_life, victim,
-                                    v_life)
+                death = await death_check(channel, challenger, c_life, victim,
+                                          v_life)
                 if death:
                     # END OF DUEL PHASE
                     whos_in.update_db()
@@ -2465,34 +2486,26 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 # should be implemented here)
                 # Poison Effects
                 if c_item is not None and "poison_effect" in c_item.type and \
-                        c_roll > 0:
-                    v_pos = True
+                        c_roll != 0:
                     p_e = PoisonEffect(c_item, chal_name)
-                    if p_e not in v_pos_eff:
-                        v_pos_eff.append(p_e)
-                    else:
-                        for index, p in enumerate(v_pos_eff):
-                            if p == p_e:
-                                v_pos_eff[index] += p_e
-                                break
+                    if c_roll > 0:
+                        v_pos_eff = add_pos_eff(v_pos_eff, p_e)
+                    elif c_roll < 0:
+                        c_pos_eff = add_pos_eff(c_pos_eff, p_e)
 
                 if v_item is not None and "poison_effect" in v_item.type and \
-                        v_roll > 0:
-                    c_pos = True
-                    p_e = PoisonEffect(c_item, chal_name)
-                    if p_e not in c_pos_eff:
-                        c_pos_eff.append(p_e)
-                    else:
-                        for index, p in enumerate(c_pos_eff):
-                            if p == p_e:
-                                c_pos_eff[index] += p_e
-                                break
+                        v_roll != 0:
+                    p_e = PoisonEffect(v_item, vict_name)
+                    if v_roll > 0:
+                        c_pos_eff = add_pos_eff(c_pos_eff, p_e)
+                    elif v_roll < 0:
+                        v_pos_eff = add_pos_eff(v_pos_eff, p_e)
 
                 await _client.send_message(channel, duel_string)
 
                 _round += 1
-                death = death_check(channel, challenger, c_life, victim,
-                                    v_life)
+                death = await death_check(channel, challenger, c_life, victim,
+                                          v_life)
                 if death:
                     # END OF DUEL PHASE
                     whos_in.update_db()
