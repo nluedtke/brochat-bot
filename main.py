@@ -859,6 +859,7 @@ async def run_test(client, message):
         if arguments[0] == 'all':
             await client.send_message(message.channel,
                                       "Starting Automated Tests.")
+            await print_version(client, message)
             await asyncio.sleep(5)
             await client.send_message(message.channel, "Printing help.")
             await print_help(client, message)
