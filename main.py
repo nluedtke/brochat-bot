@@ -24,6 +24,8 @@ VERSION_MONTH = 8
 VERSION_DAY = 23
 VERSION_REV = 0
 
+test_instance = False
+
 # Global toggle for news feed
 NEWS_FEED_ON = False
 NEWS_FEED_CREATED = False
@@ -602,6 +604,8 @@ else:
 if 'token' in tokens:
     token = tokens['token']
 else:
+    global test_instance
+    test_instance = True
     token = os.environ.get('DISCORD_BOT_TOKEN')
 
 # Twitter tokens
@@ -2444,6 +2448,8 @@ _client.loop.create_task(check_trumps_mouth())
 _client.loop.create_task(print_at_midnight())
 startTime = time()
 _client.run(token)
+if test_instance:
+    exit(0)
 
 
 # TODO weekend gaming session management
