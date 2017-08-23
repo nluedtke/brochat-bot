@@ -29,7 +29,7 @@ from random import choice
 #   prop list. 'poison' which is the amount the poison actually does right
 #   round and 'duration' the amount of rounds it hits for following a
 #   successfull strike. Poison damage does not stack, but the duration does.
-#   deadly = 3 duration, moderate = 2 duration, irritating = 1 duration.
+#   deadly = 3 duration, moderate = 2 duration, irritating/oily = 1 duration.
 common_items = {
     "0": {"name": "Copper Ring of One Better",
           "type": ["roll_effect"],

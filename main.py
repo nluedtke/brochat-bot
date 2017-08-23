@@ -1964,6 +1964,8 @@ async def print_at_midnight():
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
         await _client.send_message(c_to_send, whos_in.whos_in())
+        for m in _client.get_all_members():
+            await item_chance_roll(c_to_send, m.display_name)
         whos_in.update_db()
         await asyncio.sleep(60 * 10)
 
@@ -2375,16 +2377,14 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 v_life_start += v_item.prop['life']
 
             # ITEM CHANCE ROLLS (If needed modify chance rolls here)
+            luck_mod = 0
             if c_item is not None and "luck_effect" in c_item.type:
-                await item_chance_roll(channel, chal_name,
-                                       (100 - c_item.prop['luck']))
-            else:
-                await item_chance_roll(channel, chal_name)
+                luck_mod = c_item.prop['luck']
+            await item_chance_roll(channel, chal_name, 100 - luck_mod)
+            luck_mod = 0
             if v_item is not None and "luck_effect" in v_item.type:
-                await item_chance_roll(channel, vict_name,
-                                       (100 - v_item.prop['luck']))
-            else:
-                await item_chance_roll(channel, vict_name)
+                luck_mod = v_item.prop['luck']
+            await item_chance_roll(channel, vict_name, 100 - luck_mod)
 
             await _client.send_message(channel,
                                        ".\n{} has {} life.\n"
