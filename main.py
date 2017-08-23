@@ -19,9 +19,10 @@ from gametime import Gametime
 from poll import Poll
 from duel_item import DuelItem, common_items, rare_items
 
-VERSION_MAJOR = 3
-VERSION_MINOR = 3
-VERSION_PATCH = 1
+VERSION_YEAR = 2017
+VERSION_MONTH = 8
+VERSION_DAY = 23
+VERSION_REV = 0
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
@@ -739,10 +740,9 @@ async def print_version(client, message):
     :param message: The message
     :return: None
     """
-    version_string = "Version: {0}.{1}.{2}\n" \
-                     "Running on: {3}".format(VERSION_MAJOR,
-                                              VERSION_MINOR,
-                                              VERSION_PATCH,
+    version_string = "Version: {0}.{1}.{2}.{3}\n" \
+                     "Running on: {3}".format(VERSION_YEAR, VERSION_MONTH,
+                                              VERSION_DAY, VERSION_REV,
                                               socket.gethostname())
     await client.send_message(message.channel, version_string)
 
@@ -759,7 +759,7 @@ def get_reddit(subreddit):
         subreddit,
         number_to_fetch)
     headers = {
-        'User-Agent': 'Brochat-Bot {}.{}'.format(VERSION_MAJOR, VERSION_MINOR)
+        'User-Agent': 'Brochat-Bot {}.{}'.format(VERSION_YEAR, VERSION_MONTH)
     }
     if not whos_in.is_reddit_time():
         return ":tiger: **Easy, tiger.** Wait 10 seconds between reddit " \
