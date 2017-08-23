@@ -604,7 +604,6 @@ else:
 if 'token' in tokens:
     token = tokens['token']
 else:
-    global test_instance
     test_instance = True
     token = os.environ.get('DISCORD_BOT_TOKEN')
 
