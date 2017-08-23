@@ -119,7 +119,13 @@ common_items = {
            "prop": {'life': 2, "luck": 20},
            "uses": 2,
            "text": "This armor adds +2 life for the wearer and moderately "
-                   "increases chance for an item for two duels."}
+                   "increases chance for an item for two duels."},
+    "16": {"name": "Oily Hook",
+           "type": ["poison_effect", "disarm_effect"],
+           "prop": {'poison': 1, 'duration': 1},
+           "uses": 2,
+           "text": "This hook disarms the opponent for two duels. The hook "
+                   "seems coated in an oily residue."}
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -142,7 +148,7 @@ rare_items = {
             "uses": 5,
             "text": "This sword adds +2 to all damage for the user for five "
                     "duels."},
-    "103": {"name": "The Stinger",
+    "103": {"name": "Stinger",
             "type": ["poison_effect", "roll_effect"],
             "prop": {'roll': 1, 'poison': 1, 'duration': 3},
             "uses": 5,
