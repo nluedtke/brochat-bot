@@ -1,5 +1,6 @@
 # brochat-bot
 A Discord bot to enable friendship (and at times enforce it).
+
 [![Build Status](https://travis-ci.org/nluedtke/brochat-bot.svg?branch=master)](https://travis-ci.org/nluedtke/brochat-bot.svg?branch=master)
 
 ### Requires:

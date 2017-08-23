@@ -1,5 +1,7 @@
 language: python
 sudo: false
+notifications:
+  email: false
 python:
   - "3.6"
 script:
