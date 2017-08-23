@@ -2,4 +2,5 @@ language: python
 sudo: false
 python:
   - "3.6"
-
+script:
+  python3 main.py
