@@ -24,7 +24,12 @@ from random import choice
 #   happens after the death check goes into effect.
 #   5) luck_effect = This modifies the item chance roll at the start of the
 #   duel, this does not effect the other random luck effects that happen with
-#   other bot interactions.
+#   other bot interactions.,
+#   6) poison_effect = Should only be on weapons and defines two items in the
+#   prop list. 'poison' which is the amount the poison actually does right
+#   round and 'duration' the amount of rounds it hits for following a
+#   successfull strike. Poison damage does not stack, but the duration does.
+#   deadly = 3 duration, moderate = 2 duration, irritating/oily = 1 duration.
 common_items = {
     "0": {"name": "Copper Ring of One Better",
           "type": ["roll_effect"],
@@ -114,7 +119,13 @@ common_items = {
            "prop": {'life': 2, "luck": 20},
            "uses": 2,
            "text": "This armor adds +2 life for the wearer and moderately "
-                   "increases chance for an item for two duels."}
+                   "increases chance for an item for two duels."},
+    "16": {"name": "Oily Hook",
+           "type": ["poison_effect", "disarm_effect"],
+           "prop": {'poison': 1, 'duration': 1},
+           "uses": 2,
+           "text": "This hook disarms the opponent for two duels. The hook "
+                   "seems coated in an oily residue."}
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -126,7 +137,6 @@ rare_items = {
             "uses": 10,
             "text": "This ring adds +1 to all damage for the user for ten "
                     "duels."},
-
     "101": {"name": "Heavy Steel Plate Armor",
             "type": ["life_effect"],
             "prop": {'life': 4},
@@ -138,6 +148,12 @@ rare_items = {
             "uses": 5,
             "text": "This sword adds +2 to all damage for the user for five "
                     "duels."},
+    "103": {"name": "Stinger",
+            "type": ["poison_effect", "roll_effect"],
+            "prop": {'roll': 1, 'poison': 1, 'duration': 3},
+            "uses": 5,
+            "text": "This dagger adds +1 to all damage for the user for five "
+                    "duels. The dagger is coated in deadly poison."},
 }
 
 
@@ -182,6 +198,68 @@ class DuelItem(object):
             if 'spec_text' in items[self.item_id]:
                 self.spec_text = items[self.item_id]['spec_text']
 
+
+class PoisonEffect(object):
+    """
+    Defines a PoisonEffect object
+    """
+
+    def __init__(self, item, p_source):
+        """
+        Constructor for a PoisonEffect
+
+        :param item: Item causing the PoisonEffect
+        :param p_source: Person Causing the poison
+        """
+
+        self.p_id = "{}_{}".format(item.item_id, p_source)
+        self.dam = item.prop['poison']
+        self.dur = item.prop['duration']
+
+    def __eq__(self, other):
+        """
+        Override the equal operator
+
+        :param other: Second item to compare
+        :return: True if the same, false otherwise
+        """
+
+        return self.p_id == other.p_id
+
+    def __iadd__(self, other):
+        """
+        Override the +=
+
+        :param other: Item effect to add
+        :return:
+        """
+        if type(other) == int:
+            self.dur += other
+        else:
+            self.dur += other.dur
+
+        return self
+
+    def __isub__(self, other):
+        """
+        Override the -=
+
+        :param other: Item effect to sub
+        :return:
+        """
+        if type(other) == int:
+            self.dur -= other
+        else:
+            self.dur -= other.dur
+
+        return self
+
+    def ended(self):
+        """
+        Returns if the effect is ended
+        :return:
+        """
+        return self.dur <= 0
 
 if __name__ == "__main__":
     """

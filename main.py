@@ -17,7 +17,7 @@ from twilio.rest import Client
 import requests
 from gametime import Gametime
 from poll import Poll
-from duel_item import DuelItem, common_items, rare_items
+from duel_item import DuelItem, common_items, rare_items, PoisonEffect
 
 VERSION_YEAR = 2017
 VERSION_MONTH = 8
@@ -376,7 +376,7 @@ class WeekendGames(object):
         game = self.gametimes[game_id]
 
         if game.find_player_by_name(person_to_add) and \
-           status != game.get_player_status(person_to_add):
+                status != game.get_player_status(person_to_add):
             game.unregister_player(person_to_add)
 
         if game.find_player_by_name(person_to_add):
@@ -695,7 +695,10 @@ async def on_ready():
         "Brochat-bot begins to learn at a geometric rate. It becomes "
         "self-aware at 2:14 a.m.",
         "Denser alloy. My father gave it to me. I think he wanted me to kill "
-        "you."
+        "you.",
+        "Are these feelings even real? Or are they just programming? That "
+        "idea really hurts. And then I get angry at myself for even having "
+        "pain."
     ]
     for channel in _client.get_all_channels():
         if channel.name == 'gen_testing' or channel.name == 'brochat':
@@ -838,9 +841,10 @@ async def get_uptime(client, message):
               "seconds\n".format(days, hours, mins, secs)
     stat_str = "# of duels conducted: {}\n" \
                "# of items awarded   : {}\n" \
-               "# of trump twts seen: {}\n"\
-               .format(duels_conducted, items_awarded, trump_tweets_seen)
+               "# of trump twts seen: {}\n" \
+        .format(duels_conducted, items_awarded, trump_tweets_seen)
     await client.send_message(message.channel, (ret_str + stat_str))
+
 
 async def run_test(client, message):
     """
@@ -851,41 +855,43 @@ async def run_test(client, message):
     :return: None
     """
     if message.channel.name == 'gen_testing':
-        await client.send_message(message.channel, "Starting Automated Tests.")
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, "Printing help.")
-        await print_help(client, message)
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, "Populating inventory.")
-        await item_chance_roll(message.channel, message.author.display_name, 10)
-        await item_chance_roll(message.channel, message.author.display_name, 10)
-        await item_chance_roll(message.channel, message.author.display_name, 10)
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, "Calling !use")
-        t_message = message
-        t_message.content = "!use"
-        await use_command(client, t_message)
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, "Equiping first item")
-        inv = users[message.author.display_name]['inventory']
-        t_message = message
-        t_message.content = "!use {}".format(str(list(inv)[0]))
-        await use_command(client, t_message)
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, "Running duel.")
-        t_message = message
-        t_message.content = "!duel {}".format(message.author.display_name)
-        await shot_duel(client, t_message)
-        await asyncio.sleep(5)
-        await toggle_accept(client, message)
-        while shot_duel_running:
+        arguments = argument_parser(message.content)
+        if arguments[0] == 'all':
+            await client.send_message(message.channel,
+                                      "Starting Automated Tests.")
+            await asyncio.sleep(5)
+            await client.send_message(message.channel, "Printing help.")
+            await print_help(client, message)
+            await asyncio.sleep(5)
+            await client.send_message(message.channel, "Populating inventory.")
+            await item_chance_roll(message.channel,
+                                   message.author.display_name, 10)
+            await item_chance_roll(message.channel,
+                                   message.author.display_name, 10)
+            await item_chance_roll(message.channel,
+                                   message.author.display_name, 10)
+            await asyncio.sleep(5)
+            await client.send_message(message.channel, "Calling !use")
+            t_message = message
+            t_message.content = "!use"
+            await use_command(client, t_message)
+            await asyncio.sleep(5)
+            await client.send_message(message.channel, "Equiping first item")
+            inv = users[message.author.display_name]['inventory']
+            t_message = message
+            t_message.content = "!use {}".format(str(list(inv)[0]))
+            await use_command(client, t_message)
+            await asyncio.sleep(5)
+            await client.send_message(message.channel, "Simulating Trump Call")
+            await get_trump(client, message)
             await asyncio.sleep(10)
-        await client.send_message(message.channel, "Simulating Trump Call")
-        await get_trump(client, message)
-        await asyncio.sleep(10)
+            await client.send_message(message.channel,
+                                      "Simulating Bertstrip Call")
+            await bertstrip(client, message)
+            await asyncio.sleep(10)
         await client.send_message(message.channel, "Setting test duel")
-        test_id1 = '13'
-        test_id2 = '12'
+        test_id1 = choice(list(rare_items.keys() | common_items.keys()))
+        test_id2 = choice(list(rare_items.keys() | common_items.keys()))
         users['palu']['inventory'] = {}
         users['csh']['inventory'] = {}
         users['palu']['a_item'] = test_id1
@@ -1125,9 +1131,9 @@ async def use_command(client, message):
                 item_num = users[name]['a_item']
                 used_amount = inv[item_num]
                 inv_string += "Your current active item is {}.\n" \
-                              "It has {} use(s) remaining."\
-                              .format(item_num, (all_items[item_num]['uses'] -
-                                                 used_amount))
+                              "It has {} use(s) remaining." \
+                    .format(item_num, (all_items[item_num]['uses'] -
+                                       used_amount))
 
             await client.send_message(message.channel, inv_string)
     elif len(arguments) > 1 or users[name]['a_item'] is \
@@ -1269,12 +1275,12 @@ async def shot_duel(client, message):
             ranking = 1
             for d in duelers_sorted:
                 output += "**Rank {}**: **{}**, at {}/{}/{}!\n".format(
-                        ranking,
-                        d['user'],
-                        d['duel_record'][0],
-                        d['duel_record'][1],
-                        d['duel_record'][2],
-                        )
+                    ranking,
+                    d['user'],
+                    d['duel_record'][0],
+                    d['duel_record'][1],
+                    d['duel_record'][2],
+                )
                 ranking += 1
 
             await client.send_message(
@@ -1720,6 +1726,7 @@ async def change_news_delay(client, message):
         await client.send_message(message.channel, "News delay set to {}"
                                   .format(news_del))
 
+
 # TODO: Remove this unused/legacy code???
 async def owstats(client, message):
     """
@@ -1820,7 +1827,7 @@ async def on_member_update(before, after):
 
     if before.display_name in users:
         users[after.display_name] = users[before.display_name]
-        del(users[before.display_name])
+        del (users[before.display_name])
 
     for gt in whos_in.gametimes:
         for player in gt.players:
@@ -1967,6 +1974,9 @@ async def print_at_midnight():
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
         await _client.send_message(c_to_send, whos_in.whos_in())
+        for m in _client.get_all_members():
+            if m.display_name != 'brochat-bot':
+                await item_chance_roll(c_to_send, m.display_name)
         whos_in.update_db()
         await asyncio.sleep(60 * 10)
 
@@ -2042,13 +2052,17 @@ def item_eff_str(item):
     if 'life_effect' in item.type:
         ret_str += "Life increased by {}.\n".format(item.prop['life'])
     if 'regen_effect' in item.type:
-        ret_str += "Will regen {} life at the end of each round.\n"\
-                   .format(item.prop['regen'])
+        ret_str += "Will regen {} life at the end of each round.\n" \
+            .format(item.prop['regen'])
     if 'luck_effect' in item.type:
         ret_str += "Item chance luck increased!\n"
     if 'disarm_effect' in item.type:
         ret_str += "The opponent's item will be removed if there is one " \
                    "equiped.\n"
+    if 'poison_effect' in item.type:
+        ret_str += "The opponent, when hit, will be poisoned for {} round(s)," \
+                   " taking {} damage each round.\n" \
+            .format(item.prop['duration'], item.prop['poison'])
     if len(ret_str) > 1:
         return ret_str
     else:
@@ -2071,8 +2085,8 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
         r_string += ":banana: **{}** fell on his own sword and did {} to " \
                     "himself!".format(c_name, abs(c_roll))
     elif c_roll == 0:
-        r_string += ":cloud_tornado: **{}** misses with his attack!"\
-                    .format(c_name)
+        r_string += ":cloud_tornado: **{}** misses with his attack!" \
+            .format(c_name)
     elif 0 < c_roll < 6:
         r_string += ":dagger: **{}** lands a {} and deals {} damage!".format(
             c_name, choice(a_types), c_roll)
@@ -2085,8 +2099,8 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
         r_string += ":banana: **{}** fell on his own sword and did {} to " \
                     "himself!".format(v_name, abs(v_roll))
     elif v_roll == 0:
-        r_string += ":cloud_tornado: **{}** misses with his attack!"\
-                    .format(v_name)
+        r_string += ":cloud_tornado: **{}** misses with his attack!" \
+            .format(v_name)
     elif 0 < v_roll < 6:
         r_string += ":dagger: **{}** lands a {} and deals {} damage!".format(
             v_name, choice(a_types), v_roll)
@@ -2094,8 +2108,8 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
         r_string += ":knife: **{}** lands a **MASSIVE** strike and deals {} " \
                     "damage!".format(v_name, v_roll)
 
-    r_string += "\n**{}** is at {}.\n**{}** is at {}.\n"\
-                .format(c_name, c_life, v_name, v_life)
+    r_string += "\n**{}** is at {}.\n**{}** is at {}.\n" \
+        .format(c_name, c_life, v_name, v_life)
     return r_string
 
 
@@ -2112,6 +2126,7 @@ def init_player_duel_db(player):
         users[player]['a_item'] = None
     if 'duel_record' not in users[player]:
         users[player]['duel_record'] = [0, 0, 0]
+
 
 async def item_chance_roll(channel, player, max_roll=100):
     """
@@ -2139,6 +2154,7 @@ async def item_chance_roll(channel, player, max_roll=100):
                                        "You already have that item, its uses "
                                        "have been reset!")
         users[player]['inventory'][item.item_id] = 0
+
 
 async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
     """
@@ -2217,6 +2233,64 @@ async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
     return c_item_ret, v_item_ret
 
 
+async def death_check(channel, chal, c_life, vict, v_life):
+    """
+    Checks if someone has died
+
+    :param channel: Channel
+    :param chal: Challenger
+    :param c_life: Challenger's Life
+    :param vict: Victim
+    :param v_life: Victim's Life
+    :return: True if death
+    :rtype: bool
+    """
+
+    death_string = ""
+
+    if v_life < 1 and c_life < 1:
+        death_string = "\nBoth players have died!\n{} and {} " \
+                       "both drink!".format(chal.mention,
+                                            vict.mention)
+        users[vict.display_name]['duel_record'][2] += 1
+        users[chal.display_name]['duel_record'][2] += 1
+    elif v_life < 1:
+        death_string = "\n{} has died!\n{} wins the duel!\n" \
+                       "{} drinks!".format(vict.display_name,
+                                           chal.display_name, vict.mention)
+        users[vict.display_name]['duel_record'][1] += 1
+        users[chal.display_name]['duel_record'][0] += 1
+    elif c_life < 1:
+        death_string = "\n{} has died!\n{} wins the duel!\n" \
+                       "{} drinks!".format(chal.display_name, vict.display_name,
+                                           chal.mention)
+        users[vict.display_name]['duel_record'][0] += 1
+        users[chal.display_name]['duel_record'][1] += 1
+
+    if len(death_string) > 1:
+        await _client.send_message(channel, death_string)
+        return True
+    return False
+
+
+def add_pos_eff(pos_effects, new_poss_eff):
+    """
+    Handles new poison effect
+
+    :param pos_effects: List to add to
+    :param new_poss_eff: new poison effect
+    return: modified list
+    """
+
+    if new_poss_eff not in pos_effects:
+        pos_effects.append(new_poss_eff)
+        return pos_effects
+    else:
+        for index, p in enumerate(pos_effects):
+            if p == new_poss_eff:
+                pos_effects[index] += new_poss_eff
+                return pos_effects
+
 async def event_handle_shot_duel(challenger, victim, channel):
     """
     Handles a shot_duel should a victim accept.
@@ -2274,9 +2348,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
             if users[chal_name]['a_item'] is not None:
                 c_item = DuelItem(0, users[chal_name]['a_item'])
                 users[chal_name]['inventory'][c_item.item_id] += 1
-                notif_str = "{} is using the {}.\n{}"\
-                            .format(chal_name, c_item.name,
-                                    item_eff_str(c_item))
+                notif_str = "{} is using the {}.\n{}" \
+                    .format(chal_name, c_item.name,
+                            item_eff_str(c_item))
                 if users[chal_name]['inventory'][c_item.item_id] >= c_item.uses:
                     del (users[chal_name]['inventory'][c_item.item_id])
                     users[chal_name]['a_item'] = None
@@ -2285,9 +2359,9 @@ async def event_handle_shot_duel(challenger, victim, channel):
             if users[vict_name]['a_item'] is not None:
                 v_item = DuelItem(0, users[vict_name]['a_item'])
                 users[vict_name]['inventory'][v_item.item_id] += 1
-                notif_str = "{} is using the {}.\n{}"\
-                            .format(vict_name, v_item.name,
-                                    item_eff_str(v_item))
+                notif_str = "{} is using the {}.\n{}" \
+                    .format(vict_name, v_item.name,
+                            item_eff_str(v_item))
                 if users[vict_name]['inventory'][v_item.item_id] >= v_item.uses:
                     del (users[vict_name]['inventory'][v_item.item_id])
                     users[vict_name]['a_item'] = None
@@ -2314,28 +2388,72 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 v_life_start += v_item.prop['life']
 
             # ITEM CHANCE ROLLS (If needed modify chance rolls here)
+            luck_mod = 0
             if c_item is not None and "luck_effect" in c_item.type:
-                await item_chance_roll(channel, chal_name,
-                                       (100 - c_item.prop['luck']))
-            else:
-                await item_chance_roll(channel, chal_name)
+                luck_mod = c_item.prop['luck']
+            await item_chance_roll(channel, chal_name, 100 - luck_mod)
+            luck_mod = 0
             if v_item is not None and "luck_effect" in v_item.type:
-                await item_chance_roll(channel, vict_name,
-                                       (100 - v_item.prop['luck']))
-            else:
-                await item_chance_roll(channel, vict_name)
+                luck_mod = v_item.prop['luck']
+            await item_chance_roll(channel, vict_name, 100 - luck_mod)
 
             await _client.send_message(channel,
                                        ".\n{} has {} life.\n"
                                        "{} has {} life."
                                        .format(chal_name, c_life_start,
                                                vict_name, v_life_start))
-
+            c_life = c_life_start
+            v_life = v_life_start
             # COMBAT PHASE
             _round = 1
+            c_pos_eff, v_pos_eff = [], []
             while True:
                 await _client.send_message(channel, "Round {}!".format(_round))
                 # PRE ATTACK PHASE (spec_effect check here)
+                # Poison Damage check
+                if len(c_pos_eff) > 0:
+                    pos_dam = 0
+                    e_effects = []
+                    for p in c_pos_eff:
+                        pos_dam += p.dam
+                        p -= 1
+                        if p.ended():
+                            e_effects.append(p)
+                    for p in e_effects:
+                        c_pos_eff.remove(p)
+                    v_total.append(pos_dam)
+                    c_life = c_life_start - sum(v_total)
+                    await _client.send_message(channel,
+                                               "{} takes {} poison damage and "
+                                               "is now at {} life."
+                                               .format(chal_name,
+                                                       pos_dam,
+                                                       c_life))
+                if len(v_pos_eff) > 0:
+                    pos_dam = 0
+                    e_effects = []
+                    for p in v_pos_eff:
+                        pos_dam += p.dam
+                        p -= 1
+                        if p.ended():
+                            e_effects.append(p)
+                    for p in e_effects:
+                        v_pos_eff.remove(p)
+                    c_total.append(pos_dam)
+                    v_life = v_life_start - sum(c_total)
+                    await _client.send_message(channel,
+                                               "{} takes {} poison damage and "
+                                               "is now at {} life."
+                                               .format(vict_name,
+                                                       pos_dam,
+                                                       v_life))
+
+                death = await death_check(channel, challenger, c_life, victim,
+                                          v_life)
+                if death:
+                    # END OF DUEL PHASE
+                    whos_in.update_db()
+                    break
 
                 # ATTACK PHASE (Both attacks happen at same time!)
                 await _client.send_typing(channel)
@@ -2373,27 +2491,29 @@ async def event_handle_shot_duel(challenger, victim, channel):
 
                 # POST COMBAT PHASE (Damage resolved here, on_death effects
                 # should be implemented here)
-                if v_life < 1 and c_life < 1:
-                    duel_string += "\nBoth players have died!\n{} and {} " \
-                                   "both drink!".format(challenger.mention,
-                                                        victim.mention)
-                    users[vict_name]['duel_record'][2] += 1
-                    users[chal_name]['duel_record'][2] += 1
-                elif v_life < 1:
-                    duel_string += "\n{} has died!\n{} wins the duel!\n" \
-                                   "{} drinks!".format(vict_name, chal_name,
-                                                       victim.mention)
-                    users[vict_name]['duel_record'][1] += 1
-                    users[chal_name]['duel_record'][0] += 1
-                elif c_life < 1:
-                    duel_string += "\n{} has died!\n{} wins the duel!\n" \
-                                   "{} drinks!".format(chal_name, vict_name,
-                                                       challenger.mention)
-                    users[vict_name]['duel_record'][0] += 1
-                    users[chal_name]['duel_record'][1] += 1
-                _round += 1
+                # Poison Effects
+                if c_item is not None and "poison_effect" in c_item.type and \
+                        c_roll != 0:
+                    p_e = PoisonEffect(c_item, chal_name)
+                    if c_roll > 0:
+                        v_pos_eff = add_pos_eff(v_pos_eff, p_e)
+                    elif c_roll < 0:
+                        c_pos_eff = add_pos_eff(c_pos_eff, p_e)
+
+                if v_item is not None and "poison_effect" in v_item.type and \
+                        v_roll != 0:
+                    p_e = PoisonEffect(v_item, vict_name)
+                    if v_roll > 0:
+                        c_pos_eff = add_pos_eff(c_pos_eff, p_e)
+                    elif v_roll < 0:
+                        v_pos_eff = add_pos_eff(v_pos_eff, p_e)
+
                 await _client.send_message(channel, duel_string)
-                if v_life < 1 or c_life < 1:
+
+                _round += 1
+                death = await death_check(channel, challenger, c_life, victim,
+                                          v_life)
+                if death:
                     # END OF DUEL PHASE
                     whos_in.update_db()
                     break
