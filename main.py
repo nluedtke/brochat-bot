@@ -1965,7 +1965,8 @@ async def print_at_midnight():
         await asyncio.sleep((midnight - now).seconds)
         await _client.send_message(c_to_send, whos_in.whos_in())
         for m in _client.get_all_members():
-            await item_chance_roll(c_to_send, m.display_name)
+            if m.display_name != 'brochat-bot':
+                await item_chance_roll(c_to_send, m.display_name)
         whos_in.update_db()
         await asyncio.sleep(60 * 10)
 
