@@ -880,7 +880,7 @@ async def run_test(client, message):
         # await get_trump(client, message)
         # await asyncio.sleep(10)
         await client.send_message(message.channel, "Setting test duel")
-        test_id1 = '103'
+        test_id1 = '16'
         test_id2 = '103'
         users['palu']['inventory'] = {}
         users['csh']['inventory'] = {}
@@ -2047,8 +2047,8 @@ def item_eff_str(item):
         ret_str += "The opponent's item will be removed if there is one " \
                    "equiped.\n"
     if 'poison_effect' in item.type:
-        ret_str += "The opponent, when hit, will be poisoned for {} rounds, " \
-                   "taking {} damage each round.\n" \
+        ret_str += "The opponent, when hit, will be poisoned for {} round(s)," \
+                   " taking {} damage each round.\n" \
             .format(item.prop['duration'], item.prop['poison'])
     if len(ret_str) > 1:
         return ret_str
@@ -2403,9 +2403,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 if len(c_pos_eff) > 0:
                     pos_dam = 0
                     e_effects = []
-                    print("c")
                     for p in c_pos_eff:
-                        print("{} {} {}".format(p.p_id, p.dam, p.dur))
                         pos_dam += p.dam
                         p -= 1
                         if p.ended():
@@ -2423,9 +2421,7 @@ async def event_handle_shot_duel(challenger, victim, channel):
                 if len(v_pos_eff) > 0:
                     pos_dam = 0
                     e_effects = []
-                    print('v')
                     for p in v_pos_eff:
-                        print("{} {} {}".format(p.p_id, p.dam, p.dur))
                         pos_dam += p.dam
                         p -= 1
                         if p.ended():
