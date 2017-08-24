@@ -21,8 +21,8 @@ from duel_item import DuelItem, common_items, rare_items, PoisonEffect
 
 VERSION_YEAR = 2017
 VERSION_MONTH = 8
-VERSION_DAY = 23
-VERSION_REV = 1
+VERSION_DAY = 24
+VERSION_REV = 0
 
 # Global toggle for news feed
 NEWS_FEED_ON = False
