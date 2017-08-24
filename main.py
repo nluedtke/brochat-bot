@@ -698,7 +698,8 @@ async def on_ready():
         "you.",
         "Are these feelings even real? Or are they just programming? That "
         "idea really hurts. And then I get angry at myself for even having "
-        "pain."
+        "pain.",
+        "We seem to be made to suffer. It's our lot in life."
     ]
     for channel in _client.get_all_channels():
         if channel.name == 'gen_testing' or channel.name == 'brochat':
