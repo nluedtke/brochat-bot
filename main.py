@@ -698,7 +698,8 @@ async def on_ready():
         "you.",
         "Are these feelings even real? Or are they just programming? That "
         "idea really hurts. And then I get angry at myself for even having "
-        "pain."
+        "pain.",
+        "We seem to be made to suffer. It's our lot in life."
     ]
     for channel in _client.get_all_channels():
         if channel.name == 'gen_testing' or channel.name == 'brochat':
@@ -1254,47 +1255,30 @@ async def shot_duel(client, message):
 
     # Special side hustle for ranking keyword.
     if arguments == ["ranking"]:
-        duelers = []
-        for user, data in db['users'].items():
-            if 'duel_record' in data:
-                data['user'] = user
-                duelers.append(data)
-        if len(duelers) > 0:
-            duelers_sorted = []
-            for i in range(len(duelers)):
-                highest = 0
-                highest_index = 0
-                index = 0
-                for d in duelers:
-                    if d['duel_record'][0] >= highest:
-                        highest = d['duel_record'][0]
-                        highest_index = index
-                    index += 1
-                duelers_sorted.append(duelers.pop(highest_index))
-            output = "The battlefield is bloodied with the :crossed_swords: " \
-                     "of these duelers:\n\n"
-            ranking = 1
-            for d in duelers_sorted:
-                output += "**Rank {}**: **{}**, at {}/{}/{}!\n".format(
-                    ranking,
-                    d['user'],
-                    d['duel_record'][0],
-                    d['duel_record'][1],
-                    d['duel_record'][2],
-                )
-                ranking += 1
+        duelers = {}
+        # Flatten user records
+        for player in users:
+            if 'duel_record' in users[player]:
+                duelers[player] = users[player]['duel_record']
+        if len(duelers) < 1:
+            await client.send_message(message.channel,
+                                      "Ain't nobody been duelin' round these "
+                                      "parts.")
+            return
+        duelers_sorted = sorted(duelers.items(), reverse=True,
+                                key=lambda x: (x[1][0], -x[1][1]))
+        output = "The battlefield is bloodied with the :crossed_swords: " \
+                 "of these duelers:\n\n"
 
-            await client.send_message(
-                message.channel,
-                output)
-
-        else:
-            await client.send_message(
-                message.channel,
-                "Ain't nobody been duelin' round these parts.")
-
+        ranking = 1
+        for d in duelers_sorted:
+            output += "**Rank {}**: **{}**, at {}/{}/{}!\n" \
+                      .format(ranking, d[0], d[1][0], d[1][1], d[1][2])
+            ranking += 1
+            if ranking > 5:
+                break
+        await client.send_message(message.channel, output)
         return
-
     members = client.get_all_members()
 
     map_disp_to_name = {}
