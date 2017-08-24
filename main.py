@@ -1630,7 +1630,7 @@ async def whoami(client, message):
                 else:
                     output = "Your inventory of dueling items:"
                     for item, count in v.items():
-                        output += "\n    - {}: {}".format(count, DuelItem(0, item).name)
+                        output += "\n    - {}".format(DuelItem(0, item).name)
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
@@ -1901,6 +1901,7 @@ async def on_message(message):
         "battletag": battletag,
         "set": set_command,
         "me": whoami,
+        "whoami": whoami, #duplicate left for backwards compatibility
         "version": print_version,
         "toggle-news": toggle_news,
         'news': get_news,
