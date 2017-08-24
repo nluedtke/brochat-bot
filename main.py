@@ -1265,7 +1265,7 @@ async def shot_duel(client, message):
                                       "parts.")
             return
         duelers_sorted = sorted(duelers.items(), reverse=True,
-                                key=lambda x: x[1][0])
+                                key=lambda x: (x[1][0], -x[1][1]))
         output = "The battlefield is bloodied with the :crossed_swords: " \
                  "of these duelers:\n\n"
 
