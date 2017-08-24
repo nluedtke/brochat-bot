@@ -734,7 +734,7 @@ async def print_help(client, message):
                   "**!get-record**: Print the session record\n" \
                   "**!set**: Tell Brochat-Bot some info about you\n" \
                   "**!battletag**: I'll tell you your battletag\n" \
-                  "**!whoami**: I'll tell you what I know about you\n" \
+                  "**!me**: I'll tell you what I know about you\n" \
                   "**!toggle-news**: Turn news feed on/off\n"
 
     await client.send_message(message.channel, help_string)
@@ -1595,7 +1595,7 @@ async def set_command(client, message):
 
 async def whoami(client, message):
     """
-    Handles !whoami
+    Handles !me
 
     :param client: The Client
     :param message: The message
@@ -1603,13 +1603,40 @@ async def whoami(client, message):
     """
     author = str(message.author.display_name)
     if author in users and users[author] != {}:
-        await client.send_message(message.channel,
-                                  "Well, I don't know you that well, but "
-                                  "from what I've been hearing on the "
-                                  "streets...")
+        message_output = "Well, I don't know you that well, but " \
+                         "from what I've been hearing on the " \
+                         "streets...\n"
+
         for k, v in users[author].items():
-            await client.send_message(message.channel,
-                                      "Your {} is {}.".format(k, v))
+            if k == "duel_record":
+                if v[0] < 10:
+                    output = "You're a pretty green dueler"
+                elif v[0] < 100:
+                    output = "You're a seasoned dueler"
+                else:
+                    output = "You're a master dueler"
+
+                output += ", and your record is **{}** wins, **{}** losses," \
+                          " and **{}** ties.".format(v[0], v[1], v[2])
+            elif k == "a_item":
+                if v == None:
+                    output = "You don't have a dueling item equipped."
+                else:
+                    output = "You have **{}** equipped.".format(DuelItem(0, v).name)
+            elif k == "inventory":
+                # TODO: display_inventory
+                if v == {}:
+                    output = "You don't have an inventory for dueling items."
+                else:
+                    output = "Your inventory of dueling items:"
+                    for item, count in v.items():
+                        output += "\n    - {}: {}".format(count, DuelItem(0, item).name)
+            else:
+                output = "Your {} is **{}**.".format(k, v)
+
+            message_output += "\n" + output
+        await client.send_message(message.channel, message_output)
+
     else:
         await client.send_message(message.channel,
                                   "You're {}, but that's all I know about "
@@ -1873,7 +1900,7 @@ async def on_message(message):
         "get-record": record_get,
         "battletag": battletag,
         "set": set_command,
-        "whoami": whoami,
+        "me": whoami,
         "version": print_version,
         "toggle-news": toggle_news,
         'news': get_news,
