@@ -19,8 +19,8 @@ Below are instructions to set up and run your own brochat-bot.
    required. This file should be placed in the same directory to which you
    installed main.py. Alternatively, you can place the Discord token in
    the $DISCORD_BOT_TOKEN environment variable on the host if that's the
-   only token you wish to use. Use of just the Discord will disable some
-    functionality.
+   only token you wish to use. Use of just the Discord token will
+   disable some functionality.
   3) Run main.py. This will set up a blank database (a lightweight json 
    file) to hold the persistent database.
   4) If the tokens are set up correctly a brochat-bot should appear.
