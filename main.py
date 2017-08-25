@@ -1865,14 +1865,19 @@ async def get_last_seen(client, message):
     :return: None
     """
     arguments = argument_parser(message.content)
-
-    name = " ".join(arguments).lower()
+    if arguments[0] == '!seen':
+        name = message.author.display_name
+    else:
+        name = " ".join(arguments).lower()
 
     if name in users and 'last_seen' in users[name]:
         dt = datetime.datetime.strptime(users[name]['last_seen'], "%c")
-        await client.send_message(message.channel, "{} last seen at {}."
-                                                   .format(name, pretty_date(
-                                                           dt)))
+        last_time = pretty_date(dt)
+    else:
+        last_time = "unknown"
+
+    await client.send_message(message.channel, "{} last seen at {}."
+                              .format(name, last_time))
 
 
 @_client.event
