@@ -24,6 +24,7 @@ from duel_item import DuelItem, common_items, rare_items, PoisonEffect
 from weekend_games import WeekendGames, argument_parser, pretty_date
 
 description = "A bot to enforce friendship."
+startTime = 0
 
 VERSION_YEAR = 2017
 VERSION_MONTH = 8
@@ -64,7 +65,7 @@ trump_tweets_seen = 0
 
 
 # this specifies what extensions to load when the bot starts up
-startup_extensions = ['commandscog', 'redditcog']
+startup_extensions = ['commandscog', 'redditcog', 'gametimecog']
 
 bot = commands.Bot(command_prefix='!', description=description)
 # Handle tokens from local file
@@ -143,6 +144,7 @@ else:
     users = {}
 
 # Instantiate Discord client and Weekend Games
+global whos_in
 whos_in = WeekendGames(db)
 
 
@@ -287,6 +289,24 @@ async def summary(url):
     await bot.say(get_smmry(url))
 
 
+@bot.command(name='uptime')
+async def get_uptime():
+    """Prints the uptime"""
+
+    total_time = time() - startTime
+    mins, secs = divmod(total_time, 60)
+    hours, mins = divmod(mins, 60)
+    days, hours = divmod(hours, 24)
+
+    ret_str = "Uptime: {:.0f} days, {:.0f} hours, {:.0f} minutes, {:.0f} " \
+              "seconds\n".format(days, hours, mins, secs)
+    stat_str = "# of duels conducted: {}\n" \
+               "# of items awarded   : {}\n" \
+               "# of trump twts seen: {}\n" \
+        .format(duels_conducted, items_awarded, trump_tweets_seen)
+    await bot.say((ret_str + stat_str))
+
+
 @bot.event
 async def on_command_error(exception, context):
     if type(exception) == commands.CommandOnCooldown:
@@ -310,4 +330,6 @@ if __name__ == "__main__":
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(extension, exc))
 
+    startTime = time()
     bot.run(token)
+
