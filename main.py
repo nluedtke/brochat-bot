@@ -1284,14 +1284,14 @@ async def shot_duel(client, message):
     map_disp_to_name = {}
 
     for m in members:
-        map_disp_to_name[m.display_name] = m
+        map_disp_to_name[m.display_name.lower()] = m
 
     if len(arguments) < 1 or arguments[0] == '!duel':
         await client.send_message(message.channel,
                                   'Who do you want to duel?')
         return
 
-    name = " ".join(arguments)
+    name = " ".join(arguments).lower()
     print(name)
     if name == message.author.display_name and message.channel.name != \
             'gen_testing':
