@@ -1987,9 +1987,12 @@ async def print_at_midnight():
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
         await _client.send_message(c_to_send, whos_in.whos_in())
-        for m in _client.get_all_members():
-            if m.display_name != 'brochat-bot':
-                await item_chance_roll(c_to_send, m.display_name)
+        i_awarded = False
+        while not i_awarded:
+            for m in _client.get_all_members():
+                if m.display_name != 'brochat-bot':
+                    i = await item_chance_roll(c_to_send, m.display_name)
+                i_awarded = i_awarded or i
         whos_in.update_db()
         await asyncio.sleep(60 * 10)
 
@@ -2167,6 +2170,8 @@ async def item_chance_roll(channel, player, max_roll=100):
                                        "You already have that item, its uses "
                                        "have been reset!")
         users[player]['inventory'][item.item_id] = 0
+        return True
+    return False
 
 
 async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
