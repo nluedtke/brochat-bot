@@ -13,13 +13,17 @@ Below are instructions to set up and run your own brochat-bot.
 
   1) Get the source code by either cloning this repo or downloading the 
   latest stable release at [Releases](../../releases/latest).
-  2) Acquire a tokens.config file from the developers or create your own
-   tokens. Currently brochat-bot uses tokens from Twitter, Twilio, and 
-   Discord. This file should be placed in the same directory to which 
-   you installed main.py.
+  2) Create a tokens.config file using the tokens.config.example file as
+   a template. Currently brochat-bot uses tokens from Summary, Twitter,
+   Twilio, and Discord. However, as of v3.3.0 only the Discord token is
+   required. This file should be placed in the same directory to which you
+   installed main.py. Alternatively, you can place the Discord token in
+   the $DISCORD_BOT_TOKEN environment variable on the host if that's the
+   only token you wish to use. Use of just the Discord will disable some
+    functionality.
   3) Run main.py. This will set up a blank database (a lightweight json 
    file) to hold the persistent database.
-  4) If the tokens are set up correctly a brochat-bot should appear. 
+  4) If the tokens are set up correctly a brochat-bot should appear.
   Type !help to get a list of commands that brochat-bot can handle.
 
 #### Docker Container
