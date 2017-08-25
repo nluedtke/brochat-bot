@@ -1851,8 +1851,8 @@ async def on_member_update(before, after):
             whos_in.last_shot = after.display_name
         whos_in.update_db()
     elif before.status != after.status:
-        users[after.display_name]['last_seen'] = str(datetime.datetime.now(
-            pytz.timezone('US/Eastern')))
+        users[after.display_name]['last_seen'] = datetime.datetime.strftime(
+            datetime.datetime.now(pytz.timezone('US/Eastern')), "%c")
         whos_in.update_db()
 
 
@@ -1870,8 +1870,9 @@ async def get_last_seen(client, message):
 
     if name in users and 'last_seen' in users[name]:
         dt = datetime.datetime.strptime(users[name]['last_seen'], "%c")
-        await client.send_message(message.channel, "User last seen at {}."
-                                                   .format(pretty_date(dt)))
+        await client.send_message(message.channel, "{} last seen at {}."
+                                                   .format(name, pretty_date(
+                                                           dt)))
 
 
 @_client.event
