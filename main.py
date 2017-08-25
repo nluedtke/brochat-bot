@@ -1834,22 +1834,50 @@ async def on_member_update(before, after):
     :param before: before state
     :param after: after state
     """
-    if before.display_name == after.display_name:
+    if before.display_name == 'brochat-bot':
         return
 
-    if before.display_name in users:
-        users[after.display_name] = users[before.display_name]
-        del (users[before.display_name])
+    if before.display_name != after.display_name:
+        if before.display_name in users:
+            users[after.display_name] = users[before.display_name]
+            del (users[before.display_name])
 
-    for gt in whos_in.gametimes:
-        for player in gt.players:
-            if player['name'] == before.display_name:
-                player['name'] = after.display_name
+        for gt in whos_in.gametimes:
+            for player in gt.players:
+                if player['name'] == before.display_name:
+                    player['name'] = after.display_name
 
-    if whos_in.last_shot == before.display_name:
-        whos_in.last_shot = after.display_name
+        if whos_in.last_shot == before.display_name:
+            whos_in.last_shot = after.display_name
+        whos_in.update_db()
+    elif before.status != after.status:
+        users[after.display_name]['last_seen'] = datetime.datetime.strftime(
+            datetime.datetime.now(pytz.timezone('US/Eastern')), "%c")
+        whos_in.update_db()
 
-    whos_in.update_db()
+
+async def get_last_seen(client, message):
+    """
+    Handles !ndelay
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+    if arguments[0] == '!seen':
+        name = message.author.display_name
+    else:
+        name = " ".join(arguments).lower()
+
+    if name in users and 'last_seen' in users[name]:
+        dt = datetime.datetime.strptime(users[name]['last_seen'], "%c")
+        last_time = pretty_date(dt)
+    else:
+        last_time = "unknown"
+
+    await client.send_message(message.channel, "{} last seen at {}."
+                              .format(name, last_time))
 
 
 @_client.event
@@ -1897,11 +1925,15 @@ async def on_message(message):
         'accept': toggle_accept,
         'clear': clear,
         'use': use_command,
-        'unequip': unequip_command
+        'unequip': unequip_command,
+        'seen': get_last_seen
     }
 
     if message.content.startswith("!") and \
             "brochat-bot" not in str(message.author):
+        users[message.author.display_name]['last_seen'] = \
+            datetime.datetime.strftime(
+                datetime.datetime.now(pytz.timezone('US/Eastern')), "%c")
         cmd = message.content.lower()
         cmd = cmd.split()[0][1:]
         if cmd in commands:
