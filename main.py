@@ -1834,22 +1834,44 @@ async def on_member_update(before, after):
     :param before: before state
     :param after: after state
     """
-    if before.display_name == after.display_name:
+    if before.display_name == 'brochat-bot':
         return
 
-    if before.display_name in users:
-        users[after.display_name] = users[before.display_name]
-        del (users[before.display_name])
+    if before.display_name != after.display_name:
+        if before.display_name in users:
+            users[after.display_name] = users[before.display_name]
+            del (users[before.display_name])
 
-    for gt in whos_in.gametimes:
-        for player in gt.players:
-            if player['name'] == before.display_name:
-                player['name'] = after.display_name
+        for gt in whos_in.gametimes:
+            for player in gt.players:
+                if player['name'] == before.display_name:
+                    player['name'] = after.display_name
 
-    if whos_in.last_shot == before.display_name:
-        whos_in.last_shot = after.display_name
+        if whos_in.last_shot == before.display_name:
+            whos_in.last_shot = after.display_name
+        whos_in.update_db()
+    elif before.status != after.status:
+        users[after.display_name]['last_seen'] = str(datetime.datetime.now(
+            pytz.timezone('US/Eastern')))
+        whos_in.update_db()
 
-    whos_in.update_db()
+
+async def get_last_seen(client, message):
+    """
+    Handles !ndelay
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+
+    name = " ".join(arguments).lower()
+
+    if name in users and 'last_seen' in users[name]:
+        dt = datetime.datetime.strptime(users[name]['last_seen'], "%c")
+        await client.send_message(message.channel, "User last seen at {}."
+                                                   .format(pretty_date(dt)))
 
 
 @_client.event
@@ -1897,7 +1919,8 @@ async def on_message(message):
         'accept': toggle_accept,
         'clear': clear,
         'use': use_command,
-        'unequip': unequip_command
+        'unequip': unequip_command,
+        'seen': get_last_seen
     }
 
     if message.content.startswith("!") and \
