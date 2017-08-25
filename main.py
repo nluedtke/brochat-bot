@@ -1926,6 +1926,9 @@ async def on_message(message):
 
     if message.content.startswith("!") and \
             "brochat-bot" not in str(message.author):
+        users[message.author.display_name]['last_seen'] = \
+            datetime.datetime.strftime(
+                datetime.datetime.now(pytz.timezone('US/Eastern')), "%c")
         cmd = message.content.lower()
         cmd = cmd.split()[0][1:]
         if cmd in commands:
