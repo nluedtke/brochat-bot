@@ -125,7 +125,19 @@ common_items = {
            "prop": {'poison': 1, 'duration': 1},
            "uses": 2,
            "text": "This hook disarms the opponent for two duels. The hook "
-                   "seems coated in an oily residue."}
+                   "seems coated in an oily residue."},
+    "17": {"name": "Bronze Pendant of Regeneration",
+           "type": ["regen_effect"],
+           "prop": {'regen': 1},
+           "uses": 2,
+           "text": "This item allows the wearer to regenerate 1 life at the "
+                   "end of each round for two duels."},
+    "18": {"name": "Steel Pendant of Regeneration",
+           "type": ["regen_effect"],
+           "prop": {'regen': 1},
+           "uses": 4,
+           "text": "This item allows the wearer to regenerate 1 life at the "
+                   "end of each round for four duels."}
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -154,6 +166,12 @@ rare_items = {
             "uses": 5,
             "text": "This dagger adds +1 to all damage for the user for five "
                     "duels. The dagger is coated in deadly poison."},
+    "104": {"name": "Gold Pendant of Regeneration",
+            "type": ["regen_effect"],
+            "prop": {'regen': 1},
+            "uses": 10,
+            "text": "This item allows the wearer to regenerate 1 life at the "
+                    "end of each round for ten duels."}
 }
 
 

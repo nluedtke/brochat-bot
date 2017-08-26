@@ -22,7 +22,7 @@ from drinking import add_drink, consume_drink
 
 VERSION_YEAR = 2017
 VERSION_MONTH = 8
-VERSION_DAY = 24
+VERSION_DAY = 25
 VERSION_REV = 1
 
 # Global toggle for news feed
@@ -1294,16 +1294,16 @@ async def shot_duel(client, message):
     map_disp_to_name = {}
 
     for m in members:
-        map_disp_to_name[m.display_name] = m
+        map_disp_to_name[m.display_name.lower()] = m
 
     if len(arguments) < 1 or arguments[0] == '!duel':
         await client.send_message(message.channel,
                                   'Who do you want to duel?')
         return
 
-    name = " ".join(arguments)
+    name = " ".join(arguments).lower()
     print(name)
-    if name == message.author.display_name and message.channel.name != \
+    if name == message.author.display_name.lower() and message.channel.name != \
             'gen_testing':
         await client.send_message(message.channel, "Why not just drink your "
                                                    "tears away, instead of "
@@ -1371,7 +1371,7 @@ async def get_last_tweet(_id, tweet_text, rt_text, client, message):
                                   "Twitter not activated.")
         return
 
-    if id == 'realdonaldtrump':
+    if _id == 'realdonaldtrump':
         global last_id
 
     try:
@@ -1847,22 +1847,50 @@ async def on_member_update(before, after):
     :param before: before state
     :param after: after state
     """
-    if before.display_name == after.display_name:
+    if before.display_name == 'brochat-bot':
         return
 
-    if before.display_name in users:
-        users[after.display_name] = users[before.display_name]
-        del (users[before.display_name])
+    if before.display_name != after.display_name:
+        if before.display_name in users:
+            users[after.display_name] = users[before.display_name]
+            del (users[before.display_name])
 
-    for gt in whos_in.gametimes:
-        for player in gt.players:
-            if player['name'] == before.display_name:
-                player['name'] = after.display_name
+        for gt in whos_in.gametimes:
+            for player in gt.players:
+                if player['name'] == before.display_name:
+                    player['name'] = after.display_name
 
-    if whos_in.last_shot == before.display_name:
-        whos_in.last_shot = after.display_name
+        if whos_in.last_shot == before.display_name:
+            whos_in.last_shot = after.display_name
+        whos_in.update_db()
+    elif before.status != after.status:
+        users[after.display_name]['last_seen'] = datetime.datetime.strftime(
+            datetime.datetime.now(pytz.timezone('US/Eastern')), "%c")
+        whos_in.update_db()
 
-    whos_in.update_db()
+
+async def get_last_seen(client, message):
+    """
+    Handles !ndelay
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+    if arguments[0] == '!seen':
+        name = message.author.display_name
+    else:
+        name = " ".join(arguments).lower()
+
+    if name in users and 'last_seen' in users[name]:
+        dt = datetime.datetime.strptime(users[name]['last_seen'], "%c")
+        last_time = pretty_date(dt)
+    else:
+        last_time = "unknown"
+
+    await client.send_message(message.channel, "{} last seen at {}."
+                              .format(name, last_time))
 
 
 @_client.event
@@ -1911,12 +1939,16 @@ async def on_message(message):
         'clear': clear,
         'use': use_command,
         'unequip': unequip_command,
+        'seen': get_last_seen,
         'drink': drink,
         'drankbank': drankbank
     }
 
     if message.content.startswith("!") and \
             "brochat-bot" not in str(message.author):
+        users[message.author.display_name]['last_seen'] = \
+            datetime.datetime.strftime(
+                datetime.datetime.now(pytz.timezone('US/Eastern')), "%c")
         cmd = message.content.lower()
         cmd = cmd.split()[0][1:]
         if cmd in commands:
@@ -2002,9 +2034,12 @@ async def print_at_midnight():
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
         await _client.send_message(c_to_send, whos_in.whos_in())
-        for m in _client.get_all_members():
-            if m.display_name != 'brochat-bot':
-                await item_chance_roll(c_to_send, m.display_name)
+        i_awarded = False
+        while not i_awarded:
+            for m in _client.get_all_members():
+                if m.display_name != 'brochat-bot':
+                    i = await item_chance_roll(c_to_send, m.display_name)
+                i_awarded = i_awarded or i
         whos_in.update_db()
         await asyncio.sleep(60 * 10)
 
@@ -2182,6 +2217,8 @@ async def item_chance_roll(channel, player, max_roll=100):
                                        "You already have that item, its uses "
                                        "have been reset!")
         users[player]['inventory'][item.item_id] = 0
+        return True
+    return False
 
 
 async def item_disarm_check(channel, c_item, v_item, c_name, v_name):
@@ -2338,20 +2375,19 @@ async def drankbank(client, message):
     :param message: The Message
     :return:
     """
-    output = ":moneybag: The **drankbank** is now open for business :moneybag:\n"
+    output = ":moneybag: The **drankbank** is now open for business " \
+             ":moneybag:\n"
     for name, user in users.items():
         if "drinks_owed" in user:
             if user["drinks_owed"] > 0:
-                output += "\n**{}** owes **{}** :tumbler_glass: to the **drankbank**.".format(
-                    name, user['drinks_owed']
-                )
+                output += "\n**{}** owes **{}** :tumbler_glass: to the " \
+                          "**drankbank**.".format(name, user['drinks_owed'])
             elif user['drinks_owed'] < 0:
-                output += "\n**{}** has **{}** dranks in their ledger. *In the black!*".format(
-                    name, -user['drinks_owed']
-                )
+                output += "\n**{}** has **{}** dranks in their ledger. " \
+                          "*In the black!*".format(name, -user['drinks_owed'])
             else:
-                output += "\n**{}** is in clear and good standing with the **drankbank**.".format(
-                    name)
+                output += "\n**{}** is in clear and good standing with the " \
+                          "**drankbank**.".format(name)
     await client.send_message(message.channel, output)
 
 
