@@ -3,7 +3,7 @@ from discord.ext import commands
 import common
 from twython import Twython, TwythonError
 from duelcog import item_chance_roll
-from random import shuffle
+from random import shuffle, randint
 import asyncio
 from datetime import datetime
 
@@ -36,7 +36,7 @@ class TwitterCog:
             await self.bot.say("Twitter is acting up, try again later.")
 
         if common.trump_chance_roll_rdy:
-            await item_chance_roll(ctx, ctx.message.author.display_name)
+            await item_chance_roll(ctx.bot, ctx.message.author.display_name)
             common.trump_chance_roll_rdy = False
 
     @commands.command(name='news', pass_context=True)
@@ -63,6 +63,20 @@ class TwitterCog:
                 found_art = True
 
         return
+
+    @commands.command(name='toggle-news', pass_context=True)
+    async def toggle_news(self, ctx):
+        """Toggle the news feed on and off"""
+
+        if common.NEWS_FEED_ON:
+            common.NEWS_FEED_ON = False
+            await self.bot.say("News Feed turned off.")
+        else:
+            if not common.NEWS_FEED_CREATED:
+                self.bot.loop.create_task(handle_news(ctx))
+                common.NEWS_FEED_CREATED = True
+            common.NEWS_FEED_ON = True
+            await self.bot.say("News Feed turned on.")
 
 async def get_last_tweet(_id, tweet_text, rt_text, ctx):
     """
@@ -119,7 +133,6 @@ async def check_trumps_mouth(bot):
     delay = common.trump_del * 60
 
     while not bot.is_closed:
-        print("correct")
         await asyncio.sleep(delay)
         print("Checked trump at {}".format(datetime.now()))
         try:
@@ -136,6 +149,49 @@ async def check_trumps_mouth(bot):
                 await bot.say("New Message from the prez! Try !trump")
                 common.last_id = trumps_lt_id
                 common.trump_chance_roll_rdy = True
+
+async def handle_news(ctx):
+    """
+    Handles the news feed
+    :return:
+    """
+
+    c_to_send = ctx.message.channel
+    shuffle(common.news_handles)
+
+    for channel in ctx.bot.get_all_channels():
+        if channel.name == 'gen_testing' or channel.name == 'newsfeed':
+            c_to_send = channel
+            break
+
+    if common.twitter is None:
+        await ctx.bot.say("Twitter not activated.")
+        return
+
+    delay = (common.news_del * 60) + (randint(0, 10) * 60)
+    while not ctx.bot.is_closed:
+        next_source = common.news_handles.pop(0)
+        common.news_handles.append(next_source)
+        print("Next news source will be {}".format(next_source))
+        await asyncio.sleep(delay)
+        if common.NEWS_FEED_ON:
+            try:
+                news = common.twitter.get_user_timeline(
+                    screen_name=next_source, count=1,
+                    include_retweets=False)
+            except:
+                print("Error caught in news, shortening delay")
+                delay = 30
+            else:
+                delay = (common.news_del * 60) + (randint(0, 10) * 60)
+                await ctx.bot.send_message(
+                    c_to_send, "https://twitter.com/{0}/status/{1}"
+                               .format(news[0]['user']['screen_name'],
+                                       str(news[0]['id'])))
+        else:
+            common.NEWS_FEED_CREATED = False
+            print("Destroying News Feed Task")
+            return
 
 
 def setup(bot):

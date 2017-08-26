@@ -2,6 +2,7 @@ from gametime import Gametime
 from time import time
 from poll import Poll
 import json
+import common
 
 
 class WeekendGames(object):
@@ -9,11 +10,12 @@ class WeekendGames(object):
     Defines the WeekendGames class
     """
 
-    def __init__(self, db):
+    def __init__(self,):
         """
         WeekendGames constructor
         """
 
+        db = common.db
         self.people = []
         if 'people' in db:
             self.people = db['people']
@@ -156,11 +158,9 @@ class WeekendGames(object):
             return "You probably want to start the poll correctly. Nice try."
         return self.poll.get_current_state()
 
-    def stop_poll(self, options):
+    def stop_poll(self):
         """
         Stops a poll
-
-        :param options: Unused variable
         """
 
         if self.poll is None:
@@ -299,26 +299,26 @@ class WeekendGames(object):
                 .format(person_to_remove, pretty_date(self.gametimes[
                                                           game_id].get_date()))
 
-    def update_db(self, db, users, db_file):
+    def update_db(self):
         """
         Updates the database to disk
 
         :return: None
         """
 
-        db['people'] = self.people
-        db['last_shot'] = self.last_shot
-        db['consecutive_shot_wins'] = self.consecutive_shot_wins
-        db['last_lottery_time'] = self.last_lottery
-        db['gametimes'] = []
+        common.db['people'] = self.people
+        common.db['last_shot'] = self.last_shot
+        common.db['consecutive_shot_wins'] = self.consecutive_shot_wins
+        common.db['last_lottery_time'] = self.last_lottery
+        common.db['gametimes'] = []
         for gt in self.gametimes:
-            db['gametimes'].append(gt.to_json())
-        db['users'] = users
-        db['c_win'] = self.c_win
-        db['c_loss'] = self.c_loss
-        db['c_draw'] = self.c_draw
-        with open(db_file, 'w') as dbfile:
-            json.dump(db, dbfile, sort_keys=True, indent=4,
+            common.db['gametimes'].append(gt.to_json())
+        common.db['users'] = common.users
+        common.db['c_win'] = self.c_win
+        common.db['c_loss'] = self.c_loss
+        common.db['c_draw'] = self.c_draw
+        with open(common.db_file, 'w') as dbfile:
+            json.dump(common.db, dbfile, sort_keys=True, indent=4,
                       ensure_ascii=False)
 
     def add_shot_win(self, name):
@@ -336,25 +336,6 @@ class WeekendGames(object):
             self.last_shot = name
             self.consecutive_shot_wins = 1
         return self.consecutive_shot_wins
-
-    def log_reddit_time(self):
-        """
-        Logs the last time a reddit request was run to avoid ratelimit
-
-        :return: None
-        """
-
-        self.last_reddit_request = time()
-
-    def is_reddit_time(self):
-        """
-        Determines if its time for a reddit request
-
-        :rtype bool
-        :return: True if more than 10 seconds has passed
-        """
-
-        return time() - self.last_reddit_request > 10
 
     def add_win(self):
         """

@@ -3,52 +3,34 @@ from time import time
 import json
 import os
 from sys import stderr
-from random import randint, shuffle, choice
+from random import randint, choice
 import socket
-import datetime
-from difflib import get_close_matches
-import pytz
 import sys
 import traceback
+from difflib import get_close_matches
 
 # NonStandard Imports
 import discord
 from discord.ext import commands
 import asyncio
-from twython import Twython, TwythonError
+from twython import Twython
 from twilio.rest import Client
 import requests
-from gametime import Gametime
-from poll import Poll
-from duel_item import DuelItem, common_items, rare_items, PoisonEffect
-from weekend_games import WeekendGames, argument_parser, pretty_date
+from duel_item import DuelItem
+from weekend_games import WeekendGames, argument_parser
 import common
 
 description = "A bot to enforce friendship."
 startTime = 0
 
-VERSION_YEAR = 2017
-VERSION_MONTH = 8
-VERSION_DAY = 24
-VERSION_REV = 1
-
-# Global toggle for news feed
-NEWS_FEED_ON = False
-NEWS_FEED_CREATED = False
-
-# Location of db.json and tokens.config
-data_dir = "/data"
-
-# Runtime stats
-duels_conducted = 0
-
 # this specifies what extensions to load when the bot starts up
-startup_extensions = ['commandscog', 'redditcog', 'gametimecog', 'twittercog']
+startup_extensions = ['redditcog', 'gametimecog', 'twittercog', 'duelcog',
+                      'textcog']
 
 bot = commands.Bot(command_prefix='!', description=description)
 # Handle tokens from local file
 tokens = {}
-if not os.path.exists('{}/tokens.config'.format(data_dir)) and not \
+if not os.path.exists('{}/tokens.config'.format(common.data_dir)) and not \
         os.path.exists('tokens.config'):
     print("No tokens config file found.", file=stderr)
     tokens = {}
@@ -59,7 +41,7 @@ elif os.path.exists('tokens.config'):
     with open('tokens.config', 'r') as t_file:
         tokens = json.load(t_file)
 else:
-    with open('{}/tokens.config'.format(data_dir), 'r') as t_file:
+    with open('{}/tokens.config'.format(common.data_dir), 'r') as t_file:
         tokens = json.load(t_file)
 
 # Discord Bot Token
@@ -89,40 +71,73 @@ else:
 
 # Twilio Tokens
 if 'twilio_account_sid' not in tokens or 'twilio_auth_token' not in tokens:
-    twilio_client = None
+    common.twilio_client = None
     print("No twilio functionality!")
 else:
     account_sid = tokens['twilio_account_sid']
     auth_token = tokens['twilio_auth_token']
-    twilio_client = Client(account_sid, auth_token)
+    common.twilio_client = Client(account_sid, auth_token)
 
-# Create/Load Local Database
-db_file = '{}/db.json'.format(data_dir)
-db = {}
 
-if not os.path.exists(db_file) and not os.path.exists('db.json'):
+if not os.path.exists(common.db_file) and not os.path.exists('db.json'):
     print("Starting DB from scratch (locally)")
-    db_file = 'db.json'
-    with open(db_file, 'w') as datafile:
-        json.dump(db, datafile)
+    common.db_file = 'db.json'
+    with open(common.db_file, 'w') as datafile:
+        json.dump(common.db, datafile)
 elif os.path.exists('db.json'):
-    db_file = 'db.json'
+    common.db_file = 'db.json'
     print("Using local db file")
-    with open(db_file, 'r') as datafile:
-        db = json.load(datafile)
+    with open(common.db_file, 'r') as datafile:
+        common.db = json.load(datafile)
 else:
     print("Loading the DB")
-    with open(db_file, 'r') as datafile:
-        db = json.load(datafile)
+    with open(common.db_file, 'r') as datafile:
+        common.db = json.load(datafile)
 
 # Create users from DB
-if 'users' in db:
-    common.users = db['users']
+if 'users' in common.db:
+    common.users = common.db['users']
 else:
     common.users = {}
 
 # Instantiate Discord client and Weekend Games
-common.whos_in = WeekendGames(db)
+common.whos_in = WeekendGames()
+
+
+@bot.event
+async def on_message_edit(before, after):
+    """
+    Asynchronous event handler for edit
+
+    return: None
+    """
+    await bot.on_message(after)
+
+
+@bot.event
+async def on_member_update(before, after):
+    """
+    Updates a user's db entry if they change their nickname.
+
+    :param before: before state
+    :param after: after state
+    """
+    if before.display_name == after.display_name:
+        return
+
+    if before.display_name in common.users:
+        common.users[after.display_name] = common.users[before.display_name]
+        del (common.users[before.display_name])
+
+    for gt in common.whos_in.gametimes:
+        for player in gt.players:
+            if player['name'] == before.display_name:
+                player['name'] = after.display_name
+
+    if common.whos_in.last_shot == before.display_name:
+        common.whos_in.last_shot = after.display_name
+
+    common.whos_in.update_db()
 
 
 @bot.event
@@ -152,14 +167,80 @@ async def on_ready():
             await bot.send_message(channel, choice(connect_strings))
 
 
+@bot.command(name='battletag', pass_context=True)
+async def battletag(ctx):
+    """Get your battletag to share!"""
+
+    author = str(ctx.message.author.display_name)
+    if author in common.users:
+        if "battletag" in common.users[author]:
+            await bot.say("Your battletag is: {}"
+                          .format(common.users[author]["battletag"]))
+        else:
+            await bot.say("I couldn\'t find your battletag!")
+    else:
+        await bot.say("I couldn\'t find your user info!")
+
+
+@bot.command(name='set', pass_context=True)
+async def set_command(ctx):
+    """Add some info to the db about you"""
+    author = str(ctx.message.author.display_name)
+    arguments = argument_parser(ctx.message.content)
+
+    if author not in common.users:
+        common.users[author] = {}
+
+    valid_arguments = {'name': "Okay, I'll call you {} now.",
+                       'battletag': "Okay, your battletag is {} from here"
+                                    " on out.",
+                       'mobile': "Got your digits: {}."}
+    if len(arguments) != 2:
+        await bot.say("To !set information about yourself, please use:\n\n"
+                      "**!set** <name/battletag/mobile> <value>")
+    elif arguments[0] in valid_arguments:
+        # Added format check for mobile
+        if arguments[0] == 'mobile' and \
+                (len(arguments[1]) != 12 or
+                 arguments[1][0] != '+' or not
+                 isinstance(int(arguments[1][1:]), int)):
+            await bot.say("You'll need to use the format **+14148888888** for "
+                          "your mobile number.")
+        else:
+            common.users[author][arguments[0]] = arguments[1]
+            await bot.say(valid_arguments[arguments[0]]
+                          .format(common.users[author][arguments[0]]))
+    # Update database
+    common.whos_in.update_db()
+
+
 @bot.command()
 async def version():
     """Prints the version of bot."""
     version_string = "Version: {0}.{1}.{2}.{3}\n" \
-                     "Running on: {4}".format(VERSION_YEAR, VERSION_MONTH,
-                                              VERSION_DAY, VERSION_REV,
+                     "Running on: {4}".format(common.VERSION_YEAR,
+                                              common.VERSION_MONTH,
+                                              common.VERSION_DAY,
+                                              common.VERSION_REV,
                                               socket.gethostname())
     await bot.say(version_string)
+
+
+def is_me(m):
+    return m.author == bot.user
+
+
+def is_command(m):
+    return m.content.startswith("!")
+
+
+@bot.command(name='clear', pass_context=True)
+async def clear(ctx):
+    """Clears Bot chat history"""
+    channel = ctx.message.channel
+    deleted = await bot.purge_from(channel, limit=75, check=is_me)
+    c_ds = await bot.purge_from(channel, limit=50, check=is_command)
+    await bot.say('Deleted {} message(s)'.format(len(deleted) + len(c_ds)))
 
 
 def run_shot_lottery(auto_call=False):
@@ -224,10 +305,11 @@ async def shot_lottery(auto_call=False):
     shot_lottery_string = run_shot_lottery(auto_call)
     for x in range(4):
         await bot.say(shot_lottery_string.pop(0))
+        # await bot.send_typing()
         await asyncio.sleep(4)
     while len(shot_lottery_string) > 0:
         await bot.say(shot_lottery_string.pop(0))
-    common.whos_in.update_db(db, common.users, db_file)
+    common.whos_in.update_db()
 
 
 # TODO - url validation
@@ -280,7 +362,8 @@ async def get_uptime():
     stat_str = "# of duels conducted: {}\n" \
                "# of items awarded   : {}\n" \
                "# of trump twts seen: {}\n" \
-        .format(duels_conducted, common.items_awarded, common.trump_tweets_seen)
+        .format(common.duels_conducted, common.items_awarded,
+                common.trump_tweets_seen)
     await bot.say((ret_str + stat_str))
 
 
@@ -308,7 +391,8 @@ async def whoami(ctx):
                 if v is None:
                     output = "You don't have a dueling item equipped."
                 else:
-                    output = "You have **{}** equipped.".format(DuelItem(0, v).name)
+                    output = "You have **{}** equipped."\
+                        .format(DuelItem(0, v).name)
             elif k == "inventory":
                 # TODO: display_inventory
                 if v == {}:
@@ -340,7 +424,7 @@ async def change_trump_delay(num_of_mins: int):
 async def change_news_delay(num_of_mins: int):
     """Change the frequency we grab news"""
 
-    news_del = int(num_of_mins)
+    common.news_del = int(num_of_mins)
     await bot.say("News delay set to {} mins.".format(common.news_del))
 
 
@@ -350,9 +434,21 @@ async def on_command_error(exception, context):
         await bot.send_message(context.message.channel,
                                "{} is on cooldown for {} seconds.".format(
                                    context.command, exception.retry_after))
+    elif type(exception) == commands.CommandNotFound:
+        try:
+            closest = get_close_matches(context.message.content[1:],
+                                        list(bot.commands))[0]
+        except IndexError:
+            await bot.send_message(context.message.channel,
+                                   "{} is not a known command."
+                                   .format(context.message.content))
+        else:
+            await bot.send_message(context.message.channel,
+                                   "{} is not a command, did you mean !{}?"
+                                   .format(context.message.content, closest))
     else:
-        await bot.send_message(context.message.channel,
-                               "Unhandled command error")
+        await bot.send_message(context.message.channel, "Unhandled command "
+                                                        "error")
 
     print('Ignoring exception in command {}'.format(context.command),
           file=sys.stderr)
@@ -367,7 +463,10 @@ if __name__ == "__main__":
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(extension, exc))
+            exit(1)
 
     startTime = time()
+    if os.environ.get("TEST_TRAVIS_NL"):
+        exit(0)
     bot.run(token)
 

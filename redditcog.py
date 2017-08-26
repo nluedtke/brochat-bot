@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import requests
 from random import randint
+import common
 
 
 class RedditCog:
@@ -35,7 +36,8 @@ def get_reddit(subreddit):
         subreddit,
         number_to_fetch)
     headers = {
-        'User-Agent': 'Brochat-Bot {}.{}'.format(2017, 8)
+        'User-Agent': 'Brochat-Bot {}.{}'.format(common.VERSION_YEAR,
+                                                 common.VERSION_MONTH)
     }
     response = requests.get(url, headers=headers)
     response_json = response.json()

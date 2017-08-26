@@ -1,11 +1,19 @@
+VERSION_YEAR = 2017
+VERSION_MONTH = 8
+VERSION_DAY = 26
+VERSION_REV = 0
+
 whos_in = None
 twitter = None
 users = None
+twilio_client = None
 
 # Variable hold trumps last tweet id
 last_id = 0
 trump_chance_roll_rdy = False
 
+# Runtime stats
+duels_conducted = 0
 items_awarded = 0
 trump_tweets_seen = 0
 
@@ -24,6 +32,17 @@ news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
 # remember that news_del is fuzzed + (0-10)
 trump_del = 20
 news_del = 55
+
+# Location of db.json and tokens.config
+data_dir = "/data"
+
+# Create/Load Local Database
+db_file = '{}/db.json'.format(data_dir)
+db = {}
+
+# Global toggle for news feed
+NEWS_FEED_ON = False
+NEWS_FEED_CREATED = False
 
 async def trigger_social(ctx):
     """Triggers a social """

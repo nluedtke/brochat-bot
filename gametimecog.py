@@ -1,6 +1,11 @@
 import discord
 from discord.ext import commands
+from weekend_games import pretty_date
 import common
+from datetime import datetime
+import pytz
+import asyncio
+from duelcog import item_chance_roll
 
 
 class GametimeCog:
@@ -30,6 +35,44 @@ class GametimeCog:
         """List current gametimes"""
         await self.bot.say(common.whos_in.get_gametimes())
 
+    @gametime.command(name="add")
+    async def add_gametime(self, day, start_time=None):
+        """Create a new gametime"""
+        await self.bot.say(common.whos_in.create_gametime(day, start_time))
+
+    @gametime.command(name="remove")
+    async def rem_gametime(self, index):
+        """Remove a gametime"""
+        await self.bot.say(common.whos_in.remove_gametime(index))
+
+    @gametime.command(name="set")
+    async def set_gametime(self, index, new_time):
+        """Set a gametime"""
+        await self.bot.say(common.whos_in.set_gametime(index, new_time))
+
+    @commands.group(name='poll', pass_context=True)
+    async def poll(self, ctx):
+        """Handles Polls actions"""
+
+        poll_help_string = \
+            "That's not a valid command for **!poll**\n\n" \
+            "Please use:\n" \
+            "!poll start \"option 1\" \"option 2\" etc... to **start a " \
+            "poll**\n" \
+            "!poll stop to **delete the current poll**"
+        if ctx.invoked_subcommand is None:
+            await self.bot.say(poll_help_string)
+
+    @poll.command(name='start', pass_context=True)
+    async def start_poll(self, ctx):
+        """Creates a poll"""
+        await self.bot.say(common.whos_in.create_poll(ctx.message.content[6:]))
+
+    @poll.command(name='stop')
+    async def stop_poll(self):
+        """Stops a poll"""
+        await self.bot.say(common.whos_in.stop_poll())
+
     @commands.command(name='in', pass_context=True)
     async def in_command(self, ctx, gt_num):
         """Marks you as in for a gametime"""
@@ -39,7 +82,7 @@ class GametimeCog:
                                .format(common.whos_in.get_gametimes()))
         else:
             await self.bot.say(common.whos_in.add(ctx.message.author, gt_num,
-                                           status="in"))
+                               status="in"))
 
     @commands.command(name='possible', pass_context=True)
     async def possible_command(self, ctx, gt_num):
@@ -127,6 +170,48 @@ class GametimeCog:
             common.whos_in.get_c_record())
         await self.bot.say(record_string)
 
+    @commands.command(name='vote', pass_context=True)
+    async def add_vote(self, ctx, option=""):
+        """Vote in a pool"""
+
+        if common.whos_in.poll is None:
+            await self.bot.say("No Poll currently taking place")
+
+        if option == "":
+            await self.bot.say("What are you voting for, though?\n\n{}"
+                               .format(common.whos_in.poll.get_current_state()))
+        else:
+            try:
+                await self.bot.say(
+                    common.whos_in.poll.add_vote(option, ctx.message.author))
+            except IndexError:
+                await self.bot.say("Not a valid option!")
+
+
+async def print_at_midnight(bot):
+    """
+    Prints list at midnight
+    :return:
+    """
+
+    while not bot.is_closed:
+        now = datetime.now(pytz.timezone('US/Eastern'))
+        midnight = now.replace(hour=23, minute=59, second=59, microsecond=59)
+        if now > midnight:
+            midnight = midnight.replace(day=(now.day + 1))
+        print("Scheduling next list print at {}".format(pretty_date(midnight)))
+        await asyncio.sleep((midnight - now).seconds)
+        await bot.say(common.whos_in.whos_in())
+        i_awarded = False
+        while not i_awarded:
+            for m in bot.get_all_members():
+                if m.display_name != 'brochat-bot':
+                    i = await item_chance_roll(bot, m.display_name)
+                i_awarded = i_awarded or i
+        common.whos_in.update_db()
+        await asyncio.sleep(60 * 10)
+
 
 def setup(bot):
     bot.add_cog(GametimeCog(bot))
+    bot.loop.create_task(print_at_midnight(bot))
