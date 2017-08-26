@@ -38,6 +38,7 @@ class Poll(object):
         Adds a vote to the choice
 
         :param choice: Choice to add the vote to
+        :param user: User that is voting
         """
         choice = int(choice)
 
@@ -61,16 +62,12 @@ class Poll(object):
     def get_current_state(self):
         """
         Returns of string of the current results
-
         """
 
         out_string = "\nIndex: Option (total votes)\n"
         for ind, opt in enumerate(self.choices):
-            out_string += "**{0}**: {1} (**{2}**)\n".format(ind, opt,
-                                                  self.choice_count[ind])
-
-        winner = ""
-
+            out_string += "**{0}**: {1} (**{2}**)\n"\
+                          .format(ind, opt, self.choice_count[ind])
 
         return out_string
 
@@ -82,8 +79,8 @@ class Poll(object):
 
         out_string = ":scales: Poll. *Freaking.* Over. :scales:\n\n"
         for ind, opt in enumerate(self.choices):
-            out_string += "**{0}**: {1} (**{2}**)\n".format(ind, opt,
-                                                  self.choice_count[ind])
+            out_string += "**{0}**: {1} (**{2}**)\n"\
+                          .format(ind, opt, self.choice_count[ind])
 
         winner = []
         vote_count = 0
@@ -97,8 +94,8 @@ class Poll(object):
 
         if len(winner) == 1:
             out_string += "\nVoting has concluded, the winner is " \
-                          "**{}** with **{}** votes!".format(winner[0],
-                                                         vote_count)
+                          "**{}** with **{}** votes!"\
+                          .format(winner[0], vote_count)
         else:
             out_string += "Gross, it was a tie, between: "
             out_string += ", ".join(winner)

@@ -158,10 +158,10 @@ async def item_chance_roll(bot, player, max_roll=100):
     if item.name is not None:
         common.items_awarded += 1
         await bot.say("Congratulations {}! You received the \"{}\"."
-                          .format(player, item.name))
+                      .format(player, item.name))
         if item.item_id in common.users[player]['inventory']:
             await bot.say("You already have that item, its uses have been "
-                              "reset!")
+                          "reset!")
         common.users[player]['inventory'][item.item_id] = 0
         return True
     return False
@@ -218,6 +218,7 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
     """
     Handles the Disarming spec_effect
 
+    :param ctx: Context
     :param c_item: Challenger's item
     :param v_item: Victim's item
     :param c_name: Challenger's Display name
@@ -269,7 +270,8 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
                     and len(v_item.type) == 1:
                 common.users[v_name]['inventory'][v_item.item_id] -= 1
             elif len(v_item.type) == 1:
-                common.users[v_name]['inventory'][v_item.item_id] = v_item.uses - 1
+                common.users[v_name]['inventory'][v_item.item_id] \
+                    = v_item.uses - 1
         else:
             await ctx.bot.say("{} has nothing to disarm, the {} has no effect!"
                               .format(c_name, v_item.name))
@@ -286,6 +288,7 @@ async def death_check(ctx, chal, c_life, vict, v_life):
     """
     Checks if someone has died
 
+    :param ctx: Context
     :param chal: Challenger
     :param c_life: Challenger's Life
     :param vict: Victim
@@ -395,6 +398,7 @@ async def event_handle_shot_duel(ctx, victim):
     """
     Handles a shot_duel should a victim accept.
 
+    :param ctx: Context
     :param victim: Person challenged
     :return: None
     """

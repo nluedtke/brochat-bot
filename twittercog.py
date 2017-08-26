@@ -84,6 +84,7 @@ async def get_last_tweet(_id, tweet_text, rt_text, ctx):
     :param _id: Twitter id
     :param tweet_text: flavor text for tweets
     :param rt_text: flavor text for retweets
+    :param ctx: Context
     :return:
     """
     if common.twitter is None:
@@ -103,10 +104,8 @@ async def get_last_tweet(_id, tweet_text, rt_text, ctx):
             rt_id = last_tweet[0]['retweeted_status']['id']
             rt_screen_name = last_tweet[0]['retweeted_status']['user'][
                     'screen_name']
-            await ctx.bot.say('{}\n\nhttps://twitter.com/{}'
-                                           '/status/{}'
-                                           .format(rt_text, rt_screen_name,
-                                                   str(rt_id)))
+            await ctx.bot.say('{}\n\nhttps://twitter.com/{}/status/{}'
+                              .format(rt_text, rt_screen_name, str(rt_id)))
         # otherwise, send the tweet
         else:
             if _id == 'realdonaldtrump':

@@ -92,7 +92,7 @@ class GametimeCog:
                                .format(common.whos_in.get_gametimes()))
         else:
             await self.bot.say(common.whos_in.add(ctx.message.author, gt_num,
-                                           status="possible"))
+                               status="possible"))
 
     @commands.command(name='late', pass_context=True)
     async def late_command(self, ctx, gt_num):
@@ -103,7 +103,7 @@ class GametimeCog:
                                .format(common.whos_in.get_gametimes()))
         else:
             await self.bot.say(common.whos_in.add(ctx.message.author, gt_num,
-                                           status="going to be late"))
+                               status="going to be late"))
 
     @commands.command(name='out', pass_context=True)
     async def out_command(self, ctx, gt_num):
@@ -203,6 +203,7 @@ async def print_at_midnight(bot):
         await asyncio.sleep((midnight - now).seconds)
         await bot.say(common.whos_in.whos_in())
         i_awarded = False
+        i = False
         while not i_awarded:
             for m in bot.get_all_members():
                 if m.display_name != 'brochat-bot':
