@@ -21,6 +21,7 @@ import requests
 from duel_item import DuelItem
 from weekend_games import WeekendGames, argument_parser, pretty_date
 import common
+from drinking import add_drink, consume_drink
 
 description = "A bot to enforce friendship."
 startTime = 0
