@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import common
 
 
 class GametimeCog:
@@ -27,7 +28,7 @@ class GametimeCog:
     @gametime.command(name="list")
     async def list_gametimes(self):
         """List current gametimes"""
-        await self.bot.say(whos_in.get_gametimes())
+        await self.bot.say(common.whos_in.get_gametimes())
 
     @commands.command(name='in', pass_context=True)
     async def in_command(self, ctx, gt_num):
@@ -35,9 +36,9 @@ class GametimeCog:
 
         if gt_num == "":
             await self.bot.say("When are you in for, though?\n\n{}"
-                               .format(whos_in.get_gametimes()))
+                               .format(common.whos_in.get_gametimes()))
         else:
-            await self.bot.say(whos_in.add(ctx.message.author, gt_num,
+            await self.bot.say(common.whos_in.add(ctx.message.author, gt_num,
                                            status="in"))
 
     @commands.command(name='possible', pass_context=True)
@@ -45,9 +46,9 @@ class GametimeCog:
         """Marks you as possible for a gametime"""
         if gt_num == "":
             await self.bot.say("When are you possibly in for, though?\n\n{}"
-                               .format(whos_in.get_gametimes()))
+                               .format(common.whos_in.get_gametimes()))
         else:
-            await self.bot.say(whos_in.add(ctx.message.author, gt_num,
+            await self.bot.say(common.whos_in.add(ctx.message.author, gt_num,
                                            status="possible"))
 
     @commands.command(name='late', pass_context=True)
@@ -56,9 +57,9 @@ class GametimeCog:
         if gt_num == "":
             await self.bot.say("For what session are you going to be late for, "
                                "though?\n\n{}"
-                               .format(whos_in.get_gametimes()))
+                               .format(common.whos_in.get_gametimes()))
         else:
-            await self.bot.say(whos_in.add(ctx.message.author, gt_num,
+            await self.bot.say(common.whos_in.add(ctx.message.author, gt_num,
                                            status="going to be late"))
 
     @commands.command(name='out', pass_context=True)
@@ -66,14 +67,15 @@ class GametimeCog:
         """Removes you from a gametime"""
         if gt_num == "":
             await self.bot.say("When are you out for, though?\n\n{}"
-                               .format(whos_in.get_gametimes()))
+                               .format(common.whos_in.get_gametimes()))
         else:
-            await self.bot.say(whos_in.remove(ctx.message.author, gt_num))
+            await self.bot.say(common.whos_in.remove(ctx.message.author,
+                                                     gt_num))
 
     @commands.command(name='whosin')
     async def whosin_command(self):
         """See who is in for a gametime"""
-        await self.bot.say(whos_in.whos_in())
+        await self.bot.say(common.whos_in.whos_in())
 
 
 def setup(bot):

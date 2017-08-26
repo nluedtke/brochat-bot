@@ -17,7 +17,7 @@ class RedditCog:
         await self.bot.say(get_reddit("dankmemes"))
 
     @commands.command(name='bertstrip', aliases=['badchildhood'])
-    @commands.cooldown(1, 60 * 5)
+    @commands.cooldown(2, 60 * 5)
     async def bertstrip(self):
         """Gets a bertstrip"""
         await self.bot.say(get_reddit("bertstrips"))

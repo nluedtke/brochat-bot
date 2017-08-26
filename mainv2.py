@@ -22,6 +22,7 @@ from gametime import Gametime
 from poll import Poll
 from duel_item import DuelItem, common_items, rare_items, PoisonEffect
 from weekend_games import WeekendGames, argument_parser, pretty_date
+import common
 
 description = "A bot to enforce friendship."
 startTime = 0
@@ -40,10 +41,6 @@ NEWS_FEED_CREATED = False
 trump_del = 20
 news_del = 55
 
-# Variable hold trumps last tweet id
-last_id = 0
-trump_chance_roll_rdy = False
-
 # News handles to pull from
 news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
                 'foxnews', 'reuters', 'npr', 'usatoday', 'cbsnews',
@@ -59,13 +56,13 @@ vict_name = ""
 data_dir = "/data"
 
 # Runtime stats
-items_awarded = 0
+common.items_awarded = 0
 duels_conducted = 0
 trump_tweets_seen = 0
 
 
 # this specifies what extensions to load when the bot starts up
-startup_extensions = ['commandscog', 'redditcog', 'gametimecog']
+startup_extensions = ['commandscog', 'redditcog', 'gametimecog', 'twittercog']
 
 bot = commands.Bot(command_prefix='!', description=description)
 # Handle tokens from local file
@@ -92,13 +89,13 @@ else:
 
 # Twitter tokens
 if 'twitter_api_key' not in tokens or 'twitter_api_secret' not in tokens:
-    twitter = None
+    common.twitter = None
     print("No twitter functionality!")
 else:
     twitter_api_key = tokens['twitter_api_key']
     twitter_api_secret = tokens['twitter_api_secret']
-    twitter = Twython(twitter_api_key, twitter_api_secret)
-    auth = twitter.get_authentication_tokens()
+    common.twitter = Twython(twitter_api_key, twitter_api_secret)
+    auth = common.twitter.get_authentication_tokens()
     OAUTH_TOKEN = auth['oauth_token']
     OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
 
@@ -139,13 +136,12 @@ else:
 
 # Create users from DB
 if 'users' in db:
-    users = db['users']
+    common.users = db['users']
 else:
-    users = {}
+    common.users = {}
 
 # Instantiate Discord client and Weekend Games
-global whos_in
-whos_in = WeekendGames(db)
+common.whos_in = WeekendGames(db)
 
 
 @bot.event
@@ -195,7 +191,7 @@ def run_shot_lottery(auto_call=False):
     """
     glass = ":tumbler_glass:"
     output = ["Alright everyone (@here), its time for the SHOT LOTTERY!"
-              "\n{} won the last lottery!".format(whos_in.last_shot),
+              "\n{} won the last lottery!".format(common.whos_in.last_shot),
               "...The tension is rising..."]
     players = []
 
@@ -229,7 +225,7 @@ def run_shot_lottery(auto_call=False):
                 break
         output.append("The winning number is {}, Congrats {} you WIN!\n"
                       ":beers: Take your shot!".format(winner, tag_id))
-        consecutive = whos_in.add_shot_win(players[winner])
+        consecutive = common.whos_in.add_shot_win(players[winner])
         if consecutive > 1:
             output.append("That's {} in a row!".format(consecutive))
     else:
@@ -250,7 +246,7 @@ async def shot_lottery(auto_call=False):
         await asyncio.sleep(4)
     while len(shot_lottery_string) > 0:
         await bot.say(shot_lottery_string.pop(0))
-    whos_in.update_db(db, users, db_file)
+    common.whos_in.update_db(db, common.users, db_file)
 
 
 # TODO - url validation
@@ -303,7 +299,7 @@ async def get_uptime():
     stat_str = "# of duels conducted: {}\n" \
                "# of items awarded   : {}\n" \
                "# of trump twts seen: {}\n" \
-        .format(duels_conducted, items_awarded, trump_tweets_seen)
+        .format(duels_conducted, common.items_awarded, trump_tweets_seen)
     await bot.say((ret_str + stat_str))
 
 
