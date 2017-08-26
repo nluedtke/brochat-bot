@@ -41,12 +41,6 @@ NEWS_FEED_CREATED = False
 trump_del = 20
 news_del = 55
 
-# News handles to pull from
-news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
-                'foxnews', 'reuters', 'npr', 'usatoday', 'cbsnews',
-                'abc', 'washingtonpost', 'msnbc', 'ap', 'aphealthscience',
-                'lifehacker', 'cnnnewsroom', 'theonion']
-
 # Shot_duel acceptance and active
 accepted = False
 shot_duel_running = False
@@ -199,7 +193,7 @@ def run_shot_lottery(auto_call=False):
         largest_num_in_voice = 0
         for channel in bot.get_all_channels():
             if str(channel.type) == "voice" and len(channel.voice_members) \
-                    > largest_num_in_voice:
+                    >= largest_num_in_voice:
                 largest_num_in_voice = len(channel.voice_members)
                 channel_to_use = channel
         for m in channel_to_use.voice_members:
@@ -301,6 +295,50 @@ async def get_uptime():
                "# of trump twts seen: {}\n" \
         .format(duels_conducted, common.items_awarded, trump_tweets_seen)
     await bot.say((ret_str + stat_str))
+
+
+@bot.command(name='me', aliases=['whoami'], pass_context=True)
+async def whoami(ctx):
+    """Tell me about myself"""
+    author = str(ctx.message.author.display_name)
+    if author in common.users and common.users[author] != {}:
+        message_output = "Well, I don't know you that well, but " \
+                         "from what I've been hearing on the " \
+                         "streets...\n"
+
+        for k, v in common.users[author].items():
+            if k == "duel_record":
+                if v[0] < 10:
+                    output = "You're a pretty green dueler"
+                elif v[0] < 100:
+                    output = "You're a seasoned dueler"
+                else:
+                    output = "You're a master dueler"
+
+                output += ", and your record is **{}** wins, **{}** losses," \
+                          " and **{}** ties.".format(v[0], v[1], v[2])
+            elif k == "a_item":
+                if v is None:
+                    output = "You don't have a dueling item equipped."
+                else:
+                    output = "You have **{}** equipped.".format(DuelItem(0, v).name)
+            elif k == "inventory":
+                # TODO: display_inventory
+                if v == {}:
+                    output = "You don't have an inventory for dueling items."
+                else:
+                    output = "Your inventory of dueling items:"
+                    for item, count in v.items():
+                        output += "\n    - {}".format(DuelItem(0, item).name)
+            else:
+                output = "Your {} is **{}**.".format(k, v)
+
+            message_output += "\n" + output
+        await bot.say(message_output)
+
+    else:
+        await bot.say("You're {}, but that's all I know about you."
+                      .format(author))
 
 
 @bot.event

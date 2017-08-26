@@ -77,6 +77,56 @@ class GametimeCog:
         """See who is in for a gametime"""
         await self.bot.say(common.whos_in.whos_in())
 
+    @commands.command(name='win', pass_context=True)
+    async def record_win(self, ctx):
+        """Add a win to the record books"""
+
+        common.whos_in.add_win()
+        await self.bot.say("Congrats on the win!")
+        await ctx.invoke(self.bot.get_command('get-record'))
+        if common.whos_in.consecutive == 3:
+            await common.trigger_social(ctx)
+            common.whos_in.consecutive = 0
+        else:
+            await ctx.invoke(self.bot.get_command('shot-lottery'), True)
+
+    @commands.command(name='loss', pass_context=True)
+    async def record_loss(self, ctx):
+        """Add a loss to the record books"""
+        common.whos_in.add_loss()
+        await self.bot.say("You guys are bad!")
+        await ctx.invoke(self.bot.get_command('get-record'))
+        if common.whos_in.consecutive == 3:
+            await common.trigger_social(ctx)
+            common.whos_in.consecutive = 0
+
+    @commands.command(name='draw', pass_context=True)
+    async def record_draw(self, ctx):
+        """Add a draw to the record books"""
+        common.whos_in.add_draw()
+        await self.bot.say("What a waste!")
+        await ctx.invoke(self.bot.get_command('get-record'))
+        if common.whos_in.consecutive == 3:
+            await common.trigger_social(ctx)
+            common.whos_in.consecutive = 0
+
+    @commands.command(name='clear-record')
+    async def record_clear(self):
+        """Clears the session record."""
+        record_string = "You went: {}".format(common.whos_in.get_record())
+        await self.bot.say(record_string)
+        common.whos_in.clear_record()
+        await self.bot.say("Record Cleared!")
+
+    @commands.command(name='get-record')
+    async def record_get(self):
+        """Get the current record."""
+        record_string = "Current Record: {}".format(common.whos_in.get_record())
+        await self.bot.say(record_string)
+        record_string = "Overall Record {}".format(
+            common.whos_in.get_c_record())
+        await self.bot.say(record_string)
+
 
 def setup(bot):
     bot.add_cog(GametimeCog(bot))
