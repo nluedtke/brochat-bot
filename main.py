@@ -1361,7 +1361,7 @@ async def get_last_tweet(_id, tweet_text, rt_text, client, message):
                                   "Twitter not activated.")
         return
 
-    if id == 'realdonaldtrump':
+    if _id == 'realdonaldtrump':
         global last_id
 
     try:
