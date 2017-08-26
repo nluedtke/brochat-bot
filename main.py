@@ -329,19 +329,19 @@ def run_shot_lottery(auto_call=False):
         output.append("{}{}{}".format(glass, glass, glass))
         players.pop(winner)
         for player in players:
-            +            add_drink(common.users[player])
+            add_drink(common.users[player])
     return output
 
 
-@bot.command(name='shot-lottery')
+@bot.command(name='shot-lottery', pass_context=True)
 @commands.cooldown(1, 60*5)
-async def shot_lottery(auto_call=False):
+async def shot_lottery(ctx, auto_call=False):
     """Runs a shot-lottery"""
 
     shot_lottery_string = run_shot_lottery(auto_call)
     for x in range(4):
         await bot.say(shot_lottery_string.pop(0))
-        # await bot.send_typing()
+        ctx.bot.send_typing(ctx.message.channel)
         await asyncio.sleep(4)
     while len(shot_lottery_string) > 0:
         await bot.say(shot_lottery_string.pop(0))

@@ -552,7 +552,7 @@ async def event_handle_shot_duel(ctx, victim):
                     break
 
                 # ATTACK PHASE (Both attacks happen at same time!)
-                # await ctx.bot.send_typing()
+                await ctx.bot.send_typing(ctx.message.channel)
                 await asyncio.sleep(10)
                 c_roll, v_roll = dual_dice_roll()
 
