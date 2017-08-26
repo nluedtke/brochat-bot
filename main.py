@@ -18,6 +18,7 @@ import requests
 from gametime import Gametime
 from poll import Poll
 from duel_item import DuelItem, common_items, rare_items, PoisonEffect
+from drinking import add_drink, consume_drink
 
 VERSION_YEAR = 2017
 VERSION_MONTH = 8
@@ -89,14 +90,17 @@ def shot_lottery(client_obj, wg_games, auto_call=False):
                     != 'brochat-bot':
                 players.append(m.display_name)
 
-    output.append("{} have been entered in the SHOT LOTTERY good luck!"
-                  .format(players))
+    output.append("{} entered in the SHOT LOTTERY good luck!"
+                  .format(", ".join(players)))
     players.append('SOCIAL!')
     output.append("...Who will it be!?!?")
     output.append("Selecting a random number between 0 and {}"
                   .format(len(players) - 1))
     winner = randint(0, len(players) - 1)
     if players[winner] != 'SOCIAL!':
+
+        # add a drink for the "winner"
+        add_drink(users[players[winner]])
         for m in client_obj.get_all_members():
             if str(m.display_name) == players[winner]:
                 tag_id = m.mention
@@ -110,6 +114,11 @@ def shot_lottery(client_obj, wg_games, auto_call=False):
         output.append("The winning number is {}".format(winner))
         output.append("Ah shit! ITS A SOCIAL! SHOTS! SHOTS! SHOTS!")
         output.append("{}{}{}".format(glass, glass, glass))
+        players.pop(winner)
+
+        # add a drink for everyone... also known as a SOCIAL
+        for player in players:
+            add_drink(users[player])
     wg_games.log_lottery_time()
     return output
 
@@ -736,7 +745,8 @@ async def print_help(client, message):
                   "**!set**: Tell Brochat-Bot some info about you\n" \
                   "**!battletag**: I'll tell you your battletag\n" \
                   "**!me**: I'll tell you what I know about you\n" \
-                  "**!toggle-news**: Turn news feed on/off\n"
+                  "**!toggle-news**: Turn news feed on/off\n" \
+                  "**!drankbank**: See your *assets and liabilities* with the bank of drank\n"
 
     await client.send_message(message.channel, help_string)
 
@@ -1427,6 +1437,9 @@ async def trigger_social(client, message):
     :param message: The message
     :return: None
     """
+    for m in client.get_all_members():
+        if m.display_name != 'brochat-bot':
+            add_drink(users[m.display_name])
     glass = ":tumbler_glass:"
     await client.send_message(message.channel, "Ah shit that's three in a row! "
                                                "ITS A SOCIAL! SHOTS! "
@@ -1897,7 +1910,9 @@ async def on_message(message):
         'accept': toggle_accept,
         'clear': clear,
         'use': use_command,
-        'unequip': unequip_command
+        'unequip': unequip_command,
+        'drink': drink,
+        'drankbank': drankbank
     }
 
     if message.content.startswith("!") and \
@@ -2265,18 +2280,22 @@ async def death_check(channel, chal, c_life, vict, v_life):
         death_string = "\nBoth players have died!\n{} and {} " \
                        "both drink!".format(chal.mention,
                                             vict.mention)
+        add_drink(users[vict.display_name])
+        add_drink(users[chal.display_name])
         users[vict.display_name]['duel_record'][2] += 1
         users[chal.display_name]['duel_record'][2] += 1
     elif v_life < 1:
         death_string = "\n{} has died!\n{} wins the duel!\n" \
                        "{} drinks!".format(vict.display_name,
                                            chal.display_name, vict.mention)
+        add_drink(users[vict.display_name])
         users[vict.display_name]['duel_record'][1] += 1
         users[chal.display_name]['duel_record'][0] += 1
     elif c_life < 1:
         death_string = "\n{} has died!\n{} wins the duel!\n" \
                        "{} drinks!".format(chal.display_name, vict.display_name,
                                            chal.mention)
+        add_drink(users[chal.display_name])
         users[vict.display_name]['duel_record'][0] += 1
         users[chal.display_name]['duel_record'][1] += 1
 
@@ -2284,6 +2303,56 @@ async def death_check(channel, chal, c_life, vict, v_life):
         await _client.send_message(channel, death_string)
         return True
     return False
+
+
+async def drink(client, message):
+    """
+    Handles !drink
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    author = str(message.author.display_name)
+    if author in users:
+        output = "Bottoms up, {}.".format(author)
+        result = consume_drink(users[author])
+        if result < 0:
+            output += " You're now banking **{}** dranks.".format(-result)
+        else:
+            output += " You now owe {} drinks.".format(result)
+        await client.send_message(message.channel, output)
+
+    else:
+        await client.send_message(message.channel,
+                                  "I don't know you, man.")
+
+    # update the db
+    whos_in.update_db()
+
+
+async def drankbank(client, message):
+    """
+    Handles !drankbank
+    :param client: The Client
+    :param message: The Message
+    :return:
+    """
+    output = ":moneybag: The **drankbank** is now open for business :moneybag:\n"
+    for name, user in users.items():
+        if "drinks_owed" in user:
+            if user["drinks_owed"] > 0:
+                output += "\n**{}** owes **{}** :tumbler_glass: to the **drankbank**.".format(
+                    name, user['drinks_owed']
+                )
+            elif user['drinks_owed'] < 0:
+                output += "\n**{}** has **{}** dranks in their ledger. *In the black!*".format(
+                    name, -user['drinks_owed']
+                )
+            else:
+                output += "\n**{}** is in clear and good standing with the **drankbank**.".format(
+                    name)
+    await client.send_message(message.channel, output)
 
 
 def add_pos_eff(pos_effects, new_poss_eff):
