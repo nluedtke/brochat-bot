@@ -305,19 +305,22 @@ async def death_check(ctx, chal, c_life, vict, v_life):
                                             vict.mention)
         common.users[vict.display_name]['duel_record'][2] += 1
         common.users[chal.display_name]['duel_record'][2] += 1
+        common.add_drink(common.users[vict.display_name])
+        common.add_drink(common.users[chal.display_name])
     elif v_life < 1:
         death_string = "\n{} has died!\n{} wins the duel!\n" \
                        "{} drinks!".format(vict.display_name,
                                            chal.display_name, vict.mention)
         common.users[vict.display_name]['duel_record'][1] += 1
         common.users[chal.display_name]['duel_record'][0] += 1
+        common.add_drink(common.users[vict.display_name])
     elif c_life < 1:
         death_string = "\n{} has died!\n{} wins the duel!\n" \
                        "{} drinks!".format(chal.display_name, vict.display_name,
                                            chal.mention)
         common.users[vict.display_name]['duel_record'][0] += 1
         common.users[chal.display_name]['duel_record'][1] += 1
-
+        common.add_drink(common.users[chal.display_name])
     if len(death_string) > 1:
         await ctx.bot.say(death_string)
         return True

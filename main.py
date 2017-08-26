@@ -21,7 +21,7 @@ import requests
 from duel_item import DuelItem
 from weekend_games import WeekendGames, argument_parser, pretty_date
 import common
-from drinking import add_drink, consume_drink
+from common import add_drink
 
 description = "A bot to enforce friendship."
 startTime = 0
@@ -305,14 +305,15 @@ def run_shot_lottery(auto_call=False):
                     != 'brochat-bot':
                 players.append(m.display_name)
 
-    output.append("{} have been entered in the SHOT LOTTERY good luck!"
-                  .format(players))
+    output.append("{} entered in the SHOT LOTTERY good luck!"
+                  .format(", ".join(players)))
     players.append('SOCIAL!')
     output.append("...Who will it be!?!?")
     output.append("Selecting a random number between 0 and {}"
                   .format(len(players) - 1))
     winner = randint(0, len(players) - 1)
     if players[winner] != 'SOCIAL!':
+        add_drink(common.users[players[winner]])
         for m in bot.get_all_members():
             if str(m.display_name) == players[winner]:
                 tag_id = m.mention
@@ -326,6 +327,9 @@ def run_shot_lottery(auto_call=False):
         output.append("The winning number is {}".format(winner))
         output.append("Ah shit! ITS A SOCIAL! SHOTS! SHOTS! SHOTS!")
         output.append("{}{}{}".format(glass, glass, glass))
+        players.pop(winner)
+        for player in players:
+            +            add_drink(common.users[player])
     return output
 
 
