@@ -147,18 +147,12 @@ async def on_member_update(before, after):
         common.whos_in.update_db()
 
 
-@bot.command(name='seen')
-async def get_last_seen(client, message):
-    """
-    Handles !ndelay
-
-    :param client: The Client
-    :param message: The message
-    :return: None
-    """
-    arguments = argument_parser(message.content)
+@bot.command(name='seen', pass_context=True)
+async def get_last_seen(ctx):
+    """Get last seen time for a player"""
+    arguments = argument_parser(ctx.message.content)
     if arguments[0] == '!seen':
-        name = message.author.display_name
+        name = ctx.message.author.display_name
     else:
         name = " ".join(arguments).lower()
 
@@ -168,8 +162,22 @@ async def get_last_seen(client, message):
     else:
         last_time = "unknown"
 
-    await client.send_message(message.channel, "{} last seen at {}."
-                              .format(name, last_time))
+    await bot.say("{} last seen at {}.".format(name, last_time))
+
+
+@bot.event
+async def on_message(message):
+    """
+    Added for logging purposes
+    :param message:
+    :return:
+    """
+
+    if message.author.display_name not in common.users:
+        common.users[message.author.display_name] = {}
+    common.users[message.author.display_name]['last_seen'] = \
+        datetime.strftime(datetime.now(pytz.timezone('US/Eastern')), "%c")
+    await bot.process_commands(message)
 
 
 @bot.event
@@ -246,7 +254,7 @@ async def set_command(ctx):
     common.whos_in.update_db()
 
 
-@bot.command()
+@bot.command(hidden=True)
 async def version():
     """Prints the version of bot."""
     version_string = "Version: {0}.{1}.{2}.{3}\n" \
@@ -273,79 +281,6 @@ async def clear(ctx):
     deleted = await bot.purge_from(channel, limit=75, check=is_me)
     c_ds = await bot.purge_from(channel, limit=50, check=is_command)
     await bot.say('Deleted {} message(s)'.format(len(deleted) + len(c_ds)))
-
-
-def run_shot_lottery(auto_call=False):
-    """
-    Run a shot lottery
-
-    :param auto_call: Was this called from a win?
-    :rtype: list
-    :return: Array of strings for the shot lottery
-    """
-    glass = ":tumbler_glass:"
-    output = ["Alright everyone (@here), its time for the SHOT LOTTERY!"
-              "\n{} won the last lottery!".format(common.whos_in.last_shot),
-              "...The tension is rising..."]
-    players = []
-
-    if auto_call:
-        largest_num_in_voice = 0
-        for channel in bot.get_all_channels():
-            if str(channel.type) == "voice" and len(channel.voice_members) \
-                    >= largest_num_in_voice:
-                largest_num_in_voice = len(channel.voice_members)
-                channel_to_use = channel
-        for m in channel_to_use.voice_members:
-            players.append(m.display_name)
-
-    if not auto_call or len(players) < 1:
-        for m in bot.get_all_members():
-            if str(m.status) == 'online' and str(m.display_name) \
-                    != 'brochat-bot':
-                players.append(m.display_name)
-
-    output.append("{} entered in the SHOT LOTTERY good luck!"
-                  .format(", ".join(players)))
-    players.append('SOCIAL!')
-    output.append("...Who will it be!?!?")
-    output.append("Selecting a random number between 0 and {}"
-                  .format(len(players) - 1))
-    winner = randint(0, len(players) - 1)
-    if players[winner] != 'SOCIAL!':
-        add_drink(common.users[players[winner]])
-        for m in bot.get_all_members():
-            if str(m.display_name) == players[winner]:
-                tag_id = m.mention
-                break
-        output.append("The winning number is {}, Congrats {} you WIN!\n"
-                      ":beers: Take your shot!".format(winner, tag_id))
-        consecutive = common.whos_in.add_shot_win(players[winner])
-        if consecutive > 1:
-            output.append("That's {} in a row!".format(consecutive))
-    else:
-        output.append("The winning number is {}".format(winner))
-        output.append("Ah shit! ITS A SOCIAL! SHOTS! SHOTS! SHOTS!")
-        output.append("{}{}{}".format(glass, glass, glass))
-        players.pop(winner)
-        for player in players:
-            add_drink(common.users[player])
-    return output
-
-
-@bot.command(name='shot-lottery', pass_context=True)
-@commands.cooldown(1, 60*5)
-async def shot_lottery(ctx, auto_call=False):
-    """Runs a shot-lottery"""
-
-    shot_lottery_string = run_shot_lottery(auto_call)
-    for x in range(4):
-        await bot.say(shot_lottery_string.pop(0))
-        ctx.bot.send_typing(ctx.message.channel)
-        await asyncio.sleep(4)
-    while len(shot_lottery_string) > 0:
-        await bot.say(shot_lottery_string.pop(0))
-    common.whos_in.update_db()
 
 
 # TODO - url validation
@@ -377,6 +312,20 @@ def get_smmry(message):
         return "Something went wrong... I'm sorry for letting you down, bro."
 
 
+def is_owner():
+    def predicate(ctx):
+        return ctx.message.author.id == "277173844467384321"
+    return commands.check(predicate)
+
+
+@bot.command(name='reset-cd', hidden=True, pass_context=True)
+@is_owner()
+async def reset_cmd_cooldown(ctx, cmd):
+    """Resets the cooldown of a command"""
+    bot.get_command(cmd).reset_cooldown(ctx)
+    bot.say("Cooldown reset.")
+
+
 @bot.command(name='summary')
 async def summary(url):
     """Gets a summary of a url
@@ -384,7 +333,7 @@ async def summary(url):
     await bot.say(get_smmry(url))
 
 
-@bot.command(name='uptime')
+@bot.command(name='uptime', hidden=True)
 async def get_uptime():
     """Prints the uptime"""
 

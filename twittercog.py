@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime
 
 
-class TwitterCog:
+class Twitter:
     """ Twitter Fetchers"""
 
     def __init__(self, bot):
@@ -194,5 +194,5 @@ async def handle_news(ctx):
 
 
 def setup(bot):
-    bot.add_cog(TwitterCog(bot))
+    bot.add_cog(Twitter(bot))
     bot.loop.create_task(check_trumps_mouth(bot))

@@ -5,7 +5,7 @@ from random import randint
 import common
 
 
-class RedditCog:
+class Reddit:
     """ Reddit Fetchers"""
 
     def __init__(self, bot):
@@ -61,4 +61,4 @@ def get_reddit(subreddit):
 
 
 def setup(bot):
-    bot.add_cog(RedditCog(bot))
+    bot.add_cog(Reddit(bot))

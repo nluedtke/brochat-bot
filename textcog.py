@@ -3,7 +3,7 @@ from discord.ext import commands
 import common
 
 
-class TextCog:
+class Texting:
     """ Send Text Handlers"""
 
     def __init__(self, bot):
@@ -36,4 +36,4 @@ class TextCog:
 
 
 def setup(bot):
-    bot.add_cog(TextCog(bot))
+    bot.add_cog(Texting(bot))

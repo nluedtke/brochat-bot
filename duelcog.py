@@ -5,7 +5,7 @@ from discord.ext import commands
 import asyncio
 
 
-class DuelCog:
+class Duels:
     """Handles Dueling commands"""
 
     def __init__(self, bot):
@@ -652,4 +652,4 @@ async def event_handle_shot_duel(ctx, victim):
 
 
 def setup(bot):
-    bot.add_cog(DuelCog(bot))
+    bot.add_cog(Duels(bot))

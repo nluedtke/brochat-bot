@@ -8,7 +8,7 @@ import asyncio
 from duelcog import item_chance_roll
 
 
-class GametimeCog:
+class Gametime:
     """ Gametime Commands"""
 
     def __init__(self, bot):
@@ -214,5 +214,5 @@ async def print_at_midnight(bot):
 
 
 def setup(bot):
-    bot.add_cog(GametimeCog(bot))
+    bot.add_cog(Gametime(bot))
     bot.loop.create_task(print_at_midnight(bot))
