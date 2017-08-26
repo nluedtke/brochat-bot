@@ -8,6 +8,8 @@ import socket
 import sys
 import traceback
 from difflib import get_close_matches
+from datetime import datetime
+import pytz
 
 # NonStandard Imports
 import discord
@@ -17,7 +19,7 @@ from twython import Twython
 from twilio.rest import Client
 import requests
 from duel_item import DuelItem
-from weekend_games import WeekendGames, argument_parser
+from weekend_games import WeekendGames, argument_parser, pretty_date
 import common
 
 description = "A bot to enforce friendship."
@@ -122,22 +124,50 @@ async def on_member_update(before, after):
     :param before: before state
     :param after: after state
     """
-    if before.display_name == after.display_name:
+    if before.display_name == 'brochat-bot':
         return
 
-    if before.display_name in common.users:
-        common.users[after.display_name] = common.users[before.display_name]
-        del (common.users[before.display_name])
+    if before.display_name != after.display_name:
+        if before.display_name in common.users:
+            common.users[after.display_name] = common.users[before.display_name]
+            del(common.users[before.display_name])
 
-    for gt in common.whos_in.gametimes:
-        for player in gt.players:
-            if player['name'] == before.display_name:
-                player['name'] = after.display_name
+        for gt in common.whos_in.gametimes:
+            for player in gt.players:
+                if player['name'] == before.display_name:
+                    player['name'] = after.display_name
 
-    if common.whos_in.last_shot == before.display_name:
-        common.whos_in.last_shot = after.display_name
+        if common.whos_in.last_shot == before.display_name:
+            common.whos_in.last_shot = after.display_name
+            common.whos_in.update_db()
+    elif before.status != after.status:
+        common.users[after.display_name]['last_seen'] = datetime.strftime(
+            datetime.now(pytz.timezone('US/Eastern')), "%c")
+        common.whos_in.update_db()
 
-    common.whos_in.update_db()
+
+async def get_last_seen(client, message):
+    """
+    Handles !ndelay
+
+    :param client: The Client
+    :param message: The message
+    :return: None
+    """
+    arguments = argument_parser(message.content)
+    if arguments[0] == '!seen':
+        name = message.author.display_name
+    else:
+        name = " ".join(arguments).lower()
+
+    if name in common.users and 'last_seen' in common.users[name]:
+        dt = datetime.strptime(common.users[name]['last_seen'], "%c")
+        last_time = pretty_date(dt)
+    else:
+        last_time = "unknown"
+
+    await client.send_message(message.channel, "{} last seen at {}."
+                              .format(name, last_time))
 
 
 @bot.event
