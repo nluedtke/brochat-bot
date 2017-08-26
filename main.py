@@ -146,6 +146,7 @@ async def on_member_update(before, after):
         common.whos_in.update_db()
 
 
+@bot.command(name='seen')
 async def get_last_seen(client, message):
     """
     Handles !ndelay
