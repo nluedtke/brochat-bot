@@ -36,24 +36,11 @@ VERSION_REV = 1
 NEWS_FEED_ON = False
 NEWS_FEED_CREATED = False
 
-# Delays for Newsfeed and Check_trump, These are in minutes
-# remember that news_del is fuzzed + (0-10)
-trump_del = 20
-news_del = 55
-
-# Shot_duel acceptance and active
-accepted = False
-shot_duel_running = False
-vict_name = ""
-
 # Location of db.json and tokens.config
 data_dir = "/data"
 
 # Runtime stats
-common.items_awarded = 0
 duels_conducted = 0
-trump_tweets_seen = 0
-
 
 # this specifies what extensions to load when the bot starts up
 startup_extensions = ['commandscog', 'redditcog', 'gametimecog', 'twittercog']
@@ -293,7 +280,7 @@ async def get_uptime():
     stat_str = "# of duels conducted: {}\n" \
                "# of items awarded   : {}\n" \
                "# of trump twts seen: {}\n" \
-        .format(duels_conducted, common.items_awarded, trump_tweets_seen)
+        .format(duels_conducted, common.items_awarded, common.trump_tweets_seen)
     await bot.say((ret_str + stat_str))
 
 
@@ -341,6 +328,22 @@ async def whoami(ctx):
                       .format(author))
 
 
+@bot.command(name='tdelay')
+async def change_trump_delay(num_of_mins: int):
+    """Change the frequency we check for prez tweet."""
+
+    common.trump_del = int(num_of_mins)
+    await bot.say("Trump delay set to {} mins.".format(common.trump_del))
+
+
+@bot.command(name='ndelay')
+async def change_news_delay(num_of_mins: int):
+    """Change the frequency we grab news"""
+
+    news_del = int(num_of_mins)
+    await bot.say("News delay set to {} mins.".format(common.news_del))
+
+
 @bot.event
 async def on_command_error(exception, context):
     if type(exception) == commands.CommandOnCooldown:
@@ -355,6 +358,7 @@ async def on_command_error(exception, context):
           file=sys.stderr)
     traceback.print_exception(type(exception), exception,
                               exception.__traceback__, file=sys.stderr)
+
 
 if __name__ == "__main__":
     for extension in startup_extensions:

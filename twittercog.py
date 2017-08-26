@@ -4,6 +4,8 @@ import common
 from twython import Twython, TwythonError
 from duelcog import item_chance_roll
 from random import shuffle
+import asyncio
+from datetime import datetime
 
 
 class TwitterCog:
@@ -68,8 +70,6 @@ async def get_last_tweet(_id, tweet_text, rt_text, ctx):
     :param _id: Twitter id
     :param tweet_text: flavor text for tweets
     :param rt_text: flavor text for retweets
-    :param client: discord client
-    :param message: discord message
     :return:
     """
     if common.twitter is None:
@@ -102,6 +102,42 @@ async def get_last_tweet(_id, tweet_text, rt_text, ctx):
                                       ['screen_name'],
                                       str(last_tweet[0]['id'])))
 
+async def check_trumps_mouth(bot):
+    """
+    Waits for an update from the prez
+    :return: None
+    """
+    await bot.wait_until_ready()
+
+    if common.twitter is None:
+        await bot.say("Twitter not activated.")
+        return
+
+    common.last_id = common.twitter.get_user_timeline(
+        screen_name='realdonaldtrump', count=1, include_retweets=False)[0]['id']
+
+    delay = common.trump_del * 60
+
+    while not bot.is_closed:
+        print("correct")
+        await asyncio.sleep(delay)
+        print("Checked trump at {}".format(datetime.now()))
+        try:
+            trumps_lt_id = common.twitter.get_user_timeline(
+                screen_name='realdonaldtrump', count=1,
+                include_retweets=False)[0]['id']
+        except:
+            print("Error caught in check_trump, shortening delay")
+            delay = 10 * 60
+        else:
+            delay = common.trump_del * 60
+            if trumps_lt_id != common.last_id:
+                common.trump_tweets_seen += 1
+                await bot.say("New Message from the prez! Try !trump")
+                common.last_id = trumps_lt_id
+                common.trump_chance_roll_rdy = True
+
 
 def setup(bot):
     bot.add_cog(TwitterCog(bot))
+    bot.loop.create_task(check_trumps_mouth(bot))
