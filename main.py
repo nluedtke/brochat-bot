@@ -1293,7 +1293,7 @@ async def shot_duel(client, message):
 
     name = " ".join(arguments).lower()
     print(name)
-    if name == message.author.display_name and message.channel.name != \
+    if name == message.author.display_name.lower() and message.channel.name != \
             'gen_testing':
         await client.send_message(message.channel, "Why not just drink your "
                                                    "tears away, instead of "
