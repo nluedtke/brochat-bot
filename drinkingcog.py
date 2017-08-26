@@ -29,7 +29,7 @@ class DrinkingCog:
 
     @commands.command(name='drankbank', aliases=['dbank', 'drinkbank'])
     async def drankbank(self):
-        """See how many drinks you owe."""
+        """See your *assets and liabilities* with the bank of drank"""
 
         output = ":moneybag: The **drankbank** is now open for business " \
                  ":moneybag:\n"

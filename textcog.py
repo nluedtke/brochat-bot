@@ -12,7 +12,7 @@ class TextCog:
     @commands.command(name='text', type=commands.BucketType.user)
     @commands.cooldown(1, 60 * 5)
     async def dankmeme(self, person=""):
-        """Text a user"""
+        """Get a fool in the loop"""
         if common.twilio_client is None:
             await self.bot.say('Text functionality turned off.')
             return

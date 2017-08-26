@@ -16,7 +16,7 @@ class TwitterCog:
 
     @commands.command(name="trump", pass_context=True)
     async def get_trump(self, ctx):
-        """Gets a presidential tweet"""
+        """Get Trump's latest Yuge success!"""
 
         if common.twitter is None:
             await ctx.send("Twitter not activated.")
@@ -41,7 +41,7 @@ class TwitterCog:
 
     @commands.command(name='news', pass_context=True)
     async def get_news(self, ctx):
-        """Get a news report"""
+        """Grab a news story"""
         if common.twitter is None:
             return
 
@@ -64,7 +64,7 @@ class TwitterCog:
 
         return
 
-    @commands.command(name='toggle-news', pass_context=True)
+    @commands.command(name='toggle-news', pass_context=True, hidden=True)
     async def toggle_news(self, ctx):
         """Toggle the news feed on and off"""
 

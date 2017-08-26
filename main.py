@@ -28,7 +28,7 @@ startTime = 0
 
 # this specifies what extensions to load when the bot starts up
 startup_extensions = ['redditcog', 'gametimecog', 'twittercog', 'duelcog',
-                      'textcog']
+                      'textcog', 'drinkingcog']
 
 bot = commands.Bot(command_prefix='!', description=description)
 # Handle tokens from local file
@@ -448,7 +448,7 @@ async def whoami(ctx):
                       .format(author))
 
 
-@bot.command(name='tdelay')
+@bot.command(name='tdelay', hidden=True)
 async def change_trump_delay(num_of_mins: int):
     """Change the frequency we check for prez tweet."""
 
@@ -456,7 +456,7 @@ async def change_trump_delay(num_of_mins: int):
     await bot.say("Trump delay set to {} mins.".format(common.trump_del))
 
 
-@bot.command(name='ndelay')
+@bot.command(name='ndelay', hidden=True)
 async def change_news_delay(num_of_mins: int):
     """Change the frequency we grab news"""
 

@@ -11,16 +11,16 @@ class RedditCog:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='dankmeme', aliases=['dankmay'])
+    @commands.command(name='dankmeme', aliases=['dankmay', 'dankmaymay'])
     @commands.cooldown(2, 60 * 5)
     async def dankmeme(self):
-        """Gets a dank meme"""
+        """Get a succulent dank may-may"""
         await self.bot.say(get_reddit("dankmemes"))
 
     @commands.command(name='bertstrip', aliases=['badchildhood'])
     @commands.cooldown(2, 60 * 5)
     async def bertstrip(self):
-        """Gets a bertstrip"""
+        """Ruin your childhood"""
         await self.bot.say(get_reddit("bertstrips"))
 
 
