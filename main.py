@@ -3,7 +3,7 @@ from time import time
 import json
 import os
 from sys import stderr
-from random import randint, choice
+from random import choice
 import socket
 import sys
 import traceback
@@ -14,14 +14,14 @@ import pytz
 # NonStandard Imports
 import discord
 from discord.ext import commands
-import asyncio
 from twython import Twython
 from twilio.rest import Client
 import requests
 from duel_item import DuelItem
 from weekend_games import WeekendGames, argument_parser, pretty_date
 import common
-from common import add_drink
+from duelcog import item_chance_roll
+
 
 description = "A bot to enforce friendship."
 startTime = 0
@@ -321,9 +321,32 @@ def is_owner():
 @bot.command(name='reset-cd', hidden=True, pass_context=True)
 @is_owner()
 async def reset_cmd_cooldown(ctx, cmd):
-    """Resets the cooldown of a command"""
+    """Resets the cooldown of a command
+
+    :param ctx: Context
+    :param cmd: Command to reset
+    """
     bot.get_command(cmd).reset_cooldown(ctx)
-    bot.say("Cooldown reset.")
+    await bot.say("Cooldown reset.")
+
+
+@bot.command(name='item-giveaway', hidden=True, pass_context=True)
+@is_owner()
+async def item_giveaway(ctx):
+    """Gives away at least 1 free item.
+
+    :param ctx: Context
+    """
+    await bot.say("{} started an item giveaway! At least one person will "
+                  "receive a free item!"
+                  .format(ctx.message.author.display_name))
+    i_awarded = False
+    i = False
+    while not i_awarded:
+        for m in bot.get_all_members():
+            if m.display_name != 'brochat-bot' and str(m.status) == 'online':
+                i = await item_chance_roll(bot, m.display_name)
+            i_awarded = i_awarded or i
 
 
 @bot.command(name='summary')
@@ -417,7 +440,7 @@ async def change_news_delay(num_of_mins: int):
 async def on_command_error(exception, context):
     if type(exception) == commands.CommandOnCooldown:
         await bot.send_message(context.message.channel,
-                               "{} is on cooldown for {} seconds.".format(
+                               "{} is on cooldown for {:0.2f} seconds.".format(
                                    context.command, exception.retry_after))
     elif type(exception) == commands.CommandNotFound:
         try:
@@ -431,6 +454,10 @@ async def on_command_error(exception, context):
             await bot.send_message(context.message.channel,
                                    "{} is not a command, did you mean !{}?"
                                    .format(context.message.content, closest))
+    elif type(exception) == commands.CheckFailure:
+        await bot.send_message(context.message.channel,
+                               "You failed to meet a requirement for that "
+                               "command.")
     else:
         await bot.send_message(context.message.channel, "Unhandled command "
                                                         "error")
