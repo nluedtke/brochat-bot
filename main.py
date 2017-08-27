@@ -457,6 +457,10 @@ async def on_command_error(exception, context):
         await bot.send_message(context.message.channel,
                                "You failed to meet a requirement for that "
                                "command.")
+    elif type(exception) == commands.MissingRequiredArgument:
+        await bot.send_message(context.message.channel,
+                               "You are missing a require argument for that "
+                               "command.")
     else:
         await bot.send_message(context.message.channel, "Unhandled command "
                                                         "error")

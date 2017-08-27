@@ -26,12 +26,8 @@ class Poll(object):
 
         self.choice_count = {}
 
-        print("Choices are:")
-        ind = 0
-        for opt in self.choices:
-            print(opt)
+        for ind, opt in enumerate(self.choices):
             self.choice_count[ind] = 0
-            ind += 1
 
     def add_vote(self, choice, user):
         """

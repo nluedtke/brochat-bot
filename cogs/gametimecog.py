@@ -75,7 +75,7 @@ class Gametime:
         await self.bot.say(common.whos_in.stop_poll())
 
     @commands.command(name='in', pass_context=True)
-    async def in_command(self, ctx, gt_num):
+    async def in_command(self, ctx, gt_num=""):
         """Marks you as in for a gametime"""
 
         if gt_num == "":
@@ -86,7 +86,7 @@ class Gametime:
                                status="in"))
 
     @commands.command(name='possible', pass_context=True)
-    async def possible_command(self, ctx, gt_num):
+    async def possible_command(self, ctx, gt_num=""):
         """Marks you as possible for a gametime"""
         if gt_num == "":
             await self.bot.say("When are you possibly in for, though?\n\n{}"
@@ -96,7 +96,7 @@ class Gametime:
                                status="possible"))
 
     @commands.command(name='late', pass_context=True)
-    async def late_command(self, ctx, gt_num):
+    async def late_command(self, ctx, gt_num=""):
         """Marks you as going to be late for a gametime"""
         if gt_num == "":
             await self.bot.say("For what session are you going to be late for, "
@@ -107,7 +107,7 @@ class Gametime:
                                status="going to be late"))
 
     @commands.command(name='out', pass_context=True)
-    async def out_command(self, ctx, gt_num):
+    async def out_command(self, ctx, gt_num=""):
         """Removes you from a gametime"""
         if gt_num == "":
             await self.bot.say("When are you out for, though?\n\n{}"
@@ -177,6 +177,7 @@ class Gametime:
 
         if common.whos_in.poll is None:
             await self.bot.say("No Poll currently taking place")
+            return
 
         if option == "":
             await self.bot.say("What are you voting for, though?\n\n{}"
