@@ -176,6 +176,9 @@ async def on_message(message):
         common.users[message.author.display_name] = {}
     common.users[message.author.display_name]['last_seen'] = \
         datetime.strftime(datetime.now(pytz.timezone('US/Eastern')), "%c")
+    cmd = message.content.split()[0]
+    new = cmd.lower()
+    message.content = message.content.replace(cmd, new)
     await bot.process_commands(message)
 
 
@@ -443,23 +446,23 @@ async def on_command_error(exception, context):
                                    context.command, exception.retry_after))
     elif type(exception) == commands.CommandNotFound:
         try:
-            closest = get_close_matches(context.message.content[1:],
-                                        list(bot.commands))[0]
+            cmd = context.message.content.split()[0][1:]
+            closest = get_close_matches(cmd.lower(), list(bot.commands))[0]
         except IndexError:
             await bot.send_message(context.message.channel,
-                                   "{} is not a known command."
-                                   .format(context.message.content))
+                                   "!{} is not a known command."
+                                   .format(cmd))
         else:
             await bot.send_message(context.message.channel,
-                                   "{} is not a command, did you mean !{}?"
-                                   .format(context.message.content, closest))
+                                   "!{} is not a command, did you mean !{}?"
+                                   .format(cmd, closest))
     elif type(exception) == commands.CheckFailure:
         await bot.send_message(context.message.channel,
                                "You failed to meet a requirement for that "
                                "command.")
     elif type(exception) == commands.MissingRequiredArgument:
         await bot.send_message(context.message.channel,
-                               "You are missing a require argument for that "
+                               "You are missing a required argument for that "
                                "command.")
     else:
         await bot.send_message(context.message.channel, "Unhandled command "
