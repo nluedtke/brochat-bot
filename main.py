@@ -1,34 +1,33 @@
 # Standard imports
-from time import time
 import json
 import os
-from sys import stderr
-from random import choice
 import socket
 import sys
 import traceback
-from difflib import get_close_matches
 from datetime import datetime
+from difflib import get_close_matches
+from random import choice
+from sys import stderr
+from time import time
+
 import pytz
-
-# NonStandard Imports
-import discord
-from discord.ext import commands
-from twython import Twython
-from twilio.rest import Client
 import requests
-from duel_item import DuelItem
-from weekend_games import WeekendGames, argument_parser, pretty_date
-import common
-from duelcog import item_chance_roll
+# NonStandard Imports
+from discord.ext import commands
+from twilio.rest import Client
+from twython import Twython
+from objs.weekend_games import WeekendGames, argument_parser, pretty_date
 
+import common
+from cogs.duelcog import item_chance_roll
+from objs.duel_item import DuelItem
 
 description = "A bot to enforce friendship."
 startTime = 0
 
 # this specifies what extensions to load when the bot starts up
-startup_extensions = ['redditcog', 'gametimecog', 'twittercog', 'duelcog',
-                      'textcog', 'drinkingcog']
+startup_extensions = ['cogs.redditcog', 'cogs.gametimecog', 'cogs.twittercog',
+                      'cogs.duelcog', 'cogs.textcog', 'cogs.drinkingcog']
 
 bot = commands.Bot(command_prefix='!', description=description)
 # Handle tokens from local file

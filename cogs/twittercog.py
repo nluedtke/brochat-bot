@@ -1,11 +1,12 @@
-import discord
-from discord.ext import commands
-import common
-from twython import Twython, TwythonError
-from duelcog import item_chance_roll
-from random import shuffle, randint
 import asyncio
 from datetime import datetime
+from random import shuffle, randint
+
+from discord.ext import commands
+from twython import TwythonError
+
+import common
+from cogs.duelcog import item_chance_roll
 
 
 class Twitter:

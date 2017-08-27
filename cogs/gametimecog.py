@@ -1,11 +1,12 @@
-import discord
-from discord.ext import commands
-from weekend_games import pretty_date
-import common
-from datetime import datetime
-import pytz
 import asyncio
-from duelcog import item_chance_roll
+from datetime import datetime
+
+import pytz
+from discord.ext import commands
+
+import common
+from cogs.duelcog import item_chance_roll
+from objs.weekend_games import pretty_date
 
 
 class Gametime:

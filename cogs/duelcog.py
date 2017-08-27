@@ -1,8 +1,10 @@
-import common
-from duel_item import DuelItem, PoisonEffect, common_items, rare_items
-from random import randint, choice
-from discord.ext import commands
 import asyncio
+from random import randint, choice
+
+from discord.ext import commands
+
+import common
+from objs.duel_item import DuelItem, PoisonEffect, common_items, rare_items
 
 
 class Duels:
