@@ -1,8 +1,12 @@
 language: python
-sudo: false
+sudo: required
+services:
+  - docker
 notifications:
   email: false
 python:
   - "3.6"
+before_install:
+  - docker build -t brochat-bot .
 script:
   python3 main.py
