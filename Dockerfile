@@ -6,6 +6,8 @@ RUN apt-get update && \
     apt-get remove -y python3-pip && \
     rm -rf /var/lib/apt/lists/*
 
-COPY *.py objs cogs ./
+COPY *.py ./
+COPY objs/* ./objs/
+COPY cogs/* ./cogs/
 ENTRYPOINT ["python3", "main.py"]
 
