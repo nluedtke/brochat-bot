@@ -86,7 +86,7 @@ class Duels:
         else:
             await self.bot.say("You weren't challenged!")
 
-    @commands.command(name='use', pass_context=True)
+    @commands.command(name='use', aliases=['inv'], pass_context=True)
     async def use_command(self, ctx, item_num=""):
         """ Use an item"""
 
