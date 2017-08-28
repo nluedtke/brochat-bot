@@ -76,6 +76,7 @@ class Gametime(object):
         Finds the next datetime date for a given int day
 
         :param day:
+        :param created:
         :return: datetime
         """
         for increment in range(7):
