@@ -137,7 +137,25 @@ common_items = {
            "prop": {'regen': 1},
            "uses": 4,
            "text": "This item allows the wearer to regenerate 1 life at the "
-                   "end of each round for four duels."}
+                   "end of each round for four duels."},
+    "19": {"name": "Xiphos",
+           "type": ["roll_effect"],
+           "prop": {'roll': 1},
+           "uses": 2,
+           "text": "This sword adds +1 to all damage for the user for two "
+                   "duels."},
+    "20": {"name": "Lucky Xiphos",
+           "type": ["roll_effect", "luck_effect"],
+           "prop": {'roll': 1, "luck": 10},
+           "uses": 2,
+           "text": "This sword adds +1 to all damage for the user and slightly "
+                   "increases item chance for two duels."},
+    "21": {"name": "Bastard sword",
+           "type": ["roll_effect"],
+           "prop": {'roll': 3},
+           "uses": 1,
+           "text": "This sword adds +3 to all damage for the user for one "
+                   "duel."}
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -171,7 +189,13 @@ rare_items = {
             "prop": {'regen': 1},
             "uses": 10,
             "text": "This item allows the wearer to regenerate 1 life at the "
-                    "end of each round for ten duels."}
+                    "end of each round for ten duels."},
+    "105": {"name": "Exceptional Bastard sword",
+            "type": ["roll_effect"],
+            "prop": {'roll': 3},
+            "uses": 3,
+            "text": "This sword adds +3 to all damage for the user for three "
+                    "duels."}
 }
 
 
