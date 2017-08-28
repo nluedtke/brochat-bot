@@ -3,9 +3,6 @@ sudo: required
 services:
   - docker
 notifications:
-  webhooks:
-    urls:
-      - https://discordapp.com/api/webhooks/351752017087168513/vlzLaiq4NiI9dlxsePdLqpah0yY6fZDHaz91SYuoDwjdtsoAk05OPl6qCvIQuGiUfUZO
   email: false
 python:
   - "3.6"
