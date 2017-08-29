@@ -37,7 +37,8 @@ class Twitter:
             await self.bot.say("Twitter is acting up, try again later.")
 
         if common.trump_chance_roll_rdy:
-            await item_chance_roll(ctx.bot, ctx.message.author.display_name)
+            await item_chance_roll(ctx.bot, ctx.message.author.display_name,
+                                   ctx.message.channel)
             common.trump_chance_roll_rdy = False
 
     @commands.command(name='news', pass_context=True)
@@ -121,7 +122,13 @@ async def check_trumps_mouth(bot):
     Waits for an update from the prez
     :return: None
     """
+    c_to_send = None
+
     await bot.wait_until_ready()
+    for channel in bot.get_all_channels():
+        if channel.name == 'gen_testing' or channel.name == 'brochat':
+            c_to_send = channel
+            break
 
     if common.twitter is None:
         await bot.say("Twitter not activated.")
@@ -146,7 +153,8 @@ async def check_trumps_mouth(bot):
             delay = common.trump_del * 60
             if trumps_lt_id != common.last_id:
                 common.trump_tweets_seen += 1
-                await bot.say("New Message from the prez! Try !trump")
+                await bot.send_message(c_to_send, "New Message from the prez! "
+                                                  "Try !trump")
                 common.last_id = trumps_lt_id
                 common.trump_chance_roll_rdy = True
 
@@ -159,6 +167,7 @@ async def handle_news(ctx):
     c_to_send = ctx.message.channel
     shuffle(common.news_handles)
 
+    await ctx.bot.wait_until_ready()
     for channel in ctx.bot.get_all_channels():
         if channel.name == 'gen_testing' or channel.name == 'newsfeed':
             c_to_send = channel

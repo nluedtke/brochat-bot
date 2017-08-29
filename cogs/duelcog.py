@@ -142,10 +142,11 @@ class Duels:
                                .format(all_items[item_num]['name']))
             common.users[ctx.message.author.display_name]['a_item'] = None
 
-async def item_chance_roll(bot, player, max_roll=100):
+async def item_chance_roll(bot, player, channel, max_roll=100):
     """
     Rolls for a chance at an item
 
+    :param channel: Channel to send message to
     :param bot: Bot
     :param player: Person rolling
     :param max_roll: max roll to use
@@ -154,16 +155,16 @@ async def item_chance_roll(bot, player, max_roll=100):
     if player not in common.users:
         common.users[player] = {}
     init_player_duel_db(player)
-
     item = DuelItem(randint(1, max_roll + len(common.users[player][
                                               'inventory'])))
     if item.name is not None:
         common.items_awarded += 1
-        await bot.say("Congratulations {}! You received the \"{}\"."
-                      .format(player, item.name))
+        await bot.send_message(channel, "Congratulations {}! You received "
+                                        "the \"{}\"."
+                                        .format(player, item.name))
         if item.item_id in common.users[player]['inventory']:
-            await bot.say("You already have that item, its uses have been "
-                          "reset!")
+            await bot.send_message(channel, "You already have that item, its "
+                                            "uses have been reset!")
         common.users[player]['inventory'][item.item_id] = 0
         return True
     return False
@@ -497,11 +498,13 @@ async def event_handle_shot_duel(ctx, victim):
             luck_mod = 0
             if c_item is not None and "luck_effect" in c_item.type:
                 luck_mod = c_item.prop['luck']
-            await item_chance_roll(ctx.bot, chal_name, 100 - luck_mod)
+            await item_chance_roll(ctx.bot, chal_name, ctx.message.channel,
+                                   100 - luck_mod)
             luck_mod = 0
             if v_item is not None and "luck_effect" in v_item.type:
                 luck_mod = v_item.prop['luck']
-            await item_chance_roll(ctx.bot, common.vict_name, 100 - luck_mod)
+            await item_chance_roll(ctx.bot, common.vict_name,
+                                   ctx.message.channel, 100 - luck_mod)
 
             await ctx.bot.say(".\n{} has {} life.\n{} has {} life."
                               .format(chal_name, c_life_start,

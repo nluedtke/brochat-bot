@@ -348,7 +348,8 @@ async def item_giveaway(ctx):
     while not i_awarded:
         for m in bot.get_all_members():
             if m.display_name != 'brochat-bot' and str(m.status) == 'online':
-                i = await item_chance_roll(bot, m.display_name)
+                i = await item_chance_roll(bot, m.display_name,
+                                           ctx.message.channel)
             i_awarded = i_awarded or i
 
 

@@ -173,7 +173,7 @@ class Gametime:
 
     @commands.command(name='vote', pass_context=True)
     async def add_vote(self, ctx, option=""):
-        """Vote in a pool"""
+        """Vote in a poll"""
 
         if common.whos_in.poll is None:
             await self.bot.say("No Poll currently taking place")
@@ -195,21 +195,28 @@ async def print_at_midnight(bot):
     Prints list at midnight
     :return:
     """
+    c_to_send = None
+
+    await bot.wait_until_ready()
+    for channel in bot.get_all_channels():
+        if channel.name == 'gen_testing' or channel.name == 'brochat':
+            c_to_send = channel
+            break
 
     while not bot.is_closed:
         now = datetime.now(pytz.timezone('US/Eastern'))
-        midnight = now.replace(hour=23, minute=59, second=59, microsecond=59)
+        midnight = now.replace(hour=9, minute=57, second=59, microsecond=59)
         if now > midnight:
             midnight = midnight.replace(day=(now.day + 1))
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
-        await bot.say(common.whos_in.whos_in())
+        await bot.send_message(c_to_send, common.whos_in.whos_in())
         i_awarded = False
         i = False
         while not i_awarded:
             for m in bot.get_all_members():
                 if m.display_name != 'brochat-bot':
-                    i = await item_chance_roll(bot, m.display_name)
+                    i = await item_chance_roll(bot, m.display_name, c_to_send)
                 i_awarded = i_awarded or i
         common.whos_in.update_db()
         await asyncio.sleep(60 * 10)
