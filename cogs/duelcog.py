@@ -94,6 +94,9 @@ class Duels:
         all_items.update(rare_items)
         name = ctx.message.author.display_name
         inv = common.users[name]['inventory']
+        if 'equip' in common.users[name]:
+            common.users[name]['equip'] = {}
+        equip = common.users[name]['equip']
         if item_num == "":
             if len(inv) == 0:
                 await self.bot.say("You have no items!")
@@ -103,44 +106,49 @@ class Duels:
                     inv_string += "{}: {} ({})\n".format(it,
                                                          all_items[it]['name'],
                                                          all_items[it]['text'])
-                if common.users[name]['a_item'] is not None:
-                    item_num = common.users[name]['a_item']
-                    used_amount = inv[item_num]
-                    inv_string += "Your current active item is {}.\n" \
-                                  "It has {} use(s) remaining." \
-                        .format(item_num, (all_items[item_num]['uses'] -
-                                           used_amount))
+                if len(equip) > 0:
+                    for i in equip:
+                        item_num = equip[i]
+                        used_amount = inv[item_num]
+                        inv_string += "{}: Your current active item is {}.\n" \
+                                      "    It has {} use(s) remaining." \
+                                      .format(i, all_items[item_num]['name'],
+                                              (all_items[item_num]['uses']
+                                               - used_amount))
 
                 await self.bot.say(inv_string)
-        elif common.users[name]['a_item'] is not None:
-            await self.bot.say("You may only use one item at a time!")
-            if common.users[name]['a_item'] is not None:
-                it = common.users[name]['a_item']
-                await self.bot.say("{} is currently in use!\n"
-                                   .format(all_items[it]['name']))
+        elif item_num in all_items and item_num in inv and \
+                all_items[item_num]['slot'] in equip:
+            await self.bot.say("You already have {} equipped in the {} slot."
+                               .format(all_items[equip['slot']]['name'],
+                                       all_items[item_num]['slot']))
         elif item_num in all_items and item_num not in inv:
             await self.bot.say("You don't have that item!")
         elif item_num in all_items and item_num in inv:
             await self.bot.say("Item \"{}\" will be active starting with your "
                                "next duel.".format(all_items[item_num]['name']))
-            common.users[name]['a_item'] = item_num
+            common.users[name]['equip'][all_items[item_num]['slot']] = item_num
         else:
             await self.bot.say("**!use <item_id>**: To use an item \n"
                                "**!use**: to view your inventory")
 
     @commands.command(name='unequip', pass_context=True)
-    async def unequip_command(self, ctx):
-        """Unequip an item in use"""
+    async def unequip_command(self, ctx, slot: str):
+        """Unequips an item in use"""
 
-        if common.users[ctx.message.author.display_name]['a_item'] is None:
-            await self.bot.say("You don't have an item equiped!")
+        name = ctx.message.author.display_name
+
+        if 'equip' not in common.users[name]:
+            await self.bot.say("You have no items equipped!")
+        elif slot not in common.users[name]['equip']:
+            await self.bot.say("You don't have an item equipped in that slot!")
         else:
             all_items = common_items
             all_items.update(rare_items)
-            item_num = common.users[ctx.message.author.display_name]['a_item']
+            item_num = common.users[name]['equip'][slot]
             await self.bot.say("You have unquiped the {}"
                                .format(all_items[item_num]['name']))
-            common.users[ctx.message.author.display_name]['a_item'] = None
+            del(common.users[name]['equip'][slot])
 
 async def item_chance_roll(bot, player, channel, max_roll=100):
     """
@@ -180,7 +188,7 @@ def init_player_duel_db(player):
 
     if 'inventory' not in common.users[player]:
         common.users[player]['inventory'] = {}
-        common.users[player]['a_item'] = None
+        common.users[player]['equip'] = {}
     if 'duel_record' not in common.users[player]:
         common.users[player]['duel_record'] = [0, 0, 0]
 
