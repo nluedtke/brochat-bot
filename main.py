@@ -171,6 +171,8 @@ async def on_message(message):
     :param message:
     :return:
     """
+    if message.author == bot.user:
+        return
 
     if message.author.display_name not in common.users:
         common.users[message.author.display_name] = {}
@@ -444,7 +446,7 @@ async def change_news_delay(num_of_mins: int):
 async def on_command_error(exception, context):
     if type(exception) == commands.CommandOnCooldown:
         await bot.send_message(context.message.channel,
-                               "{} is on cooldown for {:0.2f} seconds.".format(
+                               "!{} is on cooldown for {:0.2f} seconds.".format(
                                    context.command, exception.retry_after))
     elif type(exception) == commands.CommandNotFound:
         try:
