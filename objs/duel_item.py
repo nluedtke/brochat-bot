@@ -253,7 +253,7 @@ class DuelItem(object):
         if _id is not None:
             self.item_id = str(_id)
         else:
-            if 10 >= item_roll > 1:
+            if 15 >= item_roll > 1:
                 _item = choice(list(common_items.keys()))
                 self.item_id = _item
             elif item_roll == 1:
