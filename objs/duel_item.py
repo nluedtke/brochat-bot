@@ -227,6 +227,9 @@ rare_items = {
                     "duels."}
 }
 
+all_items = common_items
+all_items.update(rare_items)
+
 
 class DuelItem(object):
     """

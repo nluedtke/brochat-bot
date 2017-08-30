@@ -4,7 +4,7 @@ from random import randint, choice
 from discord.ext import commands
 
 import common
-from objs.duel_item import DuelItem, PoisonEffect, common_items, rare_items
+from objs.duel_item import DuelItem, PoisonEffect, all_items
 
 
 class Duels:
@@ -30,7 +30,6 @@ class Duels:
             map_disp_to_name[m.display_name.lower()] = m
 
         name = ctx.message.content[6:].lower()
-        print(name)
 
         if len(name) < 1:
             await self.bot.say('Who do you want to duel?')
@@ -90,12 +89,9 @@ class Duels:
     async def use_command(self, ctx, item_num=""):
         """ Use an item"""
 
-        all_items = common_items
-        all_items.update(rare_items)
         name = ctx.message.author.display_name
+        init_player_duel_db(name)
         inv = common.users[name]['inventory']
-        if 'equip' not in common.users[name]:
-            common.users[name]['equip'] = {}
         equip = common.users[name]['equip']
         if item_num == "":
             if len(inv) == 0:
@@ -106,6 +102,7 @@ class Duels:
                     inv_string += "{}: {} ({})\n".format(it,
                                                          all_items[it]['name'],
                                                          all_items[it]['text'])
+                # If any are in use, go ahead print that info
                 if len(equip) > 0:
                     icons = {'armor': ":shirt:",
                              'weapon': ":dagger:",
@@ -142,15 +139,13 @@ class Duels:
 
         name = ctx.message.author.display_name
 
-        if 'equip' not in common.users[name]:
+        if 'equip' not in common.users[name] or len(common.users[name]) < 1:
             await self.bot.say("You have no items equipped!")
         elif slot not in common.users[name]['equip']:
             await self.bot.say("You don't have an item equipped in that slot!")
         else:
-            all_items = common_items
-            all_items.update(rare_items)
             item_num = common.users[name]['equip'][slot]
-            await self.bot.say("You have unquiped the {}"
+            await self.bot.say("You have unquipped the {}"
                                .format(all_items[item_num]['name']))
             del(common.users[name]['equip'][slot])
 
@@ -164,8 +159,6 @@ async def item_chance_roll(bot, player, channel, max_roll=100):
     :param max_roll: max roll to use
     """
 
-    if player not in common.users:
-        common.users[player] = {}
     init_player_duel_db(player)
     item = DuelItem(randint(1, max_roll + len(common.users[player][
                                               'inventory'])))
@@ -190,6 +183,8 @@ def init_player_duel_db(player):
     :return: None
     """
 
+    if player not in common.users:
+        common.users[player] = {}
     if 'inventory' not in common.users[player]:
         common.users[player]['inventory'] = {}
     if 'duel_record' not in common.users[player]:
@@ -230,6 +225,22 @@ def item_eff_str(item):
     else:
         return "This item has an unknown or not implemented effect."
 
+
+def return_item(item, player):
+    """
+    Returns an item to inventory, ie. the item wasn't used. A return may just
+    be the return of a charge.
+
+    :param item: Item to return.
+    :param player: Player owning the item
+    :return: None
+    """
+    if item.item_id in common.users[player]['inventory']:
+        common.users[player]['inventory'][item.item_id] -= 1
+    else:
+        common.users[player]['inventory'][item.item_id] = item.uses - 1
+        common.users[player]['equip'][item.slot] = item.item_id
+
 async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
     """
     Handles the Disarming spec_effect
@@ -240,8 +251,7 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
     :param c_name: Challenger's Display name
     :param v_name: Victim's Display name
     """
-    all_items = common_items
-    all_items.update(rare_items)
+
     notif_str = ""
     c_item_ret = None
     v_item_ret = None
@@ -249,13 +259,8 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
         if len(common.users[v_name]['equip']) < 1:
             notif_str += "{} has nothing to disarm, the {} has no effect!\n"\
                          .format(v_name, c_item.name)
-            if c_item.item_id in common.users[c_name]['inventory'] \
-                    and len(c_item.type) == 1:
-                common.users[c_name]['inventory'][c_item.item_id] -= 1
-            elif len(c_item.type) == 1:
-                common.users[c_name]['inventory'][c_item.item_id] = \
-                    c_item.uses - 1
-                common.users[c_name]['equip']['weapon'] = c_item.item_id
+            if len(c_item.type) == 1:
+                return_item(c_item, c_name)
         else:  # Does the victim have an item that can be disarmed?
             poss_items = []
             for i in common.users[v_name]['equip']:
@@ -267,36 +272,22 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
             if len(poss_items) < 1:  # If no possible items give up
                 notif_str += "{} only has a disarm item, the {} has no " \
                              "effect!\n".format(v_name, c_item.name)
-                if c_item.item_id in common.users[c_name]['inventory'] \
-                        and len(c_item.type) == 1:
-                    common.users[c_name]['inventory'][c_item.item_id] -= 1
-                elif len(c_item.type) == 1:
-                    common.users[c_name]['inventory'][c_item.item_id] = \
-                        c_item.uses - 1
-                    common.users[c_name]['equip']['weapon'] = c_item.item_id
+                if len(c_item.type) == 1:
+                    return_item(c_item, c_name)
             else:  # We can disarm something, do so.
                 item_to_disarm = common.users['equip'][choice(poss_items)]
                 notif_str += "{}'s {} has been removed by the {}!\n"\
                              .format(v_name, all_items[item_to_disarm],
                                      c_item.name)
-                v_item_ret = item_to_disarm
-                if item_to_disarm in common.users[v_name]['inventory']:
-                    common.users[v_name]['inventory'][item_to_disarm] -= 1
-                else:
-                    common.users[v_name]['inventory'][item_to_disarm] = \
-                        all_items[item_to_disarm]['uses'] - 1
+                v_item_ret = DuelItem(0, item_to_disarm)
+                return_item(v_item_ret, v_name)
 
     if v_item is not None and 'disarm_effect' in v_item.type:
         if len(common.users[c_name]['equip']) < 1:
             notif_str += "{} has nothing to disarm, the {} has no effect!\n"\
                          .format(c_name, v_item.name)
-            if v_item.item_id in common.users[v_name]['inventory'] \
-                    and len(v_item.type) == 1:
-                common.users[v_name]['inventory'][v_item.item_id] -= 1
-            elif len(v_item.type) == 1:
-                common.users[v_name]['inventory'][v_item.item_id] = \
-                    v_item.uses - 1
-                common.users[v_name]['equip']['weapon'] = v_item.item_id
+            if len(v_item.type) == 1:
+                return_item(v_item, v_name)
         else:  # Does the challenger have an item that can be disarmed?
             poss_items = []
             for i in common.users[c_name]['equip']:
@@ -308,24 +299,16 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
             if len(poss_items) < 1:  # If no possible items give up
                 notif_str += "{} only has a disarm item, the {} has no " \
                              "effect!\n".format(c_name, v_item.name)
-                if v_item.item_id in common.users[v_name]['inventory'] \
-                        and len(v_item.type) == 1:
-                    common.users[v_name]['inventory'][v_item.item_id] -= 1
-                elif len(v_item.type) == 1:
-                    common.users[v_name]['inventory'][v_item.item_id] = \
-                        v_item.uses - 1
-                    common.users[v_name]['equip']['weapon'] = v_item.item_id
+                if len(v_item.type) == 1:
+                    return_item(v_item, v_name)
             else:  # We can disarm something, do so.
                 item_to_disarm = common.users['equip'][choice(poss_items)]
                 notif_str += "{}'s {} has been removed by the {}!\n"\
                              .format(c_name, all_items[item_to_disarm],
                                      v_item.name)
-                c_item_ret = item_to_disarm
-                if item_to_disarm in common.users[c_name]['inventory']:
-                    common.users[c_name]['inventory'][item_to_disarm] -= 1
-                else:
-                    common.users[c_name]['inventory'][item_to_disarm] = \
-                        all_items[item_to_disarm]['uses'] - 1
+                c_item_ret = DuelItem(0, item_to_disarm)
+                return_item(c_item_ret, c_name)
+
     ctx.bot.say(notif_str)
     return c_item_ret, v_item_ret
 
@@ -455,10 +438,6 @@ async def event_handle_shot_duel(ctx, victim):
     vict_name = common.vict_name = victim.display_name
     chal_name = ctx.message.author.display_name
 
-    if common.vict_name not in common.users:
-        common.users[common.vict_name] = {}
-    if chal_name not in common.users:
-        common.users[chal_name] = {}
     init_player_duel_db(common.vict_name)
     init_player_duel_db(chal_name)
 
@@ -470,11 +449,11 @@ async def event_handle_shot_duel(ctx, victim):
     await ctx.bot.say('.\nThe challenge has been laid down!\n'
                       '{}, {} has asked you to duel!\n'
                       'Do you accept?!?!?! (!accept)\n'
-                      'You have 60 seconds to decide.'
+                      'You have 90 seconds to decide.'
                       .format(victim.mention, chal_name))
 
     waited = 5
-    while waited < 60:
+    while waited < 90:
         await asyncio.sleep(5)
         waited += 5
         if common.accepted:
@@ -542,31 +521,31 @@ async def event_handle_shot_duel(ctx, victim):
             # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
 
             # spec_effect check (disarm_effect)
-
             if (c_wep is not None and 'disarm_effect' in c_wep.type) \
                     or (v_wep is not None and
                         'disarm_effect' in v_wep.type):
+                # If a player losses an item, remove it from active list
                 ci_to_rem, vi_to_rem = await item_disarm_check(ctx, c_wep,
                                                                v_wep, chal_name,
                                                                vict_name)
                 if ci_to_rem is not None:
-                    ci_list.remove(DuelItem(0, ci_to_rem))
+                    ci_list.remove(ci_to_rem)
                 if vi_to_rem is not None:
-                    vi_list.remove(DuelItem(0, vi_to_rem))
+                    vi_list.remove(vi_to_rem)
 
             # Determine cumulative item effect
             if len(ci_list) < 1:
                 c_item = None
             else:
                 c_item = DuelItem(99)  # Set to empty item
-                for i in ci_list:
+                for i in ci_list:  # Combine items into one
                     c_item += i
 
             if len(vi_list) < 1:
                 v_item = None
             else:
                 v_item = DuelItem(99)  # Set to empty item
-                for i in vi_list:
+                for i in vi_list:  # Combine items into one
                     v_item += i
 
             # END OF PRECOMBAT PHASE

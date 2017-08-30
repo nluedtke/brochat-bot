@@ -10,7 +10,8 @@ class DrinkBank:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='drink', aliases=['bottomsup'], pass_context=True)
+    @commands.command(name='drink', aliases=['bottomsup', 'drank'],
+                      pass_context=True)
     async def drink(self, ctx):
         """Log a drink taken"""
         author = str(ctx.message.author.display_name)
