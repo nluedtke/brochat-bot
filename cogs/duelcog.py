@@ -14,7 +14,7 @@ class Duels:
         self.bot = bot
 
     @commands.group(name='duel', pass_context=True)
-    @commands.cooldown(1, 90)
+    @commands.cooldown(1, 120)
     async def shot_duel(self, ctx):
         """ Duel someone"""
 
@@ -188,9 +188,10 @@ def init_player_duel_db(player):
 
     if 'inventory' not in common.users[player]:
         common.users[player]['inventory'] = {}
-        common.users[player]['equip'] = {}
     if 'duel_record' not in common.users[player]:
         common.users[player]['duel_record'] = [0, 0, 0]
+    if 'equip' not in common.users[player]:
+        common.users[player]['equip'] = {}
 
 
 def item_eff_str(item):
@@ -215,7 +216,7 @@ def item_eff_str(item):
         ret_str += "Item chance luck increased!\n"
     if 'disarm_effect' in item.type:
         ret_str += "The opponent's item will be removed if there is one " \
-                   "equiped.\n"
+                   "equipped.\n"
     if 'poison_effect' in item.type:
         ret_str += "The opponent, when hit, will be poisoned for {} round(s)," \
                    " taking {} damage each round.\n" \
