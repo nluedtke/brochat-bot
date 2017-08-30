@@ -1,8 +1,6 @@
 import asyncio
 from random import randint, choice
-
 from discord.ext import commands
-
 import common
 from objs.duel_item import DuelItem, PoisonEffect, all_items
 
@@ -120,8 +118,9 @@ class Duels:
                 await self.bot.say(inv_string)
         elif item_num in all_items and item_num in inv and \
                 all_items[item_num]['slot'] in equip:
+            slot = all_items[item_num]['slot']
             await self.bot.say("You already have {} equipped in the {} slot."
-                               .format(all_items[equip['slot']]['name'],
+                               .format(all_items[equip[slot]]['name'],
                                        all_items[item_num]['slot']))
         elif item_num in all_items and item_num not in inv:
             await self.bot.say("You don't have that item!")
@@ -491,7 +490,7 @@ async def event_handle_shot_duel(ctx, victim):
                         del(common.users[chal_name]['inventory']
                             [c_item.item_id])
                         rem_list.append(c_item.slot)
-                        notif_str += "\nThis is the last use for this item!"
+                        notif_str += "This is the last use for this item!\n"
                 await ctx.bot.say(notif_str)
                 for i in rem_list:
                     del(common.users[chal_name]['equip'][i])
@@ -513,7 +512,7 @@ async def event_handle_shot_duel(ctx, victim):
                         del (common.users[vict_name]['inventory']
                              [v_item.item_id])
                         rem_list.append(v_item.slot)
-                        notif_str += "\nThis is the last use for this item!"
+                        notif_str += "This is the last use for this item!\n"
                 await ctx.bot.say(notif_str)
                 for i in rem_list:
                     del(common.users[vict_name]['equip'][i])
