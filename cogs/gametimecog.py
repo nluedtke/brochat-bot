@@ -205,7 +205,7 @@ async def print_at_midnight(bot):
 
     while not bot.is_closed:
         now = datetime.now(pytz.timezone('US/Eastern'))
-        midnight = now.replace(hour=9, minute=57, second=59, microsecond=59)
+        midnight = now.replace(hour=23, minute=59, second=59, microsecond=59)
         if now > midnight:
             midnight = midnight.replace(day=(now.day + 1))
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
