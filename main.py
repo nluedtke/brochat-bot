@@ -444,7 +444,7 @@ async def change_news_delay(num_of_mins: int):
 async def on_command_error(exception, context):
     if type(exception) == commands.CommandOnCooldown:
         await bot.send_message(context.message.channel,
-                               "{} is on cooldown for {:0.2f} seconds.".format(
+                               "!{} is on cooldown for {:0.2f} seconds.".format(
                                    context.command, exception.retry_after))
     elif type(exception) == commands.CommandNotFound:
         try:
