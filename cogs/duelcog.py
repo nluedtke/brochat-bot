@@ -107,12 +107,16 @@ class Duels:
                                                          all_items[it]['name'],
                                                          all_items[it]['text'])
                 if len(equip) > 0:
+                    icons = {'armor': ":shirt:",
+                             'weapon': ":dagger:",
+                             'other': ":ring:"}
+                    inv_string += "\nYour current loadout is:\n"
                     for i in equip:
                         item_num = equip[i]
                         used_amount = inv[item_num]
-                        inv_string += "{}: Your current active item is {}.\n" \
-                                      "    It has {} use(s) remaining.\n" \
-                                      .format(i, all_items[item_num]['name'],
+                        inv_string += "{}: {} - {} use(s) remaining.\n" \
+                                      .format(icons[i],
+                                              all_items[item_num]['name'],
                                               (all_items[item_num]['uses']
                                                - used_amount))
 
