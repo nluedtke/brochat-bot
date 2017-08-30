@@ -113,7 +113,8 @@ async def on_message_edit(before, after):
 
     return: None
     """
-    await bot.on_message(after)
+    if before.content != after.content:
+        await bot.on_message(after)
 
 
 @bot.event
@@ -283,8 +284,8 @@ def is_command(m):
 async def clear(ctx):
     """Clears Bot chat history"""
     channel = ctx.message.channel
-    deleted = await bot.purge_from(channel, limit=75, check=is_me)
-    c_ds = await bot.purge_from(channel, limit=50, check=is_command)
+    deleted = await bot.purge_from(channel, limit=100, check=is_me)
+    c_ds = await bot.purge_from(channel, limit=75, check=is_command)
     await bot.say('Deleted {} message(s)'.format(len(deleted) + len(c_ds)))
 
 
@@ -408,7 +409,6 @@ async def whoami(ctx):
                     output = "You have **{}** equipped."\
                         .format(DuelItem(0, v).name)
             elif k == "inventory":
-                # TODO: display_inventory
                 if v == {}:
                     output = "You don't have an inventory for dueling items."
                 else:
@@ -449,8 +449,8 @@ async def on_command_error(exception, context):
                                "!{} is on cooldown for {:0.2f} seconds.".format(
                                    context.command, exception.retry_after))
     elif type(exception) == commands.CommandNotFound:
+        cmd = context.message.content.split()[0][1:]
         try:
-            cmd = context.message.content.split()[0][1:]
             closest = get_close_matches(cmd.lower(), list(bot.commands))[0]
         except IndexError:
             await bot.send_message(context.message.channel,

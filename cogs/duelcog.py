@@ -506,8 +506,8 @@ async def event_handle_shot_duel(ctx, victim):
                         v_wep = v_item
                     common.users[vict_name]['inventory'][v_item.item_id] += 1
                     notif_str += "{} is using the {}.\n{}" \
-                                .format(vict_name, v_item.name,
-                                        item_eff_str(v_item))
+                                 .format(vict_name, v_item.name,
+                                         item_eff_str(v_item))
                     if common.users[vict_name]['inventory'][v_item.item_id] \
                             >= v_item.uses:
                         del (common.users[vict_name]['inventory']
