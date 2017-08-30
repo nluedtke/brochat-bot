@@ -94,7 +94,7 @@ class Duels:
         all_items.update(rare_items)
         name = ctx.message.author.display_name
         inv = common.users[name]['inventory']
-        if 'equip' in common.users[name]:
+        if 'equip' not in common.users[name]:
             common.users[name]['equip'] = {}
         equip = common.users[name]['equip']
         if item_num == "":
@@ -111,7 +111,7 @@ class Duels:
                         item_num = equip[i]
                         used_amount = inv[item_num]
                         inv_string += "{}: Your current active item is {}.\n" \
-                                      "    It has {} use(s) remaining." \
+                                      "    It has {} use(s) remaining.\n" \
                                       .format(i, all_items[item_num]['name'],
                                               (all_items[item_num]['uses']
                                                - used_amount))
@@ -514,13 +514,14 @@ async def event_handle_shot_duel(ctx, victim):
             if len(common.users[vict_name]['equip']) > 0:
                 notif_str = ""
                 rem_list = []
-                for a_item in common.users[common.vict_name]['equip']:
-                    v_item = DuelItem(0, common.users[vict_name][a_item])
+                for a_item in common.users[vict_name]['equip']:
+                    v_item = DuelItem(0,
+                                      common.users[vict_name]['equip'][a_item])
                     vi_list.append(v_item)
                     if v_item.slot == 'weapon':
                         v_wep = v_item
                     common.users[vict_name]['inventory'][v_item.item_id] += 1
-                    notif_str = "{} is using the {}.\n{}" \
+                    notif_str += "{} is using the {}.\n{}" \
                                 .format(vict_name, v_item.name,
                                         item_eff_str(v_item))
                     if common.users[vict_name]['inventory'][v_item.item_id] \
