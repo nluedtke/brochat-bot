@@ -5,7 +5,7 @@ VERSION_REV = 0
 
 whos_in = None
 twitter = None
-users = None
+users = {}
 twilio_client = None
 
 # Variable hold trumps last tweet id
