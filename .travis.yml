@@ -13,7 +13,7 @@ before_script:
   - docker build -t brochat-bot .
   - pip3 install pylint
 script:
-  - pylint -E objs/* cogs/* *.py
+  - pylint -E --ignored-modules=distutils objs/* cogs/* *.py
   - python3 objs/duel_item.py
   - python3 main.py
 
