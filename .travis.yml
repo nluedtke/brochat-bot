@@ -11,9 +11,9 @@ python:
   - "3.6"
 before_script:
   - docker build -t brochat-bot .
-  - pip install pylint
+  - pip3 install pylint
 script:
-  - pylint -E .
+  - pylint -E objs/* cogs/* *.py
   - python3 objs/duel_item.py
   - python3 main.py
 
