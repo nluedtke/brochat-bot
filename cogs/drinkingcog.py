@@ -22,7 +22,7 @@ class DrinkBank:
             if result < -5:
                 output += "Whoa there buddy, drinking around here is a " \
                           "friendship activity. For your sake, I'll go ahead " \
-                          "forget about that one."
+                          "and forget about that one."
                 common.users[author]["drinks_owed"] = -5
             elif result < 0:
                 output += "You're now banking **{}** dranks.".format(-result)
