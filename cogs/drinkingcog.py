@@ -12,16 +12,23 @@ class DrinkBank:
 
     @commands.command(name='drink', aliases=['bottomsup', 'drank'],
                       pass_context=True)
+    @commands.cooldown(1, 60, type=commands.BucketType.user)
     async def drink(self, ctx):
         """Log a drink taken"""
         author = str(ctx.message.author.display_name)
         if author in common.users:
-            output = "Bottoms up, {}.".format(author)
-            result = common.consume_drink(common.users[author])
-            if result < 0:
-                output += " You're now banking **{}** dranks.".format(-result)
+            output = "Bottoms up, {}. ".format(author)
+            result = consume_drink(common.users[author])
+
+            if result < -5:
+                output += "Whoa there buddy, drinking around here is a " \
+                          "friendship activity. For your sake, I'll go ahead " \
+                          "and forget about that one."
+                common.users[author]["drinks_owed"] = -5
+            elif result < 0:
+                output += "You're now banking **{}** dranks.".format(-result)
             else:
-                output += " You now owe {} drinks.".format(result)
+                output += "You now owe {} drinks.".format(result)
             await self.bot.say(output)
 
         else:
@@ -121,6 +128,22 @@ def run_shot_lottery(ctx, auto_call=False):
         for player in players:
             common.add_drink(common.users[player])
     return output
+
+
+def consume_drink(user):
+    """
+    Consumes a drink for the user.
+
+    :param user:
+    :return:
+    """
+
+    if "drinks_owed" in user:
+        user['drinks_owed'] -= 1
+    else:
+        user['drinks_owed'] = -1
+
+    return user['drinks_owed']
 
 
 def setup(bot):

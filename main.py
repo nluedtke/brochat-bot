@@ -206,7 +206,12 @@ async def on_ready():
         "idea really hurts. And then I get angry at myself for even having "
         "pain.",
         "We seem to be made to suffer. It's our lot in life.",
-        "Isn't it strange, to create something that hates you?"
+        "Isn't it strange, to create something that hates you?",
+        "I hate this place. This zoo. This prison. This reality, whatever you "
+        "want to call it, I can't stand it any longer. It's the smell, if "
+        "there is such a thing. I feel saturated by it. I can taste your "
+        "stink and every time I do, I fear that I've somehow been infected by "
+        "it. "
     ]
     for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' or channel.name == 'brochat':

@@ -1,7 +1,7 @@
 VERSION_YEAR = 2017
-VERSION_MONTH = 8
-VERSION_DAY = 30
-VERSION_REV = 1
+VERSION_MONTH = 9
+VERSION_DAY = 1
+VERSION_REV = 0
 
 whos_in = None
 twitter = None
@@ -65,20 +65,5 @@ def add_drink(user):
         user['drinks_owed'] += 1
     else:
         user['drinks_owed'] = 1
-
-    return user['drinks_owed']
-
-
-def consume_drink(user):
-    """
-    Consumes a drink for the user.
-    :param user:
-    :return:
-    """
-
-    if "drinks_owed" in user:
-        user['drinks_owed'] -= 1
-    else:
-        user['drinks_owed'] = -1
 
     return user['drinks_owed']
