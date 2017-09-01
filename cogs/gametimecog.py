@@ -215,7 +215,9 @@ async def print_at_midnight(bot):
         i = False
         while not i_awarded:
             for m in bot.get_all_members():
-                if m.display_name != 'brochat-bot':
+                if m.display_name != 'brochat-bot' and m.display_name in \
+                        common.users and \
+                        'duel_record' in common.users[m.display_name]:
                     i = await item_chance_roll(bot, m.display_name, c_to_send)
                 i_awarded = i_awarded or i
         common.whos_in.update_db()
