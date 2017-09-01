@@ -22,30 +22,31 @@ class Duels:
                                    'turn to challenge someone!')
                 return
 
-        members = self.bot.get_all_members()
-        map_disp_to_name = {}
-        for m in members:
-            map_disp_to_name[m.display_name.lower()] = m
+            members = self.bot.get_all_members()
+            map_disp_to_name = {}
+            for m in members:
+                map_disp_to_name[m.display_name.lower()] = m
 
-        name = ctx.message.content[6:].lower()
+            name = ctx.message.content[6:].lower()
 
-        if len(name) < 1:
-            await self.bot.say('Who do you want to duel?')
-            return
 
-        if name == ctx.message.author.display_name.lower() and \
-                ctx.message.channel.name != 'gen_testing':
-            await self.bot.say("Why not just drink your tears away, instead of "
-                               "including this channel?")
-        elif name not in map_disp_to_name:
-            await self.bot.say('That\'s not a real person...')
-        elif name == 'brochat-bot':
-            await self.bot.say('brochat-bot would drink you under the table '
-                               'try another person!')
-        elif str(map_disp_to_name[name].status) != 'online':
-            await self.bot.say('That person is likely already passed out!')
-        else:
-            await event_handle_shot_duel(ctx, map_disp_to_name[name])
+            if len(name) < 1:
+                await self.bot.say('Who do you want to duel?')
+                return
+
+            if name == ctx.message.author.display_name.lower() and \
+                    ctx.message.channel.name != 'gen_testing':
+                await self.bot.say("Why not just drink your tears away, "
+                                   "instead of including this channel?")
+            elif name not in map_disp_to_name:
+                await self.bot.say('That\'s not a real person...')
+            elif name == 'brochat-bot':
+                await self.bot.say('brochat-bot would drink you under the '
+                                   'table, try another person!')
+            elif str(map_disp_to_name[name].status) != 'online':
+                await self.bot.say('That person is likely already passed out!')
+            else:
+                await event_handle_shot_duel(ctx, map_disp_to_name[name])
 
     @shot_duel.command(name='ranking', aliases=['ranks'])
     async def get_duel_rankings(self):
