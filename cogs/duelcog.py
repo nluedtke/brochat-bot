@@ -3,6 +3,7 @@ from random import randint, choice
 from discord.ext import commands
 import common
 from objs.duel_item import DuelItem, PoisonEffect, all_items
+from cogs.drinkingcog import in_deep_debt
 
 
 class Duels:
@@ -22,13 +23,18 @@ class Duels:
                                    'turn to challenge someone!')
                 return
 
+            if in_deep_debt(ctx.message.author.display_name):
+                await self.bot.say('Hey there, I can\'t let you do that till '
+                                   'you pay down some of that friendship you '
+                                   'owe.')
+                return
+
             members = self.bot.get_all_members()
             map_disp_to_name = {}
             for m in members:
                 map_disp_to_name[m.display_name.lower()] = m
 
             name = ctx.message.content[6:].lower()
-
 
             if len(name) < 1:
                 await self.bot.say('Who do you want to duel?')
@@ -548,6 +554,7 @@ async def event_handle_shot_duel(ctx, victim):
                 for i in vi_list:  # Combine items into one
                     v_item += i
 
+            await asyncio.sleep(2)
             # END OF PRECOMBAT PHASE
 
             # LIFE EFFECT CHECK

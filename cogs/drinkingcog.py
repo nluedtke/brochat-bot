@@ -130,6 +130,19 @@ def run_shot_lottery(ctx, auto_call=False):
     return output
 
 
+def in_deep_debt(player):
+    """
+    Checks if a player is in deep debt
+    :param player: Player to check
+    :return: True if player has too much debt
+    """
+
+    if "drinks_owed" not in common.users[player]:
+        return False
+    else:
+        return common.users[player]['drinks_owed'] >= 5
+
+
 def consume_drink(user):
     """
     Consumes a drink for the user.
