@@ -93,6 +93,7 @@ class Duels:
         all_items = common_items
         all_items.update(rare_items)
         name = ctx.message.author.display_name
+        init_player_duel_db(name)
         inv = common.users[name]['inventory']
         if item_num == "":
             if len(inv) == 0:
