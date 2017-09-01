@@ -28,8 +28,7 @@ class WeekendGames(object):
         if 'consecutive_shot_wins' in db:
             self.consecutive_shot_wins = db['consecutive_shot_wins']
         self.last_reddit_request = 0
-        if 'last_lottery_time' in db:
-            self.last_lottery = db['last_lottery_time']
+
 
         # store our games
         self.gametimes = []
@@ -310,7 +309,6 @@ class WeekendGames(object):
         common.db['people'] = self.people
         common.db['last_shot'] = self.last_shot
         common.db['consecutive_shot_wins'] = self.consecutive_shot_wins
-        common.db['last_lottery_time'] = self.last_lottery
         common.db['gametimes'] = []
         for gt in self.gametimes:
             common.db['gametimes'].append(gt.to_json())
