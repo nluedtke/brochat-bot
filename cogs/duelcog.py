@@ -90,7 +90,7 @@ class Duels:
         else:
             await self.bot.say("You weren't challenged!")
 
-    @commands.command(name='use', aliases=['inv'], pass_context=True)
+    @commands.command(name='use', aliases=['inv', 'equip'], pass_context=True)
     async def use_command(self, ctx, item_num=""):
         """ Use an item"""
 
@@ -148,6 +148,13 @@ class Duels:
         if 'equip' not in common.users[name] or len(common.users[name]) < 1:
             await self.bot.say("You have no items equipped!")
         elif slot not in common.users[name]['equip']:
+            for s in common.users[name]['equip']:
+                if common.users[name]['equip'][s] == slot:
+                    item_num = common.users[name]['equip'][s]
+                    await self.bot.say("You have unquipped the {}"
+                                       .format(all_items[item_num]['name']))
+                    del (common.users[name]['equip'][s])
+                    return
             await self.bot.say("You don't have an item equipped in that slot!")
         else:
             item_num = common.users[name]['equip'][slot]
