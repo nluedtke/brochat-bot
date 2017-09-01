@@ -416,13 +416,6 @@ async def event_handle_shot_duel(ctx, victim):
         common.users[common.vict_name] = {}
     if chal_name not in common.users:
         common.users[chal_name] = {}
-    init_player_duel_db(common.vict_name)
-    init_player_duel_db(chal_name)
-
-    c_rec = common.users[chal_name]['duel_record']
-    v_rec = common.users[common.vict_name]['duel_record']
-
-    life = 12
 
     await ctx.bot.say('.\nThe challenge has been laid down!\n'
                       '{}, {} has asked you to duel!\n'
@@ -435,6 +428,11 @@ async def event_handle_shot_duel(ctx, victim):
         await asyncio.sleep(5)
         waited += 5
         if common.accepted:
+            init_player_duel_db(common.vict_name)
+            init_player_duel_db(chal_name)
+            c_rec = common.users[chal_name]['duel_record']
+            v_rec = common.users[common.vict_name]['duel_record']
+            life = 12
             common.duels_conducted += 1
             await ctx.bot.say(".\nDuel Accepted! Here we go!\n"
                               "{} is {} - {} - {}\n"
