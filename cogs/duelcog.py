@@ -218,25 +218,25 @@ def item_eff_str(item):
     if hasattr(item, 'spec_text'):
         return item.spec_text
     if "roll_effect" in item.type:
-        ret_str += "All damage increased by {}.\n".format(item.prop['roll'])
+        ret_str += "    All damage increased by {}.\n".format(item.prop['roll'])
     if 'life_effect' in item.type:
-        ret_str += "Life increased by {}.\n".format(item.prop['life'])
+        ret_str += "    Life increased by {}.\n".format(item.prop['life'])
     if 'regen_effect' in item.type:
-        ret_str += "Will regen {} life at the end of each round.\n" \
+        ret_str += "    Will regen {} life at the end of each round.\n" \
             .format(item.prop['regen'])
     if 'luck_effect' in item.type:
-        ret_str += "Item chance luck increased!\n"
+        ret_str += "    Item chance luck increased!\n"
     if 'disarm_effect' in item.type:
-        ret_str += "The opponent's item will be removed if there is one " \
+        ret_str += "    The opponent's item will be removed if there is one " \
                    "equipped.\n"
     if 'poison_effect' in item.type:
-        ret_str += "The opponent, when hit, will be poisoned for {} round(s)," \
-                   " taking {} damage each round.\n" \
+        ret_str += "    The opponent, when hit, will be poisoned for {} " \
+                   "round(s), taking {} damage each round.\n" \
             .format(item.prop['duration'], item.prop['poison'])
     if len(ret_str) > 1:
         return ret_str
     else:
-        return "This item has an unknown or not implemented effect."
+        return "    This item has an unknown or not implemented effect."
 
 
 def return_item(item, player):
@@ -288,7 +288,8 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
                 if len(c_item.type) == 1:
                     return_item(c_item, c_name)
             else:  # We can disarm something, do so.
-                item_to_disarm = common.users['equip'][choice(poss_items)]
+                item_to_disarm = common.users[v_name]['equip'][choice(
+                    poss_items)]
                 notif_str += "{}'s {} has been removed by the {}!\n"\
                              .format(v_name, all_items[item_to_disarm],
                                      c_item.name)
@@ -315,7 +316,8 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
                 if len(v_item.type) == 1:
                     return_item(v_item, v_name)
             else:  # We can disarm something, do so.
-                item_to_disarm = common.users['equip'][choice(poss_items)]
+                item_to_disarm = common.users[c_name]['equip'][choice(
+                    poss_items)]
                 notif_str += "{}'s {} has been removed by the {}!\n"\
                              .format(c_name, all_items[item_to_disarm],
                                      v_item.name)
@@ -484,7 +486,8 @@ async def event_handle_shot_duel(ctx, victim):
             c_wep = None
             v_wep = None
             if len(common.users[chal_name]['equip']) > 0:
-                notif_str = ""
+                notif_str = "{} is using the following items:\n"\
+                            .format(chal_name)
                 rem_list = []
                 for a_item in common.users[chal_name]['equip']:
                     c_item = DuelItem(0,
@@ -493,20 +496,20 @@ async def event_handle_shot_duel(ctx, victim):
                     if c_item.slot == 'weapon':
                         c_wep = c_item
                     common.users[chal_name]['inventory'][c_item.item_id] += 1
-                    notif_str += "{} is using the {}.\n{}" \
-                                 .format(chal_name, c_item.name,
-                                         item_eff_str(c_item))
+                    notif_str += "  {}:\n{}" \
+                                 .format(c_item.name, item_eff_str(c_item))
                     if common.users[chal_name]['inventory'][c_item.item_id] \
                             >= c_item.uses:
                         del(common.users[chal_name]['inventory']
                             [c_item.item_id])
                         rem_list.append(c_item.slot)
-                        notif_str += "This is the last use for this item!\n"
+                        notif_str += "    This is the last use for this item!\n"
                 await ctx.bot.say(notif_str)
                 for i in rem_list:
                     del(common.users[chal_name]['equip'][i])
             if len(common.users[vict_name]['equip']) > 0:
-                notif_str = ""
+                notif_str = "{} is using the following items:\n"\
+                            .format(vict_name)
                 rem_list = []
                 for a_item in common.users[vict_name]['equip']:
                     v_item = DuelItem(0,
@@ -515,15 +518,14 @@ async def event_handle_shot_duel(ctx, victim):
                     if v_item.slot == 'weapon':
                         v_wep = v_item
                     common.users[vict_name]['inventory'][v_item.item_id] += 1
-                    notif_str += "{} is using the {}.\n{}" \
-                                 .format(vict_name, v_item.name,
-                                         item_eff_str(v_item))
+                    notif_str += "  {}:\n{}" \
+                                 .format(v_item.name, item_eff_str(v_item))
                     if common.users[vict_name]['inventory'][v_item.item_id] \
                             >= v_item.uses:
                         del (common.users[vict_name]['inventory']
                              [v_item.item_id])
                         rem_list.append(v_item.slot)
-                        notif_str += "This is the last use for this item!\n"
+                        notif_str += "    This is the last use for this item!\n"
                 await ctx.bot.say(notif_str)
                 for i in rem_list:
                     del(common.users[vict_name]['equip'][i])

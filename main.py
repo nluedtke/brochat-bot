@@ -9,18 +9,18 @@ from difflib import get_close_matches
 from random import choice
 from sys import stderr
 from time import time
-
 import pytz
 import requests
+import asyncio
+
 # NonStandard Imports
 from discord.ext import commands
 from twilio.rest import Client
 from twython import Twython
 from objs.weekend_games import WeekendGames, argument_parser, pretty_date
-
 import common
-from cogs.duelcog import item_chance_roll
-from objs.duel_item import DuelItem
+from cogs.duelcog import item_chance_roll, event_handle_shot_duel
+from objs.duel_item import DuelItem, all_items
 
 description = "A bot to enforce friendship."
 startTime = 0
@@ -385,6 +385,91 @@ async def get_uptime():
         .format(common.duels_conducted, common.items_awarded,
                 common.trump_tweets_seen)
     await bot.say((ret_str + stat_str))
+
+
+@bot.command(name='test', hidden=True, pass_context=True)
+async def run_test(ctx):
+    """Runs test"""
+
+    if ctx.message.channel.name == 'gen_testing':
+        arguments = argument_parser(ctx.message.content)
+        if arguments[0] == 'all':
+            await bot.send_message(ctx.message.channel, "Starting Automated "
+                                                        "Tests.")
+            ctx.message.content = "!version"
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(5)
+            await bot.send_message(ctx.message.channel, "Printing help.")
+            ctx.message.content = "!help"
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(5)
+            await bot.send_message(ctx.message.channel, "Populating inventory.")
+            await item_chance_roll(bot, ctx.message.author.display_name,
+                                   ctx.message.channel, 10)
+            await item_chance_roll(bot, ctx.message.author.display_name,
+                                   ctx.message.channel, 10)
+            await item_chance_roll(bot, ctx.message.author.display_name,
+                                   ctx.message.channel, 10)
+            await asyncio.sleep(5)
+            await bot.send_message(ctx.message.channel, "Calling !use")
+            ctx.message.content = "!use"
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(5)
+            await bot.send_message(ctx.message.channel, "Equiping first item")
+            inv = common.users[ctx.message.author.display_name]['inventory']
+            ctx.message.content = "!use {}".format(str(list(inv)[0]))
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(5)
+            await bot.send_message(ctx.message.channel, "Simulating Trump Call")
+            ctx.message.content = "!trump"
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(10)
+            await bot.send_message(ctx.message.channel,
+                                   "Simulating Bertstrip Call")
+            ctx.message.content = "!bertstrip"
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(10)
+        await bot.send_message(ctx.message.channel, "Setting test duel")
+        test_inv1 = {}
+        for i in range(3):
+            test_inv1[choice(list(all_items.keys()))] = 0
+        test_inv2 = {}
+        for i in range(3):
+            test_inv2[choice(list(all_items.keys()))] = 0
+        common.users['palu']['inventory'] = test_inv1
+        common.users['csh']['inventory'] = test_inv2
+        common.users['palu']['equip'] = {}
+        common.users['csh']['equip'] = {}
+        common.whos_in.update_db()
+
+        await asyncio.sleep(5)
+        for p in bot.get_all_members():
+            if p.display_name == 'palu':
+                player2 = p
+            elif p.display_name == 'csh':
+                player1 = p
+        for i in range(3):
+            inv = common.users[player1.display_name]['inventory']
+            if len(inv) >= i:
+                ctx.message.content = "!use {}".format(str(list(inv)[i]))
+                ctx.message.author = player1
+                await bot.process_commands(ctx.message)
+            inv = common.users[player2.display_name]['inventory']
+            if len(inv) >= i:
+                ctx.message.content = "!use {}".format(str(list(inv)[i]))
+                ctx.message.author = player2
+                await bot.process_commands(ctx.message)
+        ctx.message.author = player1
+        common.accepted = True
+        await event_handle_shot_duel(ctx, player2)
+        await asyncio.sleep(20)
+        while common.shot_duel_running:
+            await asyncio.sleep(10)
+        common.users['palu']['inventory'] = {}
+        common.users['csh']['inventory'] = {}
+        common.users['palu']['equip'] = {}
+        common.users['csh']['equip'] = {}
+        await bot.send_message(ctx.message.channel, "Test Complete.")
 
 
 @bot.command(name='me', aliases=['whoami'], pass_context=True)
