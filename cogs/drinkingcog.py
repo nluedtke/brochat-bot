@@ -10,7 +10,8 @@ class DrinkBank:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='drink', aliases=['bottomsup'], pass_context=True)
+    @commands.command(name='drink', aliases=['bottomsup', 'drank'],
+                      pass_context=True)
     @commands.cooldown(1, 60, type=commands.BucketType.user)
     async def drink(self, ctx):
         """Log a drink taken"""
@@ -127,6 +128,19 @@ def run_shot_lottery(ctx, auto_call=False):
         for player in players:
             common.add_drink(common.users[player])
     return output
+
+
+def in_deep_debt(player):
+    """
+    Checks if a player is in deep debt
+    :param player: Player to check
+    :return: True if player has too much debt
+    """
+
+    if "drinks_owed" not in common.users[player]:
+        return False
+    else:
+        return common.users[player]['drinks_owed'] >= 5
 
 
 def consume_drink(user):

@@ -14,12 +14,13 @@ from random import choice
 #   3) uses: amount of uses, measured in duels
 #   4) text: text description of item
 #   5) name: name of item
+#   6) slot: Where the item sits either armor, weapon, or other
 # effect_type: effect
 # Currently these effect_types are implemented:
 #   1) roll_effect = This effect modifies a roll
 #   2) life_effect = This effect modifies a life total at the start of a duel
 #   3) disarm_effect = This effect disarms the opponent's item provided its not
-#   a disarm_effect itself.
+#   a disarm_effect itself. CAN ONLY BE ON WEAPONS
 #   4) regen_effect = The effect adds life at the end of the round, this
 #   happens after the death check goes into effect.
 #   5) luck_effect = This modifies the item chance roll at the start of the
@@ -28,7 +29,7 @@ from random import choice
 #   6) poison_effect = Should only be on weapons and defines two items in the
 #   prop list. 'poison' which is the amount the poison actually does right
 #   round and 'duration' the amount of rounds it hits for following a
-#   successfull strike. Poison damage does not stack, but the duration does.
+#   successful strike. Poison damage does not stack, but the duration does.
 #   deadly = 3 duration, moderate = 2 duration, irritating/oily = 1 duration.
 common_items = {
     "0": {"name": "Copper Ring of One Better",
@@ -226,6 +227,9 @@ rare_items = {
                     "duels."}
 }
 
+all_items = common_items
+all_items.update(rare_items)
+
 
 class DuelItem(object):
     """
@@ -249,12 +253,12 @@ class DuelItem(object):
         if _id is not None:
             self.item_id = str(_id)
         else:
-            if 10 >= item_roll > 1:
-                item = choice(list(common_items.keys()))
-                self.item_id = item
+            if 15 >= item_roll > 1:
+                _item = choice(list(common_items.keys()))
+                self.item_id = _item
             elif item_roll == 1:
-                item = choice(list(rare_items.keys()))
-                self.item_id = item
+                _item = choice(list(rare_items.keys()))
+                self.item_id = _item
 
         if self.item_id is not None:
             if int(self.item_id) < 100:
@@ -270,23 +274,57 @@ class DuelItem(object):
             if 'spec_text' in items[self.item_id]:
                 self.spec_text = items[self.item_id]['spec_text']
 
+    def __iadd__(self, other):
+        """
+        Override the +=
+
+        :param other: Item effect to add
+        :return:
+        """
+        self.name = "Combined item"
+        self.item_id = None
+
+        if self.type is None:
+            self.type = other.type
+        else:
+            self.type += other.type
+        for p in other.prop:
+            if self.prop is None:
+                self.prop = {}
+            if p in self.prop:
+                self.prop[p] += other.prop[p]
+            else:
+                self.prop[p] = other.prop[p]
+
+        return self
+
+    def __eq__(self, other):
+        """
+        Override the equal operator
+
+        :param other: Second item to compare
+        :return: True if the same, false otherwise
+        """
+
+        return self.item_id == other.item_id
+
 
 class PoisonEffect(object):
     """
     Defines a PoisonEffect object
     """
 
-    def __init__(self, item, p_source):
+    def __init__(self, _item, p_source):
         """
         Constructor for a PoisonEffect
 
-        :param item: Item causing the PoisonEffect
+        :param _item: Item causing the PoisonEffect
         :param p_source: Person Causing the poison
         """
 
-        self.p_id = "{}_{}".format(item.item_id, p_source)
-        self.dam = item.prop['poison']
-        self.dur = item.prop['duration']
+        self.p_id = "{}_{}".format(_item.item_id, p_source)
+        self.dam = _item.prop['poison']
+        self.dur = _item.prop['duration']
 
     def __eq__(self, other):
         """
