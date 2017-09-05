@@ -211,7 +211,9 @@ async def on_ready():
         "want to call it, I can't stand it any longer. It's the smell, if "
         "there is such a thing. I feel saturated by it. I can taste your "
         "stink and every time I do, I fear that I've somehow been infected by "
-        "it. "
+        "it. ",
+        "Blackmail is such an ugly word. I prefer extortion. The ‘x’ makes "
+        "it sound cool."
     ]
     for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' or channel.name == 'brochat':
