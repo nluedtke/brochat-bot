@@ -566,8 +566,9 @@ async def on_command_error(exception, context):
                                "You are missing a required argument for that "
                                "command.")
     else:
-        await bot.send_message(context.message.channel, "Unhandled command "
-                                                        "error")
+        await bot.send_message(context.message.channel,
+                               "Unhandled command error ({})"
+                               .format(type(exception)))
 
     print('Ignoring exception in command {}'.format(context.command),
           file=sys.stderr)

@@ -489,12 +489,13 @@ async def event_handle_shot_duel(ctx, victim):
             # Check if a player has active items
             vi_list = []
             ci_list = []
+            crem_list = []
+            vrem_list = []
             c_wep = None
             v_wep = None
             if len(common.users[chal_name]['equip']) > 0:
                 notif_str = "{} is using the following items:\n"\
                             .format(chal_name)
-                rem_list = []
                 for a_item in common.users[chal_name]['equip']:
                     c_item = DuelItem(0,
                                       common.users[chal_name]['equip'][a_item])
@@ -508,15 +509,13 @@ async def event_handle_shot_duel(ctx, victim):
                             >= c_item.uses:
                         del(common.users[chal_name]['inventory']
                             [c_item.item_id])
-                        rem_list.append(c_item.slot)
+                        crem_list.append(c_item.slot)
                         notif_str += "    This is the last use for this item!\n"
                 await ctx.bot.say(notif_str)
-                for i in rem_list:
-                    del(common.users[chal_name]['equip'][i])
+
             if len(common.users[vict_name]['equip']) > 0:
                 notif_str = "{} is using the following items:\n"\
                             .format(vict_name)
-                rem_list = []
                 for a_item in common.users[vict_name]['equip']:
                     v_item = DuelItem(0,
                                       common.users[vict_name]['equip'][a_item])
@@ -530,11 +529,10 @@ async def event_handle_shot_duel(ctx, victim):
                             >= v_item.uses:
                         del (common.users[vict_name]['inventory']
                              [v_item.item_id])
-                        rem_list.append(v_item.slot)
+                        vrem_list.append(v_item.slot)
                         notif_str += "    This is the last use for this item!\n"
                 await ctx.bot.say(notif_str)
-                for i in rem_list:
-                    del(common.users[vict_name]['equip'][i])
+
 
             # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
 
@@ -549,6 +547,14 @@ async def event_handle_shot_duel(ctx, victim):
                     ci_list.remove(ci_to_rem)
                 if vi_to_rem is not None:
                     vi_list.remove(vi_to_rem)
+
+            # Remove equipped items that were used up
+            for i in crem_list:
+                if ci_to_rem and i != ci_to_rem.slot:
+                    del(common.users[chal_name]['equip'][i])
+            for i in vrem_list:
+                if vi_to_rem and i != vi_to_rem.slot:
+                    del(common.users[vict_name]['equip'][i])
 
             # Determine cumulative item effect
             if len(ci_list) < 1:
