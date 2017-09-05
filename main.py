@@ -429,47 +429,52 @@ async def run_test(ctx):
             ctx.message.content = "!bertstrip"
             await bot.process_commands(ctx.message)
             await asyncio.sleep(10)
-        await bot.send_message(ctx.message.channel, "Setting test duel")
-        test_inv1 = {}
-        for i in range(3):
-            test_inv1[choice(list(all_items.keys()))] = 0
-        test_inv2 = {}
-        for i in range(3):
-            test_inv2[choice(list(all_items.keys()))] = 0
-        common.users['palu']['inventory'] = test_inv1
-        common.users['csh']['inventory'] = test_inv2
-        common.users['palu']['equip'] = {}
-        common.users['csh']['equip'] = {}
-        common.whos_in.update_db()
+        elif arguments[0] == 'long':
+            length = 50
+            del(common.users['csh']['duel_record'])
+            del (common.users['palu']['duel_record'])
+        else:
+            length = 1
+        for y in range(length):
+            await bot.send_message(ctx.message.channel, "Setting test duel")
+            test_inv1 = {}
+            for i in range(3):
+                test_inv1[choice(list(all_items.keys()))] = 0
+            test_inv2 = {}
+            for i in range(3):
+                test_inv2[choice(list(all_items.keys()))] = 0
+            common.users['palu']['inventory'] = test_inv1
+            common.users['csh']['inventory'] = test_inv2
+            common.users['palu']['equip'] = {}
+            common.users['csh']['equip'] = {}
+            common.users['palu']['drinks_owed'] = 0
+            common.users['csh']['drinks_owed'] = 0
+            common.whos_in.update_db()
 
-        await asyncio.sleep(5)
-        for p in bot.get_all_members():
-            if p.display_name == 'palu':
-                player2 = p
-            elif p.display_name == 'csh':
-                player1 = p
-        for i in range(3):
-            inv = common.users[player1.display_name]['inventory']
-            if len(inv) >= i:
-                ctx.message.content = "!use {}".format(str(list(inv)[i]))
-                ctx.message.author = player1
-                await bot.process_commands(ctx.message)
-            inv = common.users[player2.display_name]['inventory']
-            if len(inv) >= i:
-                ctx.message.content = "!use {}".format(str(list(inv)[i]))
-                ctx.message.author = player2
-                await bot.process_commands(ctx.message)
-        ctx.message.author = player1
-        common.accepted = True
-        await event_handle_shot_duel(ctx, player2)
-        await asyncio.sleep(20)
-        while common.shot_duel_running:
-            await asyncio.sleep(10)
-        common.users['palu']['inventory'] = {}
-        common.users['csh']['inventory'] = {}
-        common.users['palu']['equip'] = {}
-        common.users['csh']['equip'] = {}
-        await bot.send_message(ctx.message.channel, "Test Complete.")
+            await asyncio.sleep(5)
+            for p in bot.get_all_members():
+                if p.display_name == 'palu':
+                    player2 = p
+                elif p.display_name == 'csh':
+                    player1 = p
+            for i in range(3):
+                inv = common.users[player1.display_name]['inventory']
+                if len(inv) > i:
+                    ctx.message.content = "!use {}".format(str(list(inv)[i]))
+                    ctx.message.author = player1
+                    await bot.process_commands(ctx.message)
+                inv = common.users[player2.display_name]['inventory']
+                if len(inv) > i:
+                    ctx.message.content = "!use {}".format(str(list(inv)[i]))
+                    ctx.message.author = player2
+                    await bot.process_commands(ctx.message)
+            ctx.message.author = player1
+            common.accepted = True
+            await event_handle_shot_duel(ctx, player2)
+            await asyncio.sleep(20)
+            while common.shot_duel_running:
+                await asyncio.sleep(10)
+            await bot.send_message(ctx.message.channel, "Test Complete.")
 
 
 @bot.command(name='me', aliases=['whoami'], pass_context=True)

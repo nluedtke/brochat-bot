@@ -110,7 +110,7 @@ def run_shot_lottery(ctx, auto_call=False):
                   .format(len(players) - 1))
     winner = randint(0, len(players) - 1)
     if players[winner] != 'SOCIAL!':
-        common.add_drink(common.users[players[winner]])
+        common.add_drink(players[winner])
         for m in ctx.bot.get_all_members():
             if str(m.display_name) == players[winner]:
                 tag_id = m.mention
@@ -126,7 +126,7 @@ def run_shot_lottery(ctx, auto_call=False):
         output.append("{}{}{}".format(glass, glass, glass))
         players.pop(winner)
         for player in players:
-            common.add_drink(common.users[player])
+            common.add_drink(player)
     return output
 
 

@@ -21,12 +21,14 @@ class Duels:
             if common.shot_duel_running:
                 await self.bot.say('There is a duel already running, wait your '
                                    'turn to challenge someone!')
+                self.bot.get_command('duel').reset_cooldown(ctx)
                 return
 
             if in_deep_debt(ctx.message.author.display_name):
                 await self.bot.say('Hey there, I can\'t let you do that till '
                                    'you pay down some of that friendship you '
                                    'owe.')
+                self.bot.get_command('duel').reset_cooldown(ctx)
                 return
 
             members = self.bot.get_all_members()
@@ -38,6 +40,7 @@ class Duels:
 
             if len(name) < 1:
                 await self.bot.say('Who do you want to duel?')
+                self.bot.get_command('duel').reset_cooldown(ctx)
                 return
 
             if name == ctx.message.author.display_name.lower() and \
@@ -46,16 +49,19 @@ class Duels:
                                    "instead of including this channel?")
             elif name not in map_disp_to_name:
                 await self.bot.say('That\'s not a real person...')
+                self.bot.get_command('duel').reset_cooldown(ctx)
             elif name == 'brochat-bot':
                 await self.bot.say('brochat-bot would drink you under the '
                                    'table, try another person!')
+                self.bot.get_command('duel').reset_cooldown(ctx)
             elif str(map_disp_to_name[name].status) != 'online':
                 await self.bot.say('That person is likely already passed out!')
+                self.bot.get_command('duel').reset_cooldown(ctx)
             else:
                 await event_handle_shot_duel(ctx, map_disp_to_name[name])
 
-    @shot_duel.command(name='ranking', aliases=['ranks'])
-    async def get_duel_rankings(self):
+    @shot_duel.command(name='ranking', aliases=['ranks'], pass_context=True)
+    async def get_duel_rankings(self, ctx):
         """Display Top 5 dueling rankings"""
 
         duelers = {}
@@ -79,6 +85,7 @@ class Duels:
             if ranking > 5:
                 break
         await self.bot.say(output)
+        self.bot.get_command('duel').reset_cooldown(ctx)
 
     @commands.command(name='accept', pass_context=True)
     async def toggle_accept(self, ctx):
@@ -126,9 +133,9 @@ class Duels:
         elif item_num in all_items and item_num in inv and \
                 all_items[item_num]['slot'] in equip:
             slot = all_items[item_num]['slot']
-            await self.bot.say("You already have {} equipped in the {} slot."
-                               .format(all_items[equip[slot]]['name'],
-                                       all_items[item_num]['slot']))
+            await self.bot.say("You already have the {} equipped in the {} "
+                               "slot.".format(all_items[equip[slot]]['name'],
+                                              all_items[item_num]['slot']))
         elif item_num in all_items and item_num not in inv:
             await self.bot.say("You don't have that item!")
         elif item_num in all_items and item_num in inv:
@@ -215,6 +222,7 @@ def item_eff_str(item):
     """
 
     ret_str = ""
+
     if hasattr(item, 'spec_text'):
         return item.spec_text
     if "roll_effect" in item.type:
@@ -264,7 +272,6 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
     :param c_name: Challenger's Display name
     :param v_name: Victim's Display name
     """
-
     notif_str = ""
     c_item_ret = None
     v_item_ret = None
@@ -291,7 +298,7 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
                 item_to_disarm = common.users[v_name]['equip'][choice(
                     poss_items)]
                 notif_str += "{}'s {} has been removed by the {}!\n"\
-                             .format(v_name, all_items[item_to_disarm],
+                             .format(v_name, all_items[item_to_disarm]['name'],
                                      c_item.name)
                 v_item_ret = DuelItem(0, item_to_disarm)
                 return_item(v_item_ret, v_name)
@@ -309,7 +316,6 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
                     poss_items.append(i)
                 elif i == 'weapon' and 'disarm_effect' not in c_item.type:
                     poss_items.append(i)
-
             if len(poss_items) < 1:  # If no possible items give up
                 notif_str += "{} only has a disarm item, the {} has no " \
                              "effect!\n".format(c_name, v_item.name)
@@ -319,12 +325,12 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
                 item_to_disarm = common.users[c_name]['equip'][choice(
                     poss_items)]
                 notif_str += "{}'s {} has been removed by the {}!\n"\
-                             .format(c_name, all_items[item_to_disarm],
+                             .format(c_name, all_items[item_to_disarm]['name'],
                                      v_item.name)
                 c_item_ret = DuelItem(0, item_to_disarm)
                 return_item(c_item_ret, c_name)
 
-    ctx.bot.say(notif_str)
+    await ctx.bot.say(notif_str)
     return c_item_ret, v_item_ret
 
 
@@ -349,22 +355,22 @@ async def death_check(ctx, chal, c_life, vict, v_life):
                                             vict.mention)
         common.users[vict.display_name]['duel_record'][2] += 1
         common.users[chal.display_name]['duel_record'][2] += 1
-        common.add_drink(common.users[vict.display_name])
-        common.add_drink(common.users[chal.display_name])
+        common.add_drink(vict.display_name)
+        common.add_drink(chal.display_name)
     elif v_life < 1:
         death_string = "\n{} has died!\n{} wins the duel!\n" \
                        "{} drinks!".format(vict.display_name,
                                            chal.display_name, vict.mention)
         common.users[vict.display_name]['duel_record'][1] += 1
         common.users[chal.display_name]['duel_record'][0] += 1
-        common.add_drink(common.users[vict.display_name])
+        common.add_drink(vict.display_name)
     elif c_life < 1:
         death_string = "\n{} has died!\n{} wins the duel!\n" \
                        "{} drinks!".format(chal.display_name, vict.display_name,
                                            chal.mention)
         common.users[vict.display_name]['duel_record'][0] += 1
         common.users[chal.display_name]['duel_record'][1] += 1
-        common.add_drink(common.users[chal.display_name])
+        common.add_drink(chal.display_name)
     if len(death_string) > 1:
         await ctx.bot.say(death_string)
         return True
@@ -534,8 +540,7 @@ async def event_handle_shot_duel(ctx, victim):
 
             # spec_effect check (disarm_effect)
             if (c_wep is not None and 'disarm_effect' in c_wep.type) \
-                    or (v_wep is not None and
-                        'disarm_effect' in v_wep.type):
+                    or (v_wep is not None and 'disarm_effect' in v_wep.type):
                 # If a player losses an item, remove it from active list
                 ci_to_rem, vi_to_rem = await item_disarm_check(ctx, c_wep,
                                                                v_wep, chal_name,

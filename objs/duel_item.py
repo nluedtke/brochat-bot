@@ -1,6 +1,7 @@
 # the duel_item class, which represents an item to help one duel
 
 from random import choice
+import copy
 
 # Define a common item here.
 # Current guidelines for rarity are:
@@ -254,25 +255,21 @@ class DuelItem(object):
             self.item_id = str(_id)
         else:
             if 15 >= item_roll > 1:
-                _item = choice(list(common_items.keys()))
+                _item = choice(list(common_items.keys()))[:]
                 self.item_id = _item
             elif item_roll == 1:
-                _item = choice(list(rare_items.keys()))
+                _item = choice(list(rare_items.keys()))[:]
                 self.item_id = _item
 
         if self.item_id is not None:
-            if int(self.item_id) < 100:
-                items = common_items
-            else:
-                items = rare_items
-            self.name = items[self.item_id]['name']
-            self.prop = items[self.item_id]['prop']
-            self.type = items[self.item_id]['type']
-            self.uses = items[self.item_id]['uses']
-            self.text = items[self.item_id]['text']
-            self.slot = items[self.item_id]['slot']
-            if 'spec_text' in items[self.item_id]:
-                self.spec_text = items[self.item_id]['spec_text']
+            self.name = all_items[self.item_id]['name'][:]
+            self.prop = copy.deepcopy(all_items[self.item_id]['prop'])
+            self.type = all_items[self.item_id]['type'][:]
+            self.uses = all_items[self.item_id]['uses']
+            self.text = all_items[self.item_id]['text']
+            self.slot = all_items[self.item_id]['slot']
+            if 'spec_text' in all_items[self.item_id]:
+                self.spec_text = all_items[self.item_id]['spec_text']
 
     def __iadd__(self, other):
         """
@@ -282,10 +279,10 @@ class DuelItem(object):
         :return:
         """
         self.name = "Combined item"
-        self.item_id = None
+        self.item_id = 'cid'
 
         if self.type is None:
-            self.type = other.type
+            self.type = other.type[:]
         else:
             self.type += other.type
         for p in other.prop:
@@ -294,7 +291,7 @@ class DuelItem(object):
             if p in self.prop:
                 self.prop[p] += other.prop[p]
             else:
-                self.prop[p] = other.prop[p]
+                self.prop[p] = copy.deepcopy(other.prop[p])
 
         return self
 
@@ -307,6 +304,15 @@ class DuelItem(object):
         """
 
         return self.item_id == other.item_id
+
+    def __str__(self):
+        """
+        Override the string method
+
+        :return: True if the same, false otherwise
+        """
+
+        return "{}: {}".format(self.item_id, self.name)
 
 
 class PoisonEffect(object):
