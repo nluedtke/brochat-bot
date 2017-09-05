@@ -533,7 +533,6 @@ async def event_handle_shot_duel(ctx, victim):
                         notif_str += "    This is the last use for this item!\n"
                 await ctx.bot.say(notif_str)
 
-
             # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
 
             # spec_effect check (disarm_effect)
@@ -544,17 +543,19 @@ async def event_handle_shot_duel(ctx, victim):
                                                                v_wep, chal_name,
                                                                vict_name)
                 if ci_to_rem is not None:
+                    if ci_to_rem.slot in crem_list:
+                        crem_list.remove(ci_to_rem.slot)
                     ci_list.remove(ci_to_rem)
                 if vi_to_rem is not None:
+                    if vi_to_rem.slot in vrem_list:
+                        vrem_list.remove(vi_to_rem.slot)
                     vi_list.remove(vi_to_rem)
 
             # Remove equipped items that were used up
             for i in crem_list:
-                if ci_to_rem and i != ci_to_rem.slot:
-                    del(common.users[chal_name]['equip'][i])
+                del(common.users[chal_name]['equip'][i])
             for i in vrem_list:
-                if vi_to_rem and i != vi_to_rem.slot:
-                    del(common.users[vict_name]['equip'][i])
+                del(common.users[vict_name]['equip'][i])
 
             # Determine cumulative item effect
             if len(ci_list) < 1:
