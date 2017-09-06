@@ -213,10 +213,10 @@ async def print_at_midnight(bot):
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
         await bot.send_message(c_to_send, common.whos_in.whos_in())
-        i_awarded = False
-        i = False
 
         # Community Drop Time
+        i_awarded = False
+        i = False
         while not i_awarded:
             for m in bot.get_all_members():
                 if m.display_name != 'brochat-bot' and m.display_name in \

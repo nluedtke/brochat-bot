@@ -516,8 +516,24 @@ if __name__ == "__main__":
     PARSER.add_argument('-c', '--channel', type=str,
                         help='Set the default channel. default="brochat"',
                         default='brochat')
+    PARSER.add_argument('-d', '--data-directory', type=str,
+                        help='Location to look for database file and '
+                             'tokens.config, if not found the local directory '
+                             'will always be checked. default="/data"',
+                        default='/data')
+    PARSER.add_argument('--database', type=str,
+                        help='Name of database file. default="db.json"',
+                        default='db.json')
+    PARSER.add_argument('--token-file', type=str,
+                        help='Name of tokens file. NOTE: This discord bot '
+                             'token could be in the ENV variable '
+                             '$DISCORD_BOT_TOKEN. default="tokens.config"',
+                        default='tokens.config')
 
     common.ARGS = vars(PARSER.parse_args())
+    common.data_dir = common.ARGS['data_directory']
+    common.db_file = '{}/{}'.format(common.data_dir, common.ARGS['database'])
+
     for extension in startup_extensions:
         try:
             bot.load_extension(extension)
@@ -530,18 +546,20 @@ if __name__ == "__main__":
 
     # Handle tokens from local file
     tokens = {}
-    if not os.path.exists('{}/tokens.config'.format(common.data_dir)) and not \
-            os.path.exists('tokens.config'):
+    if not os.path.exists('{}/{}'.format(common.data_dir,
+                                         common.ARGS['token_file'])) \
+            and not os.path.exists('{}'.format(common.ARGS['token_file'])):
         print("No tokens config file found.", file=stderr)
         tokens = {}
         if os.environ.get('DISCORD_BOT_TOKEN') is None:
             exit(-1)
-    elif os.path.exists('tokens.config'):
+    elif os.path.exists('{}'.format(common.ARGS['token_file'])):
         print("Using local token file")
-        with open('tokens.config', 'r') as t_file:
+        with open('{}'.format(common.ARGS['token_file']), 'r') as t_file:
             tokens = json.load(t_file)
     else:
-        with open('{}/tokens.config'.format(common.data_dir), 'r') as t_file:
+        with open('{}/{}'.format(common.data_dir,
+                                 common.ARGS['token_file']), 'r') as t_file:
             tokens = json.load(t_file)
 
     # Discord Bot Token
@@ -578,13 +596,14 @@ if __name__ == "__main__":
         auth_token = tokens['twilio_auth_token']
         common.twilio_client = Client(account_sid, auth_token)
 
-    if not os.path.exists(common.db_file) and not os.path.exists('db.json'):
+    if not os.path.exists(common.db_file) \
+            and not os.path.exists('{}'.format(common.ARGS['database'])):
         print("Starting DB from scratch (locally)")
-        common.db_file = 'db.json'
+        common.db_file = '{}'.format(common.ARGS['database'])
         with open(common.db_file, 'w') as datafile:
             json.dump(common.db, datafile)
-    elif os.path.exists('db.json'):
-        common.db_file = 'db.json'
+    elif os.path.exists('{}'.format(common.ARGS['database'])):
+        common.db_file = '{}'.format(common.ARGS['database'])
         print("Using local db file")
         with open(common.db_file, 'r') as datafile:
             common.db = json.load(datafile)
