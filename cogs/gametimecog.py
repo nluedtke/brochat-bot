@@ -236,7 +236,7 @@ async def print_at_midnight(bot):
                 await bot.send_message(c_to_send,
                                        "{}, the bank sent me to collect on "
                                        "your debt. I'll have to take your {} "
-                                       "in lieu of one drink. Can't cheap "
+                                       "in lieu of one drink. Can't cheat "
                                        "friendship around these parts."
                                        .format(nc, get_name(item_take)))
                 if get_slot(item_take) in common.users[nc]['equip']:
