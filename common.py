@@ -1,7 +1,7 @@
 VERSION_YEAR = 2017
 VERSION_MONTH = 9
 VERSION_DAY = 5
-VERSION_REV = 1
+VERSION_REV = 2
 
 whos_in = None
 twitter = None
@@ -63,7 +63,7 @@ def add_drink(user):
     :return:
     """
 
-    if "drinks_owed" in user:
+    if "drinks_owed" in users[user]:
         users[user]['drinks_owed'] += 1
     else:
         users[user]['drinks_owed'] = 1
