@@ -18,7 +18,7 @@ class DrinkBank:
         author = str(ctx.message.author.display_name)
         if author in common.users:
             output = "Bottoms up, {}. ".format(author)
-            result = consume_drink(common.users[author])
+            result = consume_drink(author)
 
             if result < -5:
                 output += "Whoa there buddy, drinking around here is a " \
@@ -146,17 +146,16 @@ def in_deep_debt(player):
 def consume_drink(user):
     """
     Consumes a drink for the user.
-
-    :param user:
+    :param user: user's display name
     :return:
     """
 
-    if "drinks_owed" in user:
-        user['drinks_owed'] -= 1
+    if "drinks_owed" in common.users[user]:
+        common.users[user]['drinks_owed'] -= 1
     else:
-        user['drinks_owed'] = -1
+        common.users[user]['drinks_owed'] = -1
 
-    return user['drinks_owed']
+    return common.users[user]['drinks_owed']
 
 
 def setup(bot):
