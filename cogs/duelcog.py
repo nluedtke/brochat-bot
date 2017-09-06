@@ -2,7 +2,8 @@ import asyncio
 from random import randint, choice
 from discord.ext import commands
 import common
-from objs.duel_item import DuelItem, PoisonEffect, all_items
+from objs.duel_item import DuelItem, PoisonEffect, get_name, get_slot, \
+    get_text, get_uses, item_exists
 from cogs.drinkingcog import in_deep_debt
 
 
@@ -111,9 +112,8 @@ class Duels:
             else:
                 inv_string = "Item_ID: Item_Name (Description)\n"
                 for it in inv:
-                    inv_string += "{}: {} ({})\n".format(it,
-                                                         all_items[it]['name'],
-                                                         all_items[it]['text'])
+                    inv_string += "{}: {} ({})\n".format(it, get_name(it),
+                                                         get_text(it))
                 # If any are in use, go ahead print that info
                 if len(equip) > 0:
                     icons = {'armor': ":shirt:",
@@ -125,23 +125,22 @@ class Duels:
                         used_amount = inv[item_num]
                         inv_string += "{}: {} - {} use(s) remaining.\n" \
                                       .format(icons[i],
-                                              all_items[item_num]['name'],
-                                              (all_items[item_num]['uses']
+                                              get_name(item_num),
+                                              (get_uses(item_num)
                                                - used_amount))
 
                 await self.bot.say(inv_string)
-        elif item_num in all_items and item_num in inv and \
-                all_items[item_num]['slot'] in equip:
-            slot = all_items[item_num]['slot']
+        elif item_exists(item_num) and item_num in inv and \
+                get_slot(item_num) in equip:
+            slot = get_slot(item_num)
             await self.bot.say("You already have the {} equipped in the {} "
-                               "slot.".format(all_items[equip[slot]]['name'],
-                                              all_items[item_num]['slot']))
-        elif item_num in all_items and item_num not in inv:
+                               "slot.".format(get_name(equip[slot]), slot))
+        elif item_exists(item_num) and item_num not in inv:
             await self.bot.say("You don't have that item!")
-        elif item_num in all_items and item_num in inv:
+        elif item_exists(item_num) and item_num in inv:
             await self.bot.say("Item \"{}\" will be active starting with your "
-                               "next duel.".format(all_items[item_num]['name']))
-            common.users[name]['equip'][all_items[item_num]['slot']] = item_num
+                               "next duel.".format(get_name(item_num)))
+            common.users[name]['equip'][get_slot(item_num)] = item_num
         else:
             await self.bot.say("**!use <item_id>**: To use an item \n"
                                "**!use**: to view your inventory")
@@ -159,14 +158,14 @@ class Duels:
                 if common.users[name]['equip'][s] == slot:
                     item_num = common.users[name]['equip'][s]
                     await self.bot.say("You have unquipped the {}"
-                                       .format(all_items[item_num]['name']))
+                                       .format(get_name(item_num)))
                     del (common.users[name]['equip'][s])
                     return
             await self.bot.say("You don't have an item equipped in that slot!")
         else:
             item_num = common.users[name]['equip'][slot]
             await self.bot.say("You have unquipped the {}"
-                               .format(all_items[item_num]['name']))
+                               .format(get_name(item_num)))
             del(common.users[name]['equip'][slot])
 
 async def item_chance_roll(bot, player, channel, max_roll=100):
@@ -298,7 +297,7 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
                 item_to_disarm = common.users[v_name]['equip'][choice(
                     poss_items)]
                 notif_str += "{}'s {} has been removed by the {}!\n"\
-                             .format(v_name, all_items[item_to_disarm]['name'],
+                             .format(v_name, get_name(item_to_disarm),
                                      c_item.name)
                 v_item_ret = DuelItem(0, item_to_disarm)
                 return_item(v_item_ret, v_name)
@@ -325,7 +324,7 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
                 item_to_disarm = common.users[c_name]['equip'][choice(
                     poss_items)]
                 notif_str += "{}'s {} has been removed by the {}!\n"\
-                             .format(c_name, all_items[item_to_disarm]['name'],
+                             .format(c_name, get_name(item_to_disarm),
                                      v_item.name)
                 c_item_ret = DuelItem(0, item_to_disarm)
                 return_item(c_item_ret, c_name)
