@@ -61,7 +61,7 @@ def add_drink(user):
     :return:
     """
 
-    if "drinks_owed" in user:
+    if "drinks_owed" in users[user]:
         users[user]['drinks_owed'] += 1
     else:
         users[user]['drinks_owed'] = 1
