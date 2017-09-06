@@ -419,7 +419,9 @@ async def whoami(ctx):
 
         for k, v in common.users[author].items():
             if k == "duel_record":
-                if v[0] < 10:
+                if v[0] < 10 and v[1] > (v[0] + 5):
+                    output = "You're a pretty terrible dueler"
+                elif v[0] < 10:
                     output = "You're a pretty green dueler"
                 elif v[0] < 100:
                     output = "You're a seasoned dueler"
