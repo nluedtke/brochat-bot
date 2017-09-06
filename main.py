@@ -114,9 +114,7 @@ async def on_message(message):
 
 @bot.event
 async def on_ready():
-    print('Logged in as')
-    print(bot.user.name)
-    print(bot.user.id)
+    print('Logged in as {}/{}'.format(bot.user.name, bot.user.id))
     print('------')
 
     connect_strings = [
