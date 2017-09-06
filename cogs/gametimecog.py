@@ -207,7 +207,7 @@ async def print_at_midnight(bot):
 
     while not bot.is_closed:
         now = datetime.now(pytz.timezone('US/Eastern'))
-        midnight = now.replace(hour=23, minute=59, second=59, microsecond=59)
+        midnight = now.replace(hour=17, minute=22, second=59, microsecond=59)
         if now > midnight:
             midnight = midnight.replace(day=(now.day + 1))
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
@@ -242,9 +242,8 @@ async def print_at_midnight(bot):
                 if get_slot(item_take) in common.users[nc]['equip']:
                     del(common.users[nc]['equip'][get_slot(item_take)])
                 del common.users[nc]['inventory'][item_take]
-                bot.send_message(c_to_send,
-                                 "You now owe {} drinks."
-                                 .format(consume_drink(nc)))
+                await bot.send_message(c_to_send, "You now owe {} drinks."
+                                                  .format(consume_drink(nc)))
         common.whos_in.update_db()
         await asyncio.sleep(60 * 10)
 
