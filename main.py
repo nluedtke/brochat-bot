@@ -21,7 +21,7 @@ from twython import Twython
 from objs.weekend_games import WeekendGames, argument_parser, pretty_date
 import common
 from cogs.duelcog import item_chance_roll, event_handle_shot_duel
-from objs.duel_item import DuelItem, all_items
+from objs.duel_item import all_items, get_name
 
 description = "A bot to enforce friendship."
 startTime = 0
@@ -435,14 +435,14 @@ async def whoami(ctx):
                     output = "You don't have a dueling item equipped."
                 else:
                     output = "You have **{}** equipped."\
-                        .format(DuelItem(0, v).name)
+                        .format(get_name(v))
             elif k == "inventory":
                 if v == {}:
                     output = "You don't have an inventory for dueling items."
                 else:
                     output = "Your inventory of dueling items:"
                     for item, count in v.items():
-                        output += "\n    - {}".format(DuelItem(0, item).name)
+                        output += "\n    - {}".format(get_name(item))
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
