@@ -7,6 +7,8 @@ whos_in = None
 twitter = None
 users = {}
 twilio_client = None
+ARGS = {}
+smmry_api_key = None
 
 # Variable hold trumps last tweet id
 last_id = 0

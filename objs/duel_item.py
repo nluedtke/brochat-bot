@@ -315,6 +315,59 @@ class DuelItem(object):
         return "{}: {}".format(self.item_id, self.name)
 
 
+def get_slot(item_id):
+    """
+    Returns the item's slot
+    :param item_id: Id of the item
+    :return: str: slot
+    """
+    if item_id in all_items:
+        return all_items[item_id]['slot']
+    return None
+
+
+def get_name(item_id):
+    """
+    Returns the name of the item
+    :param item_id: Id of the item
+    :return: str: Name
+    """
+    if item_id in all_items:
+        return all_items[item_id]['name']
+    return None
+
+
+def get_text(item_id):
+    """
+    Returns the text of an item
+    :param item_id: Id of the item
+    :return: str: Text
+    """
+    if item_id in all_items:
+        return all_items[item_id]['text']
+    return None
+
+
+def get_uses(item_id):
+    """
+    Returns the uses of an item
+    :param item_id: Id of the item
+    :return: str: Uses
+    """
+    if item_id in all_items:
+        return all_items[item_id]['uses']
+    return None
+
+
+def item_exists(item_id):
+    """
+    Returns whether an item exists
+    :param item_id: Item ID
+    :return: bool: True if item is in all_items
+    """
+    return item_id in all_items
+
+
 class PoisonEffect(object):
     """
     Defines a PoisonEffect object

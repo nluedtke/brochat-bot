@@ -12,6 +12,7 @@ from time import time
 import pytz
 import requests
 import asyncio
+import argparse
 
 # NonStandard Imports
 from discord.ext import commands
@@ -20,7 +21,7 @@ from twython import Twython
 from objs.weekend_games import WeekendGames, argument_parser, pretty_date
 import common
 from cogs.duelcog import item_chance_roll, event_handle_shot_duel
-from objs.duel_item import DuelItem, all_items
+from objs.duel_item import all_items, get_name
 
 description = "A bot to enforce friendship."
 startTime = 0
@@ -30,80 +31,6 @@ startup_extensions = ['cogs.redditcog', 'cogs.gametimecog', 'cogs.twittercog',
                       'cogs.duelcog', 'cogs.textcog', 'cogs.drinkingcog']
 
 bot = commands.Bot(command_prefix='!', description=description)
-# Handle tokens from local file
-tokens = {}
-if not os.path.exists('{}/tokens.config'.format(common.data_dir)) and not \
-        os.path.exists('tokens.config'):
-    print("No tokens config file found.", file=stderr)
-    tokens = {}
-    if os.environ.get('DISCORD_BOT_TOKEN') is None:
-        exit(-1)
-elif os.path.exists('tokens.config'):
-    print("Using local token file")
-    with open('tokens.config', 'r') as t_file:
-        tokens = json.load(t_file)
-else:
-    with open('{}/tokens.config'.format(common.data_dir), 'r') as t_file:
-        tokens = json.load(t_file)
-
-# Discord Bot Token
-if 'token' in tokens:
-    token = tokens['token']
-else:
-    token = os.environ.get('DISCORD_BOT_TOKEN')
-
-# Twitter tokens
-if 'twitter_api_key' not in tokens or 'twitter_api_secret' not in tokens:
-    common.twitter = None
-    print("No twitter functionality!")
-else:
-    twitter_api_key = tokens['twitter_api_key']
-    twitter_api_secret = tokens['twitter_api_secret']
-    common.twitter = Twython(twitter_api_key, twitter_api_secret)
-    auth = common.twitter.get_authentication_tokens()
-    OAUTH_TOKEN = auth['oauth_token']
-    OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
-
-# SMMRY tokens
-if 'smmry_api_key' in tokens:
-    smmry_api_key = tokens['smmry_api_key']
-else:
-    smmry_api_key = None
-    print("No summary functionality!")
-
-# Twilio Tokens
-if 'twilio_account_sid' not in tokens or 'twilio_auth_token' not in tokens:
-    common.twilio_client = None
-    print("No twilio functionality!")
-else:
-    account_sid = tokens['twilio_account_sid']
-    auth_token = tokens['twilio_auth_token']
-    common.twilio_client = Client(account_sid, auth_token)
-
-
-if not os.path.exists(common.db_file) and not os.path.exists('db.json'):
-    print("Starting DB from scratch (locally)")
-    common.db_file = 'db.json'
-    with open(common.db_file, 'w') as datafile:
-        json.dump(common.db, datafile)
-elif os.path.exists('db.json'):
-    common.db_file = 'db.json'
-    print("Using local db file")
-    with open(common.db_file, 'r') as datafile:
-        common.db = json.load(datafile)
-else:
-    print("Loading the DB")
-    with open(common.db_file, 'r') as datafile:
-        common.db = json.load(datafile)
-
-# Create users from DB
-if 'users' in common.db:
-    common.users = common.db['users']
-else:
-    common.users = {}
-
-# Instantiate Discord client and Weekend Games
-common.whos_in = WeekendGames()
 
 
 @bot.event
@@ -187,9 +114,7 @@ async def on_message(message):
 
 @bot.event
 async def on_ready():
-    print('Logged in as')
-    print(bot.user.name)
-    print(bot.user.id)
+    print('Logged in as {}/{}'.format(bot.user.name, bot.user.id))
     print('------')
 
     connect_strings = [
@@ -216,7 +141,8 @@ async def on_ready():
         "it sound cool."
     ]
     for channel in bot.get_all_channels():
-        if channel.name == 'gen_testing' or channel.name == 'brochat':
+        if channel.name == 'gen_testing' or \
+                channel.name == common.ARGS['channel']:
             await bot.send_message(channel, choice(connect_strings))
 
 
@@ -304,7 +230,7 @@ def get_smmry(message):
     :param message:
     :return: a string summarizing the URL
     """
-    if smmry_api_key is None:
+    if common.smmry_api_key is None:
         return "No smmry API key, not activated!"
     arguments = argument_parser(message)
 
@@ -315,7 +241,8 @@ def get_smmry(message):
     response = requests.get("http://api.smmry.com/"
                             "&SM_API_KEY={}"
                             "&SM_LENGTH=3"
-                            "&SM_URL={}".format(smmry_api_key, arguments[0]))
+                            "&SM_URL={}".format(common.smmry_api_key,
+                                                arguments[0]))
     response_json = response.json()
     if response.status_code == 200:
         return ":books: I got you bro. I'll read this so you don't have to:\n" \
@@ -490,7 +417,9 @@ async def whoami(ctx):
 
         for k, v in common.users[author].items():
             if k == "duel_record":
-                if v[0] < 10:
+                if v[0] < 10 and v[1] > (v[0] + 5):
+                    output = "You're a pretty terrible dueler"
+                elif v[0] < 10:
                     output = "You're a pretty green dueler"
                 elif v[0] < 100:
                     output = "You're a seasoned dueler"
@@ -504,14 +433,14 @@ async def whoami(ctx):
                     output = "You don't have a dueling item equipped."
                 else:
                     output = "You have **{}** equipped."\
-                        .format(DuelItem(0, v).name)
+                        .format(get_name(v))
             elif k == "inventory":
                 if v == {}:
                     output = "You don't have an inventory for dueling items."
                 else:
                     output = "Your inventory of dueling items:"
                     for item, count in v.items():
-                        output += "\n    - {}".format(DuelItem(0, item).name)
+                        output += "\n    - {}".format(get_name(item))
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
@@ -577,6 +506,32 @@ async def on_command_error(exception, context):
 
 
 if __name__ == "__main__":
+    des = "A Discord bot to enforce friendship."
+    PARSER = argparse.ArgumentParser(description=des)
+    PARSER.add_argument('--test',
+                        help='Run a test which loads all cogs then exits.',
+                        action="store_true")
+    PARSER.add_argument('-c', '--channel', type=str,
+                        help='Set the default channel. default="brochat"',
+                        default='brochat')
+    PARSER.add_argument('-d', '--data-directory', type=str,
+                        help='Location to look for database file and '
+                             'tokens.config, if not found the local directory '
+                             'will always be checked. default="/data"',
+                        default='/data')
+    PARSER.add_argument('--database', type=str,
+                        help='Name of database file. default="db.json"',
+                        default='db.json')
+    PARSER.add_argument('--token-file', type=str,
+                        help='Name of tokens file. NOTE: This discord bot '
+                             'token could be in the ENV variable '
+                             '$DISCORD_BOT_TOKEN. default="tokens.config"',
+                        default='tokens.config')
+
+    common.ARGS = vars(PARSER.parse_args())
+    common.data_dir = common.ARGS['data_directory']
+    common.db_file = '{}/{}'.format(common.data_dir, common.ARGS['database'])
+
     for extension in startup_extensions:
         try:
             bot.load_extension(extension)
@@ -586,6 +541,84 @@ if __name__ == "__main__":
             exit(1)
 
     startTime = time()
-    if os.environ.get("TEST_TRAVIS_NL"):
+
+    # Handle tokens from local file
+    tokens = {}
+    if not os.path.exists('{}/{}'.format(common.data_dir,
+                                         common.ARGS['token_file'])) \
+            and not os.path.exists('{}'.format(common.ARGS['token_file'])):
+        print("No tokens config file found.", file=stderr)
+        tokens = {}
+        if os.environ.get('DISCORD_BOT_TOKEN') is None:
+            exit(-1)
+    elif os.path.exists('{}'.format(common.ARGS['token_file'])):
+        print("Using local token file")
+        with open('{}'.format(common.ARGS['token_file']), 'r') as t_file:
+            tokens = json.load(t_file)
+    else:
+        with open('{}/{}'.format(common.data_dir,
+                                 common.ARGS['token_file']), 'r') as t_file:
+            tokens = json.load(t_file)
+
+    # Discord Bot Token
+    if 'token' in tokens:
+        token = tokens['token']
+    else:
+        token = os.environ.get('DISCORD_BOT_TOKEN')
+
+    # Twitter tokens
+    if 'twitter_api_key' not in tokens or 'twitter_api_secret' not in tokens:
+        common.twitter = None
+        print("No twitter functionality!")
+    else:
+        twitter_api_key = tokens['twitter_api_key']
+        twitter_api_secret = tokens['twitter_api_secret']
+        common.twitter = Twython(twitter_api_key, twitter_api_secret)
+        auth = common.twitter.get_authentication_tokens()
+        OAUTH_TOKEN = auth['oauth_token']
+        OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
+
+    # SMMRY tokens
+    if 'smmry_api_key' in tokens:
+        common.smmry_api_key = tokens['smmry_api_key']
+    else:
+        common.smmry_api_key = None
+        print("No summary functionality!")
+
+    # Twilio Tokens
+    if 'twilio_account_sid' not in tokens or 'twilio_auth_token' not in tokens:
+        common.twilio_client = None
+        print("No twilio functionality!")
+    else:
+        account_sid = tokens['twilio_account_sid']
+        auth_token = tokens['twilio_auth_token']
+        common.twilio_client = Client(account_sid, auth_token)
+
+    if not os.path.exists(common.db_file) \
+            and not os.path.exists('{}'.format(common.ARGS['database'])):
+        print("Starting DB from scratch (locally)")
+        common.db_file = '{}'.format(common.ARGS['database'])
+        with open(common.db_file, 'w') as datafile:
+            json.dump(common.db, datafile)
+    elif os.path.exists('{}'.format(common.ARGS['database'])):
+        common.db_file = '{}'.format(common.ARGS['database'])
+        print("Using local db file")
+        with open(common.db_file, 'r') as datafile:
+            common.db = json.load(datafile)
+    else:
+        print("Loading the DB")
+        with open(common.db_file, 'r') as datafile:
+            common.db = json.load(datafile)
+
+    # Create users from DB
+    if 'users' in common.db:
+        common.users = common.db['users']
+    else:
+        common.users = {}
+
+    # Instantiate Discord client and Weekend Games
+    common.whos_in = WeekendGames()
+
+    if common.ARGS["test"]:
         exit(0)
     bot.run(token)

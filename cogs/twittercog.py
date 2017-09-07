@@ -129,7 +129,8 @@ async def check_trumps_mouth(bot):
 
     await bot.wait_until_ready()
     for channel in bot.get_all_channels():
-        if channel.name == 'gen_testing' or channel.name == 'brochat':
+        if channel.name == 'gen_testing' \
+                or channel.name == common.ARGS['channel']:
             c_to_send = channel
             break
 
