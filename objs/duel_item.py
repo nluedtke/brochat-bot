@@ -490,9 +490,9 @@ if __name__ == "__main__":
         if not hasattr(i, 'type') or i.type is None:
             print("{} has no type")
             exit(1)
-        if i.slot == 'weapon' and not hasattr(i, 'iclass'):
-            print("{} has no class but is a weapon")
-            exit(1)
         if not hasattr(i, 'slot') or i.slot is None:
             print("{} has no slot")
+            exit(1)
+        elif i.slot == 'weapon' and not hasattr(i, 'iclass'):
+            print("{} has no class but is a weapon")
             exit(1)
