@@ -4,18 +4,21 @@ from random import choice
 import copy
 
 # Define a common item here.
-# Current guidelines for rarity are:
+# Current guidelines for rarity are: TODO: Update
 #   Any item with more than 4 duels in duration is RARE.
 #   Any item with a modifier greater than 2 damage or 4 life is RARE.
 #   Any item with life_regen greater than 2 is RARE.
 # The key is the id of the item
-# The item is a dictionary with two key:value pairs
+# The item is a dictionary with key:value pairs describing the item
 #   1) type: effect types SEE NOTE BELOW
 #   2) prop: strength or effect descriptor, this is a dictionary with "eff: str"
 #   3) uses: amount of uses, measured in duels
 #   4) text: text description of item
 #   5) name: name of item
 #   6) slot: Where the item sits either armor, weapon, or other
+#   Optional keys:
+#       spec_text: Special text to be displayed for the effect.
+#       class: class of item, right now only used for weapons.
 # effect_type: effect
 # Currently these effect_types are implemented:
 #   1) roll_effect = This effect modifies a roll
@@ -58,6 +61,7 @@ common_items = {
           "prop": {'life': 2},
           "uses": 1,
           "slot": "weapon",
+          "class": "edged",
           "text": "This armor adds +2 life for the wearer for one duel."},
     "4": {"name": "Leather Vest",
           "type": ["life_effect"],
@@ -100,6 +104,7 @@ common_items = {
            "prop": {'roll': 2},
            "uses": 1,
            "slot": "weapon",
+           "class": "edged",
            "text": "This sword adds +2 to all damage for the user for one "
                    "duel."},
     "11": {"name": "Disarming Hook",
@@ -107,6 +112,7 @@ common_items = {
            "prop": {},
            "uses": 1,
            "slot": "weapon",
+           "class": "edged",
            "text": "This item will remove your opponent's item."},
     "12": {"name": "Copper Pendant of Regeneration",
            "type": ["regen_effect"],
@@ -120,6 +126,7 @@ common_items = {
            "prop": {'luck': 50},
            "uses": 4,
            "slot": "weapon",
+           "class": "blunt",
            "text": "This item greatly increases the chance the user will "
                    "receive an item at the start of a duel for four duels."
            },
@@ -128,6 +135,7 @@ common_items = {
            "prop": {"roll": 2},
            "uses": 2,
            "slot": "weapon",
+           "class": "edged",
            "text": "This sword adds +2 to all damage for the user and disarms "
                    "the opponent's item for two duels."
            },
@@ -143,6 +151,7 @@ common_items = {
            "prop": {'poison': 1, 'duration': 1},
            "uses": 2,
            "slot": "weapon",
+           "class": "edged",
            "text": "This hook disarms the opponent for two duels. The hook "
                    "seems coated in an oily residue."},
     "17": {"name": "Bronze Pendant of Regeneration",
@@ -164,6 +173,7 @@ common_items = {
            "prop": {'roll': 1},
            "uses": 2,
            "slot": "weapon",
+           "class": "edged",
            "text": "This sword adds +1 to all damage for the user for two "
                    "duels."},
     "20": {"name": "Lucky Xiphos",
@@ -171,6 +181,7 @@ common_items = {
            "prop": {'roll': 1, "luck": 10},
            "uses": 2,
            "slot": "weapon",
+           "class": "edged",
            "text": "This sword adds +1 to all damage for the user and slightly "
                    "increases item chance for two duels."},
     "21": {"name": "Bastard sword",
@@ -178,6 +189,7 @@ common_items = {
            "prop": {'roll': 3},
            "uses": 1,
            "slot": "weapon",
+           "class": "edged",
            "text": "This sword adds +3 to all damage for the user for one "
                    "duel."}
 }
@@ -203,6 +215,7 @@ rare_items = {
             "prop": {'roll': 2},
             "uses": 5,
             "slot": "weapon",
+            "class": "edged",
             "text": "This sword adds +2 to all damage for the user for five "
                     "duels."},
     "103": {"name": "Stinger",
@@ -210,6 +223,7 @@ rare_items = {
             "prop": {'roll': 1, 'poison': 1, 'duration': 3},
             "uses": 5,
             "slot": "weapon",
+            "class": "edged",
             "text": "This dagger adds +1 to all damage for the user for five "
                     "duels. The dagger is coated in deadly poison."},
     "104": {"name": "Gold Pendant of Regeneration",
@@ -224,6 +238,7 @@ rare_items = {
             "prop": {'roll': 3},
             "uses": 3,
             "slot": "weapon",
+            "class": "edged",
             "text": "This sword adds +3 to all damage for the user for three "
                     "duels."}
 }
@@ -250,6 +265,7 @@ class DuelItem(object):
         self.uses = None
         self.type = None
         self.slot = None
+        self.iclass = None
 
         if _id is not None:
             self.item_id = str(_id)
@@ -270,6 +286,8 @@ class DuelItem(object):
             self.slot = all_items[self.item_id]['slot']
             if 'spec_text' in all_items[self.item_id]:
                 self.spec_text = all_items[self.item_id]['spec_text']
+            if 'class' in all_items[self.item_id]:
+                self.iclass = all_items[self.item_id]['class']
 
     def __iadd__(self, other):
         """
@@ -292,6 +310,8 @@ class DuelItem(object):
                 self.prop[p] += other.prop[p]
             else:
                 self.prop[p] = copy.deepcopy(other.prop[p])
+        if self.iclass is None and other.slot == 'weapon':
+            self.iclass = other.iclass
 
         return self
 
@@ -453,7 +473,7 @@ if __name__ == "__main__":
         print("Item roll of 99 returned an item.")
         exit(1)
 
-    for item in rare_items:
+    for item in all_items:
         i = DuelItem(0, item)
         if not hasattr(i, 'item_id') or i.item_id is None:
             print("{} has no item_id")
@@ -470,26 +490,8 @@ if __name__ == "__main__":
         if not hasattr(i, 'type') or i.type is None:
             print("{} has no type")
             exit(1)
-        if not hasattr(i, 'slot') or i.slot is None:
-            print("{} has no slot")
-            exit(1)
-
-    for item in common_items:
-        i = DuelItem(0, item)
-        if not hasattr(i, 'item_id') or i.item_id is None:
-            print("{} has no item_id")
-            exit(1)
-        if not hasattr(i, 'name')or i.name is None:
-            print("{} has no name")
-            exit(1)
-        if not hasattr(i, 'prop')or i.prop is None:
-            print("{} has no prop")
-            exit(1)
-        if not hasattr(i, 'uses')or i.uses is None:
-            print("{} has no uses")
-            exit(1)
-        if not hasattr(i, 'type') or i.type is None:
-            print("{} has no type")
+        if i.slot == 'weapon' and not hasattr(i, 'iclass'):
+            print("{} has no class but is a weapon")
             exit(1)
         if not hasattr(i, 'slot') or i.slot is None:
             print("{} has no slot")
