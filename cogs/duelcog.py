@@ -591,12 +591,12 @@ async def event_handle_shot_duel(ctx, victim):
             luck_mod = 0
             if v_item is not None and "luck_effect" in v_item.type:
                 luck_mod = v_item.prop['luck']
-            await item_chance_roll(ctx.bot, common.vict_name,
-                                   ctx.message.channel, 100 - luck_mod)
+            await item_chance_roll(ctx.bot, vict_name, ctx.message.channel,
+                                   100 - luck_mod)
 
             await ctx.bot.say(".\n{} has {} life.\n{} has {} life."
                               .format(chal_name, c_life_start,
-                                      common.vict_name, v_life_start))
+                                      vict_name, v_life_start))
             c_life = c_life_start
             v_life = v_life_start
             # COMBAT PHASE
@@ -736,13 +736,12 @@ async def event_handle_shot_duel(ctx, victim):
                 luck_mod = 0
                 if c_item is not None and "luck_effect" in c_item.type:
                     luck_mod = c_item.prop['luck']
-                await item_chance_roll(ctx.bot, chal_name,
-                                       ctx.message.channel,
+                await item_chance_roll(ctx.bot, chal_name, ctx.message.channel,
                                        int(1000 / _round) - luck_mod)
                 luck_mod = 0
                 if v_item is not None and "luck_effect" in v_item.type:
                     luck_mod = v_item.prop['luck']
-                await item_chance_roll(ctx.bot, common.vict_name,
+                await item_chance_roll(ctx.bot, vict_name, ctx.message.channel,
                                        int(1000 / _round) - luck_mod)
 
                 await asyncio.sleep(15)
