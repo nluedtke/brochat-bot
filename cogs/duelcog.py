@@ -179,8 +179,8 @@ async def item_chance_roll(bot, player, channel, max_roll=100):
     """
 
     init_player_duel_db(player)
-    item = DuelItem(randint(1, max_roll + (len(common.users[player][
-                                              'inventory']) * 3)))
+    item = DuelItem(randint(1, (max_roll + (len(common.users[player][
+                                              'inventory']) * 3))))
     if item.name is not None:
         common.items_awarded += 1
         await bot.send_message(channel, "Congratulations {}! You received "
@@ -737,12 +737,12 @@ async def event_handle_shot_duel(ctx, victim):
                 if c_item is not None and "luck_effect" in c_item.type:
                     luck_mod = c_item.prop['luck']
                 await item_chance_roll(ctx.bot, chal_name, ctx.message.channel,
-                                       int(1000 / _round) - luck_mod)
+                                       max(20, int(1000 / _round) - luck_mod))
                 luck_mod = 0
                 if v_item is not None and "luck_effect" in v_item.type:
                     luck_mod = v_item.prop['luck']
                 await item_chance_roll(ctx.bot, vict_name, ctx.message.channel,
-                                       int(1000 / _round) - luck_mod)
+                                       max(20, int(1000 / _round) - luck_mod))
 
                 await asyncio.sleep(15)
             break
