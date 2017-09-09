@@ -497,7 +497,7 @@ async def on_command_error(exception, context):
     else:
         await bot.send_message(context.message.channel,
                                "Unhandled command error ({})"
-                               .format(type(exception)))
+                               .format(exception))
 
     print('Ignoring exception in command {}'.format(context.command),
           file=sys.stderr)
