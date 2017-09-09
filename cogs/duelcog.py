@@ -582,7 +582,7 @@ async def event_handle_shot_duel(ctx, victim):
             if v_item is not None and "life_effect" in v_item.type:
                 v_life_start += v_item.prop['life']
 
-            # ITEM CHANCE ROLLS (If needed modify chance rolls here)
+            # Inital ITEM CHANCE ROLLS (If needed modify chance rolls here)
             luck_mod = 0
             if c_item is not None and "luck_effect" in c_item.type:
                 luck_mod = c_item.prop['luck']
@@ -731,6 +731,19 @@ async def event_handle_shot_duel(ctx, victim):
                     await ctx.bot.say("{} has regen'd {} life and is now at {}."
                                       .format(common.vict_name, reg_tot,
                                               (v_life + reg_tot)))
+
+                # end of round drop chance
+                luck_mod = 0
+                if c_item is not None and "luck_effect" in c_item.type:
+                    luck_mod = c_item.prop['luck']
+                await item_chance_roll(ctx.bot, chal_name,
+                                       ctx.message.channel,
+                                       int(1000 / _round) - luck_mod)
+                luck_mod = 0
+                if v_item is not None and "luck_effect" in v_item.type:
+                    luck_mod = v_item.prop['luck']
+                await item_chance_roll(ctx.bot, common.vict_name,
+                                       int(1000 / _round) - luck_mod)
 
                 await asyncio.sleep(15)
             break
