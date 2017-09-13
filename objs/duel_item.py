@@ -132,11 +132,11 @@ common_items = {
            },
     "14": {"name": "Hook Sword",
            "type": ["roll_effect", "disarm_effect"],
-           "prop": {"roll": 2},
+           "prop": {"roll": 1},
            "uses": 2,
            "slot": "weapon",
            "class": "edged",
-           "text": "This sword adds +2 to all damage for the user and disarms "
+           "text": "This sword adds +1 to all damage for the user and disarms "
                    "the opponent's item for two duels."
            },
     "15": {"name": "Glistening Leather Vest",
