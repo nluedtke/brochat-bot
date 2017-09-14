@@ -180,7 +180,7 @@ async def item_chance_roll(bot, player, channel, max_roll=100):
 
     init_player_duel_db(player)
     item = DuelItem(randint(1, (max_roll + (len(common.users[player][
-                                              'inventory']) * 3))))
+                                              'inventory']) * 10))))
     if item.name is not None:
         common.items_awarded += 1
         await bot.send_message(channel, "Congratulations {}! You received "
