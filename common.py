@@ -49,7 +49,7 @@ NEWS_FEED_CREATED = False
 async def trigger_social(ctx):
     """Triggers a social """
     for m in ctx.bot.get_all_members():
-        if m.display_name != 'brochat-bot':
+        if m.display_name != 'brochat-bot' and m.status == 'online':
             add_drink(m.display_name)
     glass = ":tumbler_glass:"
     await ctx.bot.say("Ah shit that's three in a row! ITS A SOCIAL! SHOTS! "
@@ -62,8 +62,10 @@ def add_drink(user):
     :param user: users display name
     :return:
     """
+
     if user not in users:
         users[user] = {}
+
     if "drinks_owed" in users[user]:
         users[user]['drinks_owed'] += 1
     else:
