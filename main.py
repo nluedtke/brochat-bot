@@ -138,7 +138,9 @@ async def on_ready():
         "stink and every time I do, I fear that I've somehow been infected by "
         "it. ",
         "Blackmail is such an ugly word. I prefer extortion. The ‘x’ makes "
-        "it sound cool."
+        "it sound cool.",
+        "Sweet photons. I don't know if you're waves or particles, but you go "
+        "down smooth. "
     ]
     for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' or \
@@ -268,6 +270,18 @@ async def reset_cmd_cooldown(ctx, cmd):
     """
     bot.get_command(cmd).reset_cooldown(ctx)
     await bot.say("Cooldown reset.")
+
+
+@bot.command(name='reset-records', hidden=True)
+@is_owner()
+async def reset_cmd_cooldown():
+    """Resets all duel records
+
+    """
+    for user in common.users:
+        if 'duel_record' in common.users[user]:
+            del(common.users[user]['duel_record'])
+    await bot.say("Records reset.")
 
 
 @bot.command(name='item-giveaway', hidden=True, pass_context=True)
