@@ -274,7 +274,7 @@ async def reset_cmd_cooldown(ctx, cmd):
 
 @bot.command(name='reset-records', hidden=True)
 @is_owner()
-async def reset_cmd_cooldown():
+async def reset_records():
     """Resets all duel records
 
     """
