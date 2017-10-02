@@ -228,7 +228,7 @@ async def print_at_midnight(bot):
         # Drink Debt Enforcement
         for m in bot.get_all_members():
             nc = m.display_name
-            if 'drinks_owed' in common.users[nc] \
+            if nc != 'brochat-bot' and 'drinks_owed' in common.users[nc] \
                     and common.users[nc]['drinks_owed'] > 6 \
                     and 'inventory' in common.users[nc] \
                     and len(common.users[nc]['inventory']) > 0:
