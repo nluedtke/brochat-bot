@@ -239,7 +239,16 @@ rare_items = {
             "slot": "weapon",
             "class": "edged",
             "text": "This sword adds +3 to all damage for the user for three "
-                    "duels."}
+                    "duels."},
+    "106": {"name": "Sword of Refreshment",
+            "type": ["roll_effect", "regen_effect"],
+            "prop": {'roll': 1, 'regen': 1},
+            "uses": 3,
+            "slot": "weapon",
+            "class": "edged",
+            "text": "This sword adds +1 to all damage for the user and allows "
+                    "the user to regenerate 1 life at the end of each round for"
+                    " three duels."}
 }
 
 all_items = common_items
