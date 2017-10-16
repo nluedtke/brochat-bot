@@ -4,3 +4,4 @@ discord.py>=0.16.8
 twilio>=6.5.1
 twython>=3.5.0
 discord>=0.0.2
+clarifai>=2.0.32
