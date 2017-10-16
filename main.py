@@ -263,7 +263,6 @@ async def drink_or_not_drink(image_url, message):
                     ' hyperdrive detection algorithm (PDHDA) has detected '
                     'an adult beverage. Good work, Bro!')
                 message.content = "!drink"
-                await bot.process_commands(message)
                 return
     await bot.send_message(message_channel, 'Hey, just so you know, I am '
                                             'pretty sure that image was '
