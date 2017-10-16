@@ -10,14 +10,15 @@ class DrinkBank:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='drink', aliases=['bottomsup'], pass_context=True)
+    @commands.command(name='drink', aliases=['bottomsup', 'drank'],
+                      pass_context=True)
     @commands.cooldown(1, 60, type=commands.BucketType.user)
     async def drink(self, ctx):
         """Log a drink taken"""
         author = str(ctx.message.author.display_name)
         if author in common.users:
             output = "Bottoms up, {}. ".format(author)
-            result = consume_drink(common.users[author])
+            result = consume_drink(author)
 
             if result < -5:
                 output += "Whoa there buddy, drinking around here is a " \
@@ -109,7 +110,7 @@ def run_shot_lottery(ctx, auto_call=False):
                   .format(len(players) - 1))
     winner = randint(0, len(players) - 1)
     if players[winner] != 'SOCIAL!':
-        common.add_drink(common.users[players[winner]])
+        common.add_drink(players[winner])
         for m in ctx.bot.get_all_members():
             if str(m.display_name) == players[winner]:
                 tag_id = m.mention
@@ -125,24 +126,36 @@ def run_shot_lottery(ctx, auto_call=False):
         output.append("{}{}{}".format(glass, glass, glass))
         players.pop(winner)
         for player in players:
-            common.add_drink(common.users[player])
+            common.add_drink(player)
     return output
+
+
+def in_deep_debt(player):
+    """
+    Checks if a player is in deep debt
+    :param player: Player to check
+    :return: True if player has too much debt
+    """
+
+    if "drinks_owed" not in common.users[player]:
+        return False
+    else:
+        return common.users[player]['drinks_owed'] >= 5
 
 
 def consume_drink(user):
     """
     Consumes a drink for the user.
-
-    :param user:
+    :param user: user's display name
     :return:
     """
 
-    if "drinks_owed" in user:
-        user['drinks_owed'] -= 1
+    if "drinks_owed" in common.users[user]:
+        common.users[user]['drinks_owed'] -= 1
     else:
-        user['drinks_owed'] = -1
+        common.users[user]['drinks_owed'] = -1
 
-    return user['drinks_owed']
+    return common.users[user]['drinks_owed']
 
 
 def setup(bot):

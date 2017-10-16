@@ -1,12 +1,13 @@
 import asyncio
 from datetime import datetime
-
 import pytz
 from discord.ext import commands
-
 import common
 from cogs.duelcog import item_chance_roll
 from objs.weekend_games import pretty_date
+from random import choice
+from objs.duel_item import get_slot, get_name
+from cogs.drinkingcog import consume_drink
 
 
 class Gametime:
@@ -199,7 +200,8 @@ async def print_at_midnight(bot):
 
     await bot.wait_until_ready()
     for channel in bot.get_all_channels():
-        if channel.name == 'gen_testing' or channel.name == 'brochat':
+        if channel.name == 'gen_testing' or \
+                channel.name == common.ARGS['channel']:
             c_to_send = channel
             break
 
@@ -211,6 +213,8 @@ async def print_at_midnight(bot):
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
         await bot.send_message(c_to_send, common.whos_in.whos_in())
+
+        # Community Drop Time
         i_awarded = False
         i = False
         while not i_awarded:
@@ -220,6 +224,27 @@ async def print_at_midnight(bot):
                         'duel_record' in common.users[m.display_name]:
                     i = await item_chance_roll(bot, m.display_name, c_to_send)
                 i_awarded = i_awarded or i
+
+        # Drink Debt Enforcement
+        for m in bot.get_all_members():
+            nc = m.display_name
+            if nc != 'brochat-bot' and nc in common.users and \
+                    'drinks_owed' in common.users[nc] \
+                    and common.users[nc]['drinks_owed'] > 6 \
+                    and 'inventory' in common.users[nc] \
+                    and len(common.users[nc]['inventory']) > 0:
+                item_take = choice(list(common.users[nc]['inventory'].keys()))
+                await bot.send_message(c_to_send,
+                                       "{}, the bank sent me to collect on "
+                                       "your debt. I'll have to take your {} "
+                                       "in lieu of one drink. Can't cheat "
+                                       "friendship around these parts."
+                                       .format(nc, get_name(item_take)))
+                if get_slot(item_take) in common.users[nc]['equip']:
+                    del(common.users[nc]['equip'][get_slot(item_take)])
+                del common.users[nc]['inventory'][item_take]
+                await bot.send_message(c_to_send, "You now owe {} drinks."
+                                                  .format(consume_drink(nc)))
         common.whos_in.update_db()
         await asyncio.sleep(60 * 10)
 
