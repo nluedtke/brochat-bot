@@ -71,9 +71,10 @@ async def on_member_update(before, after):
             common.whos_in.last_shot = after.display_name
             common.whos_in.update_db()
     elif before.status != after.status:
-        common.users[after.display_name]['last_seen'] = datetime.strftime(
-            datetime.now(pytz.timezone('US/Eastern')), "%c")
-        common.whos_in.update_db()
+        if after.display_name in common.users:
+            common.users[after.display_name]['last_seen'] = datetime.strftime(
+                datetime.now(pytz.timezone('US/Eastern')), "%c")
+            common.whos_in.update_db()
 
 
 @bot.command(name='seen', pass_context=True)
