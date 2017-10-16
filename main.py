@@ -416,6 +416,7 @@ async def run_test(ctx):
             ctx.message.content = "!bertstrip"
             await bot.process_commands(ctx.message)
             await asyncio.sleep(10)
+            length = 1
         elif arguments[0] == 'long':
             length = 50
             del(common.users['csh']['duel_record'])
