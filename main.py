@@ -119,7 +119,7 @@ async def on_message(message):
     if message.attachments:
         if len(message.attachments) > 1:
             print('Warning, someone being sketchy with those attachments.')
-        await drink_or_not_drink(message.attachments[0]['url'], message.channel)
+        await drink_or_not_drink(message.attachments[0]['url'], message)
 
     await bot.process_commands(message)
 
@@ -237,10 +237,10 @@ async def clear(ctx):
 
 
 @bot.event
-async def drink_or_not_drink(image_url, message_channel):
+async def drink_or_not_drink(image_url, message):
     """Checks to see if an image is a drink"""
     app = ClarifaiApp(api_key=clarifai_api_key)
-
+    message_channel = message.channel
     model = app.models.get('food-items-v1.0')
     image = Image(url=image_url)
     response_data = model.predict([image])
@@ -262,6 +262,8 @@ async def drink_or_not_drink(image_url, message_channel):
                 await bot.send_message(message_channel, 'Problem drinking'
                     ' hyperdrive detection algorithm (PDHDA) has detected '
                     'an adult beverage. Good work, Bro!')
+                message.content = "!drink"
+                await bot.process_commands(message)
                 return
     await bot.send_message(message_channel, 'Hey, just so you know, I am '
                                             'pretty sure that image was '
