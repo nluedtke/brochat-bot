@@ -1,12 +1,14 @@
 VERSION_YEAR = 2017
-VERSION_MONTH = 9
-VERSION_DAY = 1
-VERSION_REV = 2
+VERSION_MONTH = 10
+VERSION_DAY = 5
+VERSION_REV = 1
 
 whos_in = None
 twitter = None
 users = {}
 twilio_client = None
+ARGS = {}
+smmry_api_key = None
 
 # Variable hold trumps last tweet id
 last_id = 0
@@ -47,8 +49,8 @@ NEWS_FEED_CREATED = False
 async def trigger_social(ctx):
     """Triggers a social """
     for m in ctx.bot.get_all_members():
-        if m.display_name != 'brochat-bot':
-            add_drink(users[m.display_name])
+        if m.display_name != 'brochat-bot' and m.status == 'online':
+            add_drink(m.display_name)
     glass = ":tumbler_glass:"
     await ctx.bot.say("Ah shit that's three in a row! ITS A SOCIAL! SHOTS! "
                       "SHOTS! SHOTS!\n{}{}{}".format(glass, glass, glass))
@@ -57,13 +59,16 @@ async def trigger_social(ctx):
 def add_drink(user):
     """
     Adds a drink for the user.
-    :param user:
+    :param user: users display name
     :return:
     """
 
-    if "drinks_owed" in user:
-        user['drinks_owed'] += 1
-    else:
-        user['drinks_owed'] = 1
+    if user not in users:
+        users[user] = {}
 
-    return user['drinks_owed']
+    if "drinks_owed" in users[user]:
+        users[user]['drinks_owed'] += 1
+    else:
+        users[user]['drinks_owed'] = 1
+
+    return users[user]['drinks_owed']

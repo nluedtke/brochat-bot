@@ -44,7 +44,7 @@ class Gametime(object):
             self.created = datetime.datetime.now(self.timezone)
             self.game = None
             # Sets the time on the next available date for a given weekday.
-            self.date = self.next_date_for_day(self.created, day)
+            self.date = next_date_for_day(self.created, day)
             """ Sets the """
             if time:
                 self.time = self.set_time(time)
@@ -70,19 +70,6 @@ class Gametime(object):
             "players": self.players
         }
         return json_info
-
-    def next_date_for_day(self, created, day):
-        """
-        Finds the next datetime date for a given int day
-
-        :param day:
-        :param created:
-        :return: datetime
-        """
-        for increment in range(7):
-            if created.weekday() == int(day):
-                return created
-            created += datetime.timedelta(days=1)
 
     def get_date(self):
         """
@@ -239,6 +226,21 @@ class Gametime(object):
             return True
         else:
             return False
+
+
+def next_date_for_day(created, day):
+    """
+    Finds the next datetime date for a given int day
+
+    :param day:
+    :param created:
+    :return: datetime
+    """
+    for increment in range(7):
+        if created.weekday() == int(day):
+            return created
+        created += datetime.timedelta(days=1)
+
 
 # Tests
 if __name__ == "__main__":

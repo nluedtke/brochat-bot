@@ -13,15 +13,17 @@ from clarifai.rest import ClarifaiApp, Image
 
 import pytz
 import requests
+import asyncio
+import argparse
+
 # NonStandard Imports
 from discord.ext import commands
 from twilio.rest import Client
 from twython import Twython
 from objs.weekend_games import WeekendGames, argument_parser, pretty_date
-
 import common
-from cogs.duelcog import item_chance_roll
-from objs.duel_item import DuelItem
+from cogs.duelcog import item_chance_roll, event_handle_shot_duel
+from objs.duel_item import all_items, get_name
 
 description = "A bot to enforce friendship."
 startTime = 0
@@ -31,86 +33,6 @@ startup_extensions = ['cogs.redditcog', 'cogs.gametimecog', 'cogs.twittercog',
                       'cogs.duelcog', 'cogs.textcog', 'cogs.drinkingcog']
 
 bot = commands.Bot(command_prefix='!', description=description)
-# Handle tokens from local file
-tokens = {}
-if not os.path.exists('{}/tokens.config'.format(common.data_dir)) and not \
-        os.path.exists('tokens.config'):
-    print("No tokens config file found.", file=stderr)
-    tokens = {}
-    if os.environ.get('DISCORD_BOT_TOKEN') is None:
-        exit(-1)
-elif os.path.exists('tokens.config'):
-    print("Using local token file")
-    with open('tokens.config', 'r') as t_file:
-        tokens = json.load(t_file)
-else:
-    with open('{}/tokens.config'.format(common.data_dir), 'r') as t_file:
-        tokens = json.load(t_file)
-
-# Discord Bot Token
-if 'token' in tokens:
-    token = tokens['token']
-else:
-    token = os.environ.get('DISCORD_BOT_TOKEN')
-
-# Twitter tokens
-if 'twitter_api_key' not in tokens or 'twitter_api_secret' not in tokens:
-    common.twitter = None
-    print("No twitter functionality!")
-else:
-    twitter_api_key = tokens['twitter_api_key']
-    twitter_api_secret = tokens['twitter_api_secret']
-    common.twitter = Twython(twitter_api_key, twitter_api_secret)
-    auth = common.twitter.get_authentication_tokens()
-    OAUTH_TOKEN = auth['oauth_token']
-    OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
-
-# SMMRY tokens
-if 'smmry_api_key' in tokens:
-    smmry_api_key = tokens['smmry_api_key']
-else:
-    smmry_api_key = None
-    print("No summary functionality!")
-
-# Twilio Tokens
-if 'twilio_account_sid' not in tokens or 'twilio_auth_token' not in tokens:
-    common.twilio_client = None
-    print("No twilio functionality!")
-else:
-    account_sid = tokens['twilio_account_sid']
-    auth_token = tokens['twilio_auth_token']
-    common.twilio_client = Client(account_sid, auth_token)
-
-# Clarifai Tokens
-if 'clarifai_api_key' not in tokens:
-    clarifai_api_key = None
-    print("No clarifai functionality!")
-else:
-    clarifai_api_key = tokens['clarifai_api_key']
-
-if not os.path.exists(common.db_file) and not os.path.exists('db.json'):
-    print("Starting DB from scratch (locally)")
-    common.db_file = 'db.json'
-    with open(common.db_file, 'w') as datafile:
-        json.dump(common.db, datafile)
-elif os.path.exists('db.json'):
-    common.db_file = 'db.json'
-    print("Using local db file")
-    with open(common.db_file, 'r') as datafile:
-        common.db = json.load(datafile)
-else:
-    print("Loading the DB")
-    with open(common.db_file, 'r') as datafile:
-        common.db = json.load(datafile)
-
-# Create users from DB
-if 'users' in common.db:
-    common.users = common.db['users']
-else:
-    common.users = {}
-
-# Instantiate Discord client and Weekend Games
-common.whos_in = WeekendGames()
 
 
 @bot.event
@@ -120,7 +42,8 @@ async def on_message_edit(before, after):
 
     return: None
     """
-    await bot.on_message(after)
+    if before.content != after.content:
+        await bot.on_message(after)
 
 
 @bot.event
@@ -203,9 +126,7 @@ async def on_message(message):
 
 @bot.event
 async def on_ready():
-    print('Logged in as')
-    print(bot.user.name)
-    print(bot.user.id)
+    print('Logged in as {}/{}'.format(bot.user.name, bot.user.id))
     print('------')
 
     connect_strings = [
@@ -227,10 +148,15 @@ async def on_ready():
         "want to call it, I can't stand it any longer. It's the smell, if "
         "there is such a thing. I feel saturated by it. I can taste your "
         "stink and every time I do, I fear that I've somehow been infected by "
-        "it. "
+        "it. ",
+        "Blackmail is such an ugly word. I prefer extortion. The ‘x’ makes "
+        "it sound cool.",
+        "Sweet photons. I don't know if you're waves or particles, but you go "
+        "down smooth. "
     ]
     for channel in bot.get_all_channels():
-        if channel.name == 'gen_testing' or channel.name == 'brochat':
+        if channel.name == 'gen_testing' or \
+                channel.name == common.ARGS['channel']:
             await bot.send_message(channel, choice(connect_strings))
 
 
@@ -305,8 +231,8 @@ def is_command(m):
 async def clear(ctx):
     """Clears Bot chat history"""
     channel = ctx.message.channel
-    deleted = await bot.purge_from(channel, limit=75, check=is_me)
-    c_ds = await bot.purge_from(channel, limit=50, check=is_command)
+    deleted = await bot.purge_from(channel, limit=125, check=is_me)
+    c_ds = await bot.purge_from(channel, limit=100, check=is_command)
     await bot.say('Deleted {} message(s)'.format(len(deleted) + len(c_ds)))
 
 
@@ -341,6 +267,7 @@ async def drink_or_not_drink(image_url, message_channel):
                                             'pretty sure that image was '
                                             'not a drink.')
 
+
 # TODO - url validation
 # TODO - cache recent summaries to avoid going through our 100 requests per day
 def get_smmry(message):
@@ -349,7 +276,7 @@ def get_smmry(message):
     :param message:
     :return: a string summarizing the URL
     """
-    if smmry_api_key is None:
+    if common.smmry_api_key is None:
         return "No smmry API key, not activated!"
     arguments = argument_parser(message)
 
@@ -360,7 +287,8 @@ def get_smmry(message):
     response = requests.get("http://api.smmry.com/"
                             "&SM_API_KEY={}"
                             "&SM_LENGTH=3"
-                            "&SM_URL={}".format(smmry_api_key, arguments[0]))
+                            "&SM_URL={}".format(common.smmry_api_key,
+                                                arguments[0]))
     response_json = response.json()
     if response.status_code == 200:
         return ":books: I got you bro. I'll read this so you don't have to:\n" \
@@ -386,6 +314,18 @@ async def reset_cmd_cooldown(ctx, cmd):
     """
     bot.get_command(cmd).reset_cooldown(ctx)
     await bot.say("Cooldown reset.")
+
+
+@bot.command(name='reset-records', hidden=True)
+@is_owner()
+async def reset_records():
+    """Resets all duel records
+
+    """
+    for user in common.users:
+        if 'duel_record' in common.users[user]:
+            del(common.users[user]['duel_record'])
+    await bot.say("Records reset.")
 
 
 @bot.command(name='item-giveaway', hidden=True, pass_context=True)
@@ -434,6 +374,96 @@ async def get_uptime():
     await bot.say((ret_str + stat_str))
 
 
+@bot.command(name='test', hidden=True, pass_context=True)
+async def run_test(ctx):
+    """Runs test"""
+
+    if ctx.message.channel.name == 'gen_testing':
+        arguments = argument_parser(ctx.message.content)
+        if arguments[0] == 'all':
+            await bot.send_message(ctx.message.channel, "Starting Automated "
+                                                        "Tests.")
+            ctx.message.content = "!version"
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(5)
+            await bot.send_message(ctx.message.channel, "Printing help.")
+            ctx.message.content = "!help"
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(5)
+            await bot.send_message(ctx.message.channel, "Populating inventory.")
+            await item_chance_roll(bot, ctx.message.author.display_name,
+                                   ctx.message.channel, 10)
+            await item_chance_roll(bot, ctx.message.author.display_name,
+                                   ctx.message.channel, 10)
+            await item_chance_roll(bot, ctx.message.author.display_name,
+                                   ctx.message.channel, 10)
+            await asyncio.sleep(5)
+            await bot.send_message(ctx.message.channel, "Calling !use")
+            ctx.message.content = "!use"
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(5)
+            await bot.send_message(ctx.message.channel, "Equiping first item")
+            inv = common.users[ctx.message.author.display_name]['inventory']
+            ctx.message.content = "!use {}".format(str(list(inv)[0]))
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(5)
+            await bot.send_message(ctx.message.channel, "Simulating Trump Call")
+            ctx.message.content = "!trump"
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(10)
+            await bot.send_message(ctx.message.channel,
+                                   "Simulating Bertstrip Call")
+            ctx.message.content = "!bertstrip"
+            await bot.process_commands(ctx.message)
+            await asyncio.sleep(10)
+        elif arguments[0] == 'long':
+            length = 50
+            del(common.users['csh']['duel_record'])
+            del (common.users['palu']['duel_record'])
+        else:
+            length = 1
+        for y in range(length):
+            await bot.send_message(ctx.message.channel, "Setting test duel")
+            test_inv1 = {}
+            for i in range(3):
+                test_inv1[choice(list(all_items.keys()))] = 0
+            test_inv2 = {}
+            for i in range(3):
+                test_inv2[choice(list(all_items.keys()))] = 0
+            common.users['palu']['inventory'] = test_inv1
+            common.users['csh']['inventory'] = test_inv2
+            common.users['palu']['equip'] = {}
+            common.users['csh']['equip'] = {}
+            common.users['palu']['drinks_owed'] = 0
+            common.users['csh']['drinks_owed'] = 0
+            common.whos_in.update_db()
+
+            await asyncio.sleep(5)
+            for p in bot.get_all_members():
+                if p.display_name == 'palu':
+                    player2 = p
+                elif p.display_name == 'csh':
+                    player1 = p
+            for i in range(3):
+                inv = common.users[player1.display_name]['inventory']
+                if len(inv) > i:
+                    ctx.message.content = "!use {}".format(str(list(inv)[i]))
+                    ctx.message.author = player1
+                    await bot.process_commands(ctx.message)
+                inv = common.users[player2.display_name]['inventory']
+                if len(inv) > i:
+                    ctx.message.content = "!use {}".format(str(list(inv)[i]))
+                    ctx.message.author = player2
+                    await bot.process_commands(ctx.message)
+            ctx.message.author = player1
+            common.accepted = True
+            await event_handle_shot_duel(ctx, player2)
+            await asyncio.sleep(20)
+            while common.shot_duel_running:
+                await asyncio.sleep(10)
+            await bot.send_message(ctx.message.channel, "Test Complete.")
+
+
 @bot.command(name='me', aliases=['whoami'], pass_context=True)
 async def whoami(ctx):
     """Tell me about myself"""
@@ -445,7 +475,9 @@ async def whoami(ctx):
 
         for k, v in common.users[author].items():
             if k == "duel_record":
-                if v[0] < 10:
+                if v[0] < 10 and v[1] > (v[0] + 5):
+                    output = "You're a pretty terrible dueler"
+                elif v[0] < 10:
                     output = "You're a pretty green dueler"
                 elif v[0] < 100:
                     output = "You're a seasoned dueler"
@@ -459,15 +491,14 @@ async def whoami(ctx):
                     output = "You don't have a dueling item equipped."
                 else:
                     output = "You have **{}** equipped."\
-                        .format(DuelItem(0, v).name)
+                        .format(get_name(v))
             elif k == "inventory":
-                # TODO: display_inventory
                 if v == {}:
                     output = "You don't have an inventory for dueling items."
                 else:
                     output = "Your inventory of dueling items:"
                     for item, count in v.items():
-                        output += "\n    - {}".format(DuelItem(0, item).name)
+                        output += "\n    - {}".format(get_name(item))
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
@@ -502,8 +533,8 @@ async def on_command_error(exception, context):
                                "!{} is on cooldown for {:0.2f} seconds.".format(
                                    context.command, exception.retry_after))
     elif type(exception) == commands.CommandNotFound:
+        cmd = context.message.content.split()[0][1:]
         try:
-            cmd = context.message.content.split()[0][1:]
             closest = get_close_matches(cmd.lower(), list(bot.commands))[0]
         except IndexError:
             await bot.send_message(context.message.channel,
@@ -522,8 +553,9 @@ async def on_command_error(exception, context):
                                "You are missing a required argument for that "
                                "command.")
     else:
-        await bot.send_message(context.message.channel, "Unhandled command "
-                                                        "error")
+        await bot.send_message(context.message.channel,
+                               "Unhandled command error ({})"
+                               .format(exception))
 
     print('Ignoring exception in command {}'.format(context.command),
           file=sys.stderr)
@@ -532,6 +564,32 @@ async def on_command_error(exception, context):
 
 
 if __name__ == "__main__":
+    des = "A Discord bot to enforce friendship."
+    PARSER = argparse.ArgumentParser(description=des)
+    PARSER.add_argument('--test',
+                        help='Run a test which loads all cogs then exits.',
+                        action="store_true")
+    PARSER.add_argument('-c', '--channel', type=str,
+                        help='Set the default channel. default="brochat"',
+                        default='brochat')
+    PARSER.add_argument('-d', '--data-directory', type=str,
+                        help='Location to look for database file and '
+                             'tokens.config, if not found the local directory '
+                             'will always be checked. default="/data"',
+                        default='/data')
+    PARSER.add_argument('--database', type=str,
+                        help='Name of database file. default="db.json"',
+                        default='db.json')
+    PARSER.add_argument('--token-file', type=str,
+                        help='Name of tokens file. NOTE: This discord bot '
+                             'token could be in the ENV variable '
+                             '$DISCORD_BOT_TOKEN. default="tokens.config"',
+                        default='tokens.config')
+
+    common.ARGS = vars(PARSER.parse_args())
+    common.data_dir = common.ARGS['data_directory']
+    common.db_file = '{}/{}'.format(common.data_dir, common.ARGS['database'])
+
     for extension in startup_extensions:
         try:
             bot.load_extension(extension)
@@ -541,6 +599,91 @@ if __name__ == "__main__":
             exit(1)
 
     startTime = time()
-    if os.environ.get("TEST_TRAVIS_NL"):
+
+    # Handle tokens from local file
+    tokens = {}
+    if not os.path.exists('{}/{}'.format(common.data_dir,
+                                         common.ARGS['token_file'])) \
+            and not os.path.exists('{}'.format(common.ARGS['token_file'])):
+        print("No tokens config file found.", file=stderr)
+        tokens = {}
+        if os.environ.get('DISCORD_BOT_TOKEN') is None:
+            exit(-1)
+    elif os.path.exists('{}'.format(common.ARGS['token_file'])):
+        print("Using local token file")
+        with open('{}'.format(common.ARGS['token_file']), 'r') as t_file:
+            tokens = json.load(t_file)
+    else:
+        with open('{}/{}'.format(common.data_dir,
+                                 common.ARGS['token_file']), 'r') as t_file:
+            tokens = json.load(t_file)
+
+    # Discord Bot Token
+    if 'token' in tokens:
+        token = tokens['token']
+    else:
+        token = os.environ.get('DISCORD_BOT_TOKEN')
+
+    # Twitter tokens
+    if 'twitter_api_key' not in tokens or 'twitter_api_secret' not in tokens:
+        common.twitter = None
+        print("No twitter functionality!")
+    else:
+        twitter_api_key = tokens['twitter_api_key']
+        twitter_api_secret = tokens['twitter_api_secret']
+        common.twitter = Twython(twitter_api_key, twitter_api_secret)
+        auth = common.twitter.get_authentication_tokens()
+        OAUTH_TOKEN = auth['oauth_token']
+        OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
+
+    # SMMRY tokens
+    if 'smmry_api_key' in tokens:
+        common.smmry_api_key = tokens['smmry_api_key']
+    else:
+        common.smmry_api_key = None
+        print("No summary functionality!")
+
+    # Twilio Tokens
+    if 'twilio_account_sid' not in tokens or 'twilio_auth_token' not in tokens:
+        common.twilio_client = None
+        print("No twilio functionality!")
+    else:
+        account_sid = tokens['twilio_account_sid']
+        auth_token = tokens['twilio_auth_token']
+        common.twilio_client = Client(account_sid, auth_token)
+
+    # Clarifai Tokens
+    if 'clarifai_api_key' not in tokens:
+        clarifai_api_key = None
+        print("No clarifai functionality!")
+    else:
+        clarifai_api_key = tokens['clarifai_api_key']
+
+    if not os.path.exists(common.db_file) \
+            and not os.path.exists('{}'.format(common.ARGS['database'])):
+        print("Starting DB from scratch (locally)")
+        common.db_file = '{}'.format(common.ARGS['database'])
+        with open(common.db_file, 'w') as datafile:
+            json.dump(common.db, datafile)
+    elif os.path.exists('{}'.format(common.ARGS['database'])):
+        common.db_file = '{}'.format(common.ARGS['database'])
+        print("Using local db file")
+        with open(common.db_file, 'r') as datafile:
+            common.db = json.load(datafile)
+    else:
+        print("Loading the DB")
+        with open(common.db_file, 'r') as datafile:
+            common.db = json.load(datafile)
+
+    # Create users from DB
+    if 'users' in common.db:
+        common.users = common.db['users']
+    else:
+        common.users = {}
+
+    # Instantiate Discord client and Weekend Games
+    common.whos_in = WeekendGames()
+
+    if common.ARGS["test"]:
         exit(0)
     bot.run(token)

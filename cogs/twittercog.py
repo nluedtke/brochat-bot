@@ -101,7 +101,10 @@ async def get_last_tweet(_id, tweet_text, rt_text, ctx):
     else:
         # if it's a retweet, send the original tweet
         if 'retweeted_status' in last_tweet[0]:
-            if _id == 'realdonaldtrump':
+            if _id == 'realdonaldtrump'and \
+                            common.last_id != last_tweet[0]['id']:
+                await item_chance_roll(ctx.bot, ctx.message.author.display_name,
+                                       ctx.message.channel)
                 common.last_id = last_tweet[0]['id']
             rt_id = last_tweet[0]['retweeted_status']['id']
             rt_screen_name = last_tweet[0]['retweeted_status']['user'][
@@ -126,7 +129,8 @@ async def check_trumps_mouth(bot):
 
     await bot.wait_until_ready()
     for channel in bot.get_all_channels():
-        if channel.name == 'gen_testing' or channel.name == 'brochat':
+        if channel.name == 'gen_testing' \
+                or channel.name == common.ARGS['channel']:
             c_to_send = channel
             break
 
