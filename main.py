@@ -153,7 +153,9 @@ async def on_ready():
         "Blackmail is such an ugly word. I prefer extortion. The ‘x’ makes "
         "it sound cool.",
         "Sweet photons. I don't know if you're waves or particles, but you go "
-        "down smooth. "
+        "down smooth. ",
+        "I don't tell you how to tell me what to do, so don't tell me how to do"
+        " what you tell me to do. "
     ]
     for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' or \
