@@ -9,6 +9,8 @@ from difflib import get_close_matches
 from random import choice
 from sys import stderr
 from time import time
+from clarifai.rest import ClarifaiApp, Image
+
 import pytz
 import requests
 import asyncio
@@ -69,9 +71,10 @@ async def on_member_update(before, after):
             common.whos_in.last_shot = after.display_name
             common.whos_in.update_db()
     elif before.status != after.status:
-        common.users[after.display_name]['last_seen'] = datetime.strftime(
-            datetime.now(pytz.timezone('US/Eastern')), "%c")
-        common.whos_in.update_db()
+        if after.display_name in common.users:
+            common.users[after.display_name]['last_seen'] = datetime.strftime(
+                datetime.now(pytz.timezone('US/Eastern')), "%c")
+            common.whos_in.update_db()
 
 
 @bot.command(name='seen', pass_context=True)
@@ -99,6 +102,7 @@ async def on_message(message):
     :param message:
     :return:
     """
+
     if message.author == bot.user:
         return
 
@@ -106,9 +110,18 @@ async def on_message(message):
         common.users[message.author.display_name] = {}
     common.users[message.author.display_name]['last_seen'] = \
         datetime.strftime(datetime.now(pytz.timezone('US/Eastern')), "%c")
-    cmd = message.content.split()[0]
+    try:
+        cmd = message.content.split()[0]
+    except IndexError:
+        cmd = ''
     new = cmd.lower()
     message.content = message.content.replace(cmd, new)
+
+    if message.attachments:
+        if len(message.attachments) > 1:
+            print('Warning, someone being sketchy with those attachments.')
+        await drink_or_not_drink(message.attachments[0]['url'], message)
+
     await bot.process_commands(message)
 
 
@@ -140,7 +153,9 @@ async def on_ready():
         "Blackmail is such an ugly word. I prefer extortion. The ‘x’ makes "
         "it sound cool.",
         "Sweet photons. I don't know if you're waves or particles, but you go "
-        "down smooth. "
+        "down smooth. ",
+        "I don't tell you how to tell me what to do, so don't tell me how to do"
+        " what you tell me to do. "
     ]
     for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' or \
@@ -222,6 +237,39 @@ async def clear(ctx):
     deleted = await bot.purge_from(channel, limit=125, check=is_me)
     c_ds = await bot.purge_from(channel, limit=100, check=is_command)
     await bot.say('Deleted {} message(s)'.format(len(deleted) + len(c_ds)))
+
+
+@bot.event
+async def drink_or_not_drink(image_url, message):
+    """Checks to see if an image is a drink"""
+    app = ClarifaiApp(api_key=clarifai_api_key)
+    message_channel = message.channel
+    model = app.models.get('food-items-v1.0')
+    image = Image(url=image_url)
+    response_data = model.predict([image])
+
+    concepts = response_data['outputs'][0]['data']['concepts']
+
+    drinks = [
+        'beer',
+        'alcohol',
+        'cocktail',
+        'wine',
+        'liquor'
+    ]
+
+    for concept in concepts:
+        for drink in drinks:
+            if concept['name'] == drink and concept['value'] > 0.95:
+                print(type(message_channel))
+                await bot.send_message(message_channel, 'Problem drinking'
+                    ' hyperdrive detection algorithm (PDHDA) has detected '
+                    'an adult beverage. Good work, Bro!')
+                message.content = "!drink"
+                return
+    await bot.send_message(message_channel, 'Hey, just so you know, I am '
+                                            'pretty sure that image was '
+                                            'not a drink.')
 
 
 # TODO - url validation
@@ -372,6 +420,7 @@ async def run_test(ctx):
             ctx.message.content = "!bertstrip"
             await bot.process_commands(ctx.message)
             await asyncio.sleep(10)
+            length = 1
         elif arguments[0] == 'long':
             length = 50
             del(common.users['csh']['duel_record'])
@@ -607,6 +656,13 @@ if __name__ == "__main__":
         account_sid = tokens['twilio_account_sid']
         auth_token = tokens['twilio_auth_token']
         common.twilio_client = Client(account_sid, auth_token)
+
+    # Clarifai Tokens
+    if 'clarifai_api_key' not in tokens:
+        clarifai_api_key = None
+        print("No clarifai functionality!")
+    else:
+        clarifai_api_key = tokens['clarifai_api_key']
 
     if not os.path.exists(common.db_file) \
             and not os.path.exists('{}'.format(common.ARGS['database'])):
