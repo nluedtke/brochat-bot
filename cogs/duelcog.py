@@ -473,7 +473,7 @@ async def event_handle_shot_duel(ctx, victim):
             init_player_duel_db(chal_name)
             c_rec = common.users[chal_name]['duel_record']
             v_rec = common.users[common.vict_name]['duel_record']
-            life = 12
+            life = 13
             common.duels_conducted += 1
             await ctx.bot.say(".\nDuel Accepted! Here we go!\n"
                               "{} is {} - {} - {}\n"
