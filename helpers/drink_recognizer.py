@@ -34,4 +34,4 @@ if __name__ == "__main__":
 
     url = argv[1]
 
-    print(drink_or_not_drink(url, '***REMOVED***'))
+    print(drink_or_not_drink(url, 'c64d9922a1b6435da89ee8ac9d696427'))
