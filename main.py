@@ -244,7 +244,7 @@ async def drink_or_not_drink(image_url, message):
     """Checks to see if an image is a drink"""
     app = ClarifaiApp(api_key=clarifai_api_key)
     message_channel = message.channel
-    model = app.models.get('food-items-v1.0')
+    model = app.models.get('general-v1.3')
     image = Image(url=image_url)
     response_data = model.predict([image])
 
