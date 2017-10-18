@@ -263,7 +263,6 @@ async def drink_or_not_drink(image_url, message):
     for concept in concepts:
         for drink in drinks:
             if concept['name'] == drink and concept['value'] > 0.95:
-                print(type(message_channel))
                 await bot.send_message(message_channel, 'Problem drinking'
                     ' hyperdrive detection algorithm (PDHDA) has detected '
                     'an adult beverage. Good work, Bro!')
