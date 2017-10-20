@@ -190,7 +190,14 @@ common_items = {
            "slot": "weapon",
            "class": "edged",
            "text": "This sword adds +3 to all damage for the user for one "
-                   "duel."}
+                   "duel."},
+    "22": {"name": "Pendant of Resurrection",
+           "type": ["res_effect"],
+           "prop": {},
+           "uses": 1,
+           "slot": "other",
+           "text": "This pendant will bring the wearer back to life one time "
+                   "for one duel"}
 }
 
 # Rare items go here and generally considered be more powerful either in
