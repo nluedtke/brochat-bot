@@ -364,8 +364,7 @@ async def death_check(ctx, chal, c_life, vict, v_life, c_res, v_res):
         if c_res and v_res:
             death_string = "\nBoth players have died!\nBoth Players " \
                            "miraculously come back to life! It's anyone's " \
-                           "game now!".format(chal.mention,
-                                            vict.mention)
+                           "game now!"
             cres = True
             vres = True
         # Chal resurrect
