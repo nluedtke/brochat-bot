@@ -1,7 +1,7 @@
 VERSION_YEAR = 2017
 VERSION_MONTH = 10
 VERSION_DAY = 20
-VERSION_REV = 1
+VERSION_REV = 2
 
 whos_in = None
 twitter = None
