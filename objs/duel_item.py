@@ -191,7 +191,7 @@ common_items = {
            "class": "edged",
            "text": "This sword adds +3 to all damage for the user for one "
                    "duel."},
-    "22": {"name": "Pendant of Resurrection",
+    "22": {"name": "Copper Pendant of Resurrection",
            "type": ["res_effect"],
            "prop": {},
            "uses": 1,

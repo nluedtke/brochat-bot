@@ -432,7 +432,8 @@ async def death_check(ctx, chal, c_life, vict, v_life, c_res, v_res):
             common.add_drink(chal.display_name)
             death = True
 
-    await ctx.bot.say(death_string)
+    if len(death_string) > 1:
+        await ctx.bot.say(death_string)
     return cres, vres, death
 
 
@@ -704,11 +705,13 @@ async def event_handle_shot_duel(ctx, victim):
                                                       (v_item is not None and
                                                        "res_effect" in v_item.type))
                 if cres:
-                    c_item.type.pop('res_effect')
-                    v_total = [c_life_start - 1]
+                    c_item.type.remove('res_effect')
+                    v_total = [c_life_start - randint(1, 2)]
+                    c_life = c_life_start - sum(v_total)
                 if vres:
-                    v_item.type.pop('res_effect')
-                    c_total = [v_life_start - 1]
+                    v_item.type.remove('res_effect')
+                    c_total = [v_life_start - randint(1, 2)]
+                    v_life = v_life_start - sum(c_total)
                 if death:
                     # END OF DUEL PHASE
                     common.whos_in.update_db()
@@ -778,11 +781,13 @@ async def event_handle_shot_duel(ctx, victim):
                                                       (v_item is not None and
                                                        "res_effect" in v_item.type))
                 if cres:
-                    c_item.type.pop('res_effect')
-                    v_total = [c_life_start - 1]
+                    c_item.type.remove('res_effect')
+                    v_total = [c_life_start - randint(1, 2)]
+                    c_life = c_life_start - sum(v_total)
                 if vres:
-                    v_item.type.pop('res_effect')
-                    c_total = [v_life_start - 1]
+                    v_item.type.remove('res_effect')
+                    c_total = [v_life_start - randint(1, 2)]
+                    v_life = v_life_start - sum(c_total)
                 if death:
                     # END OF DUEL PHASE
                     common.whos_in.update_db()
