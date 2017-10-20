@@ -251,13 +251,10 @@ async def drink_or_not_drink(image_url, message):
     concepts = response_data['outputs'][0]['data']['concepts']
 
     drinks = [
-        'beer',
-        'alcohol',
-        'cocktail',
-        'wine',
-        'liquor',
-        'martini',
-        'vodka'
+        'beer', 'alcohol', 'cocktail',
+        'wine', 'liquor', 'martini',
+        'vodka', 'whisky', 'bourbon',
+        'Scotch'
     ]
 
     for concept in concepts:
