@@ -236,6 +236,8 @@ def item_eff_str(item):
     if 'disarm_effect' in item.type:
         ret_str += "    The opponent's item will be removed if there is one " \
                    "equipped.\n"
+    if 'res_effect' in item.type:
+        ret_str += "    Will come back to life one time.\n"
     if 'poison_effect' in item.type:
         ret_str += "    The opponent, when hit, will be poisoned for {} " \
                    "round(s), taking {} damage each round.\n" \
@@ -333,7 +335,7 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
     return c_item_ret, v_item_ret
 
 
-async def death_check(ctx, chal, c_life, vict, v_life):
+async def death_check(ctx, chal, c_life, vict, v_life, c_res, v_res):
     """
     Checks if someone has died
 
@@ -342,38 +344,96 @@ async def death_check(ctx, chal, c_life, vict, v_life):
     :param c_life: Challenger's Life
     :param vict: Victim
     :param v_life: Victim's Life
-    :return: True if death
-    :rtype: bool
+    :param c_res: Does chal have a res item?
+    :param v_res: Does vict have a res item?
+    :return: True if res for player, True if death
+    :rtype: bool, bool, bool
     """
 
     death_string = ""
+    cres = False
+    vres = False
+    death = False
 
+    # Both players died
     if v_life < 1 and c_life < 1:
         death_string = "\nBoth players have died!\n{} and {} " \
                        "both drink!".format(chal.mention,
                                             vict.mention)
-        common.users[vict.display_name]['duel_record'][2] += 1
-        common.users[chal.display_name]['duel_record'][2] += 1
-        common.add_drink(vict.display_name)
-        common.add_drink(chal.display_name)
+        # Both players resurrect
+        if c_res and v_res:
+            death_string = "\nBoth players have died!\nBoth Players " \
+                           "miraculously come back to life! It's anyone's " \
+                           "game now!"
+            cres = True
+            vres = True
+        # Chal resurrect
+        elif c_res and not v_res:
+            death_string = "\nBoth players have died!\n{} " \
+                           "miraculously came back to life! What a turn! {} " \
+                           "wins the duel!\n{} drinks!"\
+                           .format(chal.display_name, chal.display_name,
+                                   vict.mention)
+            cres = True
+            death = True
+            common.add_drink(vict.display_name)
+            common.users[vict.display_name]['duel_record'][1] += 1
+            common.users[chal.display_name]['duel_record'][0] += 1
+        # Vict resurrect
+        elif v_res and not c_res:
+            death_string = "\nBoth players have died!\n{} " \
+                           "miraculously came back to life! What a turn! {} " \
+                           "wins the duel!\n{} drinks!"\
+                           .format(vict.display_name, vict.display_name,
+                                   chal.mention)
+            vres = True
+            death = True
+            common.add_drink(chal.display_name)
+            common.users[vict.display_name]['duel_record'][0] += 1
+            common.users[chal.display_name]['duel_record'][1] += 1
+        # No resurrect
+        else:
+            common.add_drink(vict.display_name)
+            common.add_drink(chal.display_name)
+            common.users[vict.display_name]['duel_record'][2] += 1
+            common.users[chal.display_name]['duel_record'][2] += 1
+            death = True
+    # Vict death
     elif v_life < 1:
         death_string = "\n{} has died!\n{} wins the duel!\n" \
                        "{} drinks!".format(vict.display_name,
                                            chal.display_name, vict.mention)
-        common.users[vict.display_name]['duel_record'][1] += 1
-        common.users[chal.display_name]['duel_record'][0] += 1
-        common.add_drink(vict.display_name)
+        # Vict Res
+        if v_res:
+            death_string = "\n{} has died!\n{} " \
+                           "miraculously came back to life! What a turn!"\
+                .format(vict.display_name, vict.display_name)
+            vres = True
+        else:
+            death = True
+            common.users[vict.display_name]['duel_record'][1] += 1
+            common.users[chal.display_name]['duel_record'][0] += 1
+            common.add_drink(vict.display_name)
+    # Chal death
     elif c_life < 1:
         death_string = "\n{} has died!\n{} wins the duel!\n" \
                        "{} drinks!".format(chal.display_name, vict.display_name,
                                            chal.mention)
-        common.users[vict.display_name]['duel_record'][0] += 1
-        common.users[chal.display_name]['duel_record'][1] += 1
-        common.add_drink(chal.display_name)
+        # Chal Res
+        if c_res:
+            death_string = "\n{} has died!\n{} " \
+                           "miraculously came back to life! What a turn!" \
+                .format(chal.display_name, chal.display_name)
+            cres = True
+        else:
+            common.users[vict.display_name]['duel_record'][0] += 1
+            common.users[chal.display_name]['duel_record'][1] += 1
+            common.add_drink(chal.display_name)
+            death = True
+
     if len(death_string) > 1:
         await ctx.bot.say(death_string)
-        return True
-    return False
+    return cres, vres, death
 
 
 def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
@@ -637,8 +697,20 @@ async def event_handle_shot_duel(ctx, victim):
                                       "{} life.".format(common.vict_name,
                                                         pos_dam, v_life))
 
-                death = await death_check(ctx, ctx.message.author, c_life,
-                                          victim, v_life)
+                cres, vres, death = await death_check(ctx, ctx.message.author,
+                                                      c_life, victim, v_life,
+                                                      (c_item is not None and
+                                                       "res_effect" in c_item.type),
+                                                      (v_item is not None and
+                                                       "res_effect" in v_item.type))
+                if cres:
+                    c_item.type.remove('res_effect')
+                    v_total = [c_life_start - randint(1, 2)]
+                    c_life = c_life_start - sum(v_total)
+                if vres:
+                    v_item.type.remove('res_effect')
+                    c_total = [v_life_start - randint(1, 2)]
+                    v_life = v_life_start - sum(c_total)
                 if death:
                     # END OF DUEL PHASE
                     common.whos_in.update_db()
@@ -701,8 +773,20 @@ async def event_handle_shot_duel(ctx, victim):
                 await ctx.bot.say(duel_string)
 
                 _round += 1
-                death = await death_check(ctx, ctx.message.author, c_life,
-                                          victim, v_life)
+                cres, vres, death = await death_check(ctx, ctx.message.author,
+                                                      c_life, victim, v_life,
+                                                      (c_item is not None and
+                                                       "res_effect" in c_item.type),
+                                                      (v_item is not None and
+                                                       "res_effect" in v_item.type))
+                if cres:
+                    c_item.type.remove('res_effect')
+                    v_total = [c_life_start - randint(1, 2)]
+                    c_life = c_life_start - sum(v_total)
+                if vres:
+                    v_item.type.remove('res_effect')
+                    c_total = [v_life_start - randint(1, 2)]
+                    v_life = v_life_start - sum(c_total)
                 if death:
                     # END OF DUEL PHASE
                     common.whos_in.update_db()
