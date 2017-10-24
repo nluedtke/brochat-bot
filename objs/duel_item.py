@@ -255,7 +255,17 @@ rare_items = {
             "class": "edged",
             "text": "This sword adds +1 to all damage for the user and allows "
                     "the user to regenerate 1 life at the end of each round for"
-                    " three duels."}
+                    " three duels."},
+    "107": {"name": "Michael's Sword",
+            "type": ["roll_effect", "regen_effect", "res_effect"],
+            "prop": {'roll': 1, 'regen': 1},
+            "uses": 2,
+            "slot": "weapon",
+            "class": "edged",
+            "text": "This sword adds +1 to all damage for the user, allows "
+                    "the user to regenerate 1 life at the end of each round, "
+                    "and will bring the wearer back to life one time for"
+                    " two duels."}
 }
 
 all_items = common_items
