@@ -122,7 +122,7 @@ common_items = {
                    "end of each round for one duel."},
     "13": {"name": "Metal Detector",
            "type": ["luck_effect"],
-           "prop": {'luck': 50},
+           "prop": {'luck': 60},
            "uses": 4,
            "slot": "weapon",
            "class": "blunt",
@@ -140,7 +140,7 @@ common_items = {
            },
     "15": {"name": "Glistening Leather Vest",
            "type": ["life_effect", "luck_effect"],
-           "prop": {'life': 2, "luck": 20},
+           "prop": {'life': 2, "luck": 30},
            "uses": 2,
            "slot": "armor",
            "text": "This armor adds +2 life for the wearer and moderately "
@@ -177,7 +177,7 @@ common_items = {
                    "duels."},
     "20": {"name": "Lucky Xiphos",
            "type": ["roll_effect", "luck_effect"],
-           "prop": {'roll': 1, "luck": 10},
+           "prop": {'roll': 1, "luck": 20},
            "uses": 2,
            "slot": "weapon",
            "class": "edged",
@@ -197,7 +197,14 @@ common_items = {
            "uses": 1,
            "slot": "other",
            "text": "This pendant will bring the wearer back to life one time "
-                   "for one duel"}
+                   "for one duel."},
+    "23": {"name": "Bronze Pendant of Resurrection",
+           "type": ["res_effect"],
+           "prop": {},
+           "uses": 2,
+           "slot": "other",
+           "text": "This pendant will bring the wearer back to life one time "
+                   "for two duels."}
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -274,7 +281,29 @@ rare_items = {
             "text": "This armor adds +2 life for the user, allows "
                     "the user to regenerate 1 life at the end of each round, "
                     "and will bring the wearer back to life one time for"
-                    " two duels."}
+                    " two duels."},
+    "109": {"name": "Gold Pendant of Resurrection",
+            "type": ["res_effect"],
+            "prop": {},
+            "uses": 4,
+            "slot": "other",
+            "text": "This pendant will bring the wearer back to life one time "
+                    "for four duels."},
+    "110": {"name": "Glistening Steel Pendant of Resurrection",
+            "type": ["res_effect", "luck_effect"],
+            "prop": {"luck": 60},
+            "uses": 3,
+            "slot": "other",
+            "text": "This pendant will bring the wearer back to life one time "
+                    "for three duels and greatly increases luck."},
+    "111": {"name": "Michael's Pendant",
+            "type": ["res_effect", "regen_effect", "res_effect"],
+            "prop": {'regen': 1},
+            "uses": 2,
+            "slot": "other",
+            "text": "This pendant allows the user to regenerate 1 life at the "
+                    "end of each round, and will bring the wearer back to life "
+                    "two times for two duels."}
 }
 
 all_items = common_items
