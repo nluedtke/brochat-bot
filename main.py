@@ -245,6 +245,7 @@ async def drink_or_not_drink(image_url, message):
     app = ClarifaiApp(api_key=clarifai_api_key)
     message_channel = message.channel
     model = app.models.get('general-v1.3')
+    model1 = app.models.get('food-items-v1.0')
     image = Image(url=image_url)
     response_data = model.predict([image])
 
@@ -254,12 +255,12 @@ async def drink_or_not_drink(image_url, message):
         'beer', 'alcohol', 'cocktail',
         'wine', 'liquor', 'martini',
         'vodka', 'whisky', 'bourbon',
-        'Scotch'
+        'Scotch', 'ale
     ]
 
     for concept in concepts:
         for drink in drinks:
-            if concept['name'] == drink and concept['value'] > 0.92:
+            if concept['name'] == drink and concept['value'] > 0.90:
                 await bot.send_message(
                     message_channel,
                     'Problem drinking'
@@ -267,6 +268,20 @@ async def drink_or_not_drink(image_url, message):
                     'an adult beverage. Good work, Bro!')
                 message.content = "!drink"
                 return
+
+    response_data = model1.predict([image])
+    concepts = response_data['outputs'][0]['data']['concepts']
+    for concept in concepts:
+        for drink in drinks:
+            if concept['name'] == drink and concept['value'] > 0.95:
+                await bot.send_message(
+                    message_channel,
+                    'Problem drinking'
+                    ' hyperdrive detection algorithm (PDHDA) has detected '
+                    'an adult beverage. Good work, Bro!')
+                message.content = "!drink"
+                return
+    
 
 
 # TODO - url validation
