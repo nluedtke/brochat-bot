@@ -255,7 +255,7 @@ async def drink_or_not_drink(image_url, message):
         'beer', 'alcohol', 'cocktail',
         'wine', 'liquor', 'martini',
         'vodka', 'whisky', 'bourbon',
-        'Scotch', 'ale
+        'Scotch', 'ale'
     ]
 
     for concept in concepts:
