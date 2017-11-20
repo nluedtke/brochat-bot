@@ -153,6 +153,13 @@ class Duels:
 
         if 'equip' not in common.users[name] or len(common.users[name]) < 1:
             await self.bot.say("You have no items equipped!")
+        elif slot == "all":
+            for s in common.users[name]['equip']:
+                item_num = common.users[name]['equip'][s]
+                await self.bot.say("You have unquipped the {}"
+                                   .format(get_name(item_num)))
+                del (common.users[name]['equip'][s])
+            return
         elif slot not in common.users[name]['equip']:
             for s in common.users[name]['equip']:
                 if common.users[name]['equip'][s] == slot:
