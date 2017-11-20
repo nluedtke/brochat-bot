@@ -88,6 +88,26 @@ class Duels:
         await self.bot.say(output)
         self.bot.get_command('duel').reset_cooldown(ctx)
 
+    @shot_duel.command(name='random', aliases=['rand'], pass_context=True)
+    async def duel_random(self, ctx):
+        """Duel a random person"""
+        members = self.bot.get_all_members()
+        map_disp_to_name = {}
+        for m in members:
+            map_disp_to_name[m.display_name.lower()] = m
+
+        while True:
+            if len(map_disp_to_name) <= 0:
+                await self.bot.say('No one found to duel!')
+                self.bot.get_command('duel').reset_cooldown(ctx)
+                return
+            p = choice(list(map_disp_to_name.keys()))[:]
+            if map_disp_to_name[p] == 'online':
+                await event_handle_shot_duel(ctx, map_disp_to_name[p])
+                return
+            else:
+                del(map_disp_to_name[p])
+
     @commands.command(name='accept', pass_context=True)
     async def toggle_accept(self, ctx):
         """Accept a challenge"""
