@@ -102,7 +102,8 @@ class Duels:
                 self.bot.get_command('duel').reset_cooldown(ctx)
                 return
             p = choice(list(map_disp_to_name.keys()))[:]
-            if map_disp_to_name[p] == 'online':
+            if str(map_disp_to_name[p].status) == 'online' and p != ctx.message.author.display_name and \
+                    p != 'brochat-bot':
                 await event_handle_shot_duel(ctx, map_disp_to_name[p])
                 return
             else:
@@ -178,7 +179,7 @@ class Duels:
                 item_num = common.users[name]['equip'][s]
                 await self.bot.say("You have unquipped the {}"
                                    .format(get_name(item_num)))
-                del (common.users[name]['equip'][s])
+            common.users[name]['equip'] = {}
             return
         elif slot not in common.users[name]['equip']:
             for s in common.users[name]['equip']:
@@ -861,6 +862,7 @@ async def event_handle_shot_duel(ctx, victim):
     if not common.accepted:
         await ctx.bot.say("Shot duel not accepted! Clearly {} is better than "
                           "{}.".format(chal_name, common.vict_name))
+        ctx.bot.get_command('duel').reset_cooldown(ctx)
 
     common.shot_duel_running = False
     common.accepted = False
