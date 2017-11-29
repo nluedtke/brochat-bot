@@ -9,7 +9,6 @@ from difflib import get_close_matches
 from random import choice
 from sys import stderr
 from time import time
-from clarifai.rest import ClarifaiApp, Image
 
 import pytz
 import requests
@@ -117,11 +116,6 @@ async def on_message(message):
     new = cmd.lower()
     message.content = message.content.replace(cmd, new)
 
-    if message.attachments:
-        if len(message.attachments) > 1:
-            print('Warning, someone being sketchy with those attachments.')
-        await drink_or_not_drink(message.attachments[0]['url'], message)
-
     await bot.process_commands(message)
 
 
@@ -155,7 +149,8 @@ async def on_ready():
         "Sweet photons. I don't know if you're waves or particles, but you go "
         "down smooth. ",
         "I don't tell you how to tell me what to do, so don't tell me how to do"
-        " what you tell me to do. "
+        " what you tell me to do. ",
+        "You know what cheers me up? Other people’s misfortune."
     ]
     for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' or \
@@ -237,51 +232,6 @@ async def clear(ctx):
     deleted = await bot.purge_from(channel, limit=125, check=is_me)
     c_ds = await bot.purge_from(channel, limit=100, check=is_command)
     await bot.say('Deleted {} message(s)'.format(len(deleted) + len(c_ds)))
-
-
-@bot.event
-async def drink_or_not_drink(image_url, message):
-    """Checks to see if an image is a drink"""
-    app = ClarifaiApp(api_key=clarifai_api_key)
-    message_channel = message.channel
-    model = app.models.get('general-v1.3')
-    model1 = app.models.get('food-items-v1.0')
-    image = Image(url=image_url)
-    response_data = model.predict([image])
-
-    concepts = response_data['outputs'][0]['data']['concepts']
-
-    drinks = [
-        'beer', 'alcohol', 'cocktail',
-        'wine', 'liquor', 'martini',
-        'vodka', 'whisky', 'bourbon',
-        'Scotch', 'ale'
-    ]
-
-    for concept in concepts:
-        for drink in drinks:
-            if concept['name'] == drink and concept['value'] > 0.90:
-                await bot.send_message(
-                    message_channel,
-                    'Problem drinking'
-                    ' hyperdrive detection algorithm (PDHDA) has detected '
-                    'an adult beverage. Good work, Bro!')
-                message.content = "!drink"
-                return
-
-    response_data = model1.predict([image])
-    concepts = response_data['outputs'][0]['data']['concepts']
-    for concept in concepts:
-        for drink in drinks:
-            if concept['name'] == drink and concept['value'] > 0.95:
-                await bot.send_message(
-                    message_channel,
-                    'Problem drinking'
-                    ' hyperdrive detection algorithm (PDHDA) has detected '
-                    'an adult beverage. Good work, Bro!')
-                message.content = "!drink"
-                return
-    
 
 
 # TODO - url validation
@@ -672,13 +622,6 @@ if __name__ == "__main__":
         account_sid = tokens['twilio_account_sid']
         auth_token = tokens['twilio_auth_token']
         common.twilio_client = Client(account_sid, auth_token)
-
-    # Clarifai Tokens
-    if 'clarifai_api_key' not in tokens:
-        clarifai_api_key = None
-        print("No clarifai functionality!")
-    else:
-        clarifai_api_key = tokens['clarifai_api_key']
 
     if not os.path.exists(common.db_file) \
             and not os.path.exists('{}'.format(common.ARGS['database'])):

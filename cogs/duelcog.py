@@ -88,6 +88,27 @@ class Duels:
         await self.bot.say(output)
         self.bot.get_command('duel').reset_cooldown(ctx)
 
+    @shot_duel.command(name='random', aliases=['rand'], pass_context=True)
+    async def duel_random(self, ctx):
+        """Duel a random person"""
+        members = self.bot.get_all_members()
+        map_disp_to_name = {}
+        for m in members:
+            map_disp_to_name[m.display_name.lower()] = m
+
+        while True:
+            if len(map_disp_to_name) <= 0:
+                await self.bot.say('No one found to duel!')
+                self.bot.get_command('duel').reset_cooldown(ctx)
+                return
+            p = choice(list(map_disp_to_name.keys()))[:]
+            if str(map_disp_to_name[p].status) == 'online' and p != ctx.message.author.display_name and \
+                    p != 'brochat-bot':
+                await event_handle_shot_duel(ctx, map_disp_to_name[p])
+                return
+            else:
+                del(map_disp_to_name[p])
+
     @commands.command(name='accept', pass_context=True)
     async def toggle_accept(self, ctx):
         """Accept a challenge"""
@@ -153,6 +174,13 @@ class Duels:
 
         if 'equip' not in common.users[name] or len(common.users[name]) < 1:
             await self.bot.say("You have no items equipped!")
+        elif slot == "all":
+            for s in common.users[name]['equip']:
+                item_num = common.users[name]['equip'][s]
+                await self.bot.say("You have unquipped the {}"
+                                   .format(get_name(item_num)))
+            common.users[name]['equip'] = {}
+            return
         elif slot not in common.users[name]['equip']:
             for s in common.users[name]['equip']:
                 if common.users[name]['equip'][s] == slot:
@@ -834,6 +862,7 @@ async def event_handle_shot_duel(ctx, victim):
     if not common.accepted:
         await ctx.bot.say("Shot duel not accepted! Clearly {} is better than "
                           "{}.".format(chal_name, common.vict_name))
+        ctx.bot.get_command('duel').reset_cooldown(ctx)
 
     common.shot_duel_running = False
     common.accepted = False

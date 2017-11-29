@@ -7,7 +7,6 @@ A Discord bot to enable friendship (and at times enforce it).
   - discord.py
   - asyncio
   - twython
-  - clarifai
 
 ### Installation (How to get your own brochat-bot)
 Below are instructions to set up and run your own brochat-bot.
