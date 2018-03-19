@@ -286,7 +286,6 @@ async def reset_cmd_cooldown(ctx, cmd):
 @is_owner()
 async def reset_records():
     """Resets all duel records
-
     """
     for user in common.users:
         if 'duel_record' in common.users[user]:
@@ -294,6 +293,19 @@ async def reset_records():
     # Update database
     common.whos_in.update_db()
     await bot.say("Records reset.")
+
+
+@bot.command(name='erase-debt', hidden=True)
+@is_owner()
+async def reset_records():
+    """Resets owed/stored drinks
+    """
+    for user in common.users:
+        if 'drinks_owed' in common.users[user]:
+            del(common.users[user]['drinks_owed'])
+    # Update database
+    common.whos_in.update_db()
+    await bot.say("Debts erased, slackers.")
 
 
 @bot.command(name='item-giveaway', hidden=True, pass_context=True)
