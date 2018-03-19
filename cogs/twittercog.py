@@ -167,6 +167,7 @@ async def check_trumps_mouth(bot):
                 await bot.send_message(c_to_send, "New Message from the prez! "
                                                   "Try !trump")
                 decay = common.trump_del - 1
+                delay = (common.trump_del - decay) * 60
                 common.last_id = trumps_lt_id
                 common.trump_chance_roll_rdy = True
 
