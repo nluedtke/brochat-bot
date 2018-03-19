@@ -102,7 +102,8 @@ class Duels:
                 self.bot.get_command('duel').reset_cooldown(ctx)
                 return
             p = choice(list(map_disp_to_name.keys()))[:]
-            if str(map_disp_to_name[p].status) == 'online' and p != ctx.message.author.display_name and \
+            if str(map_disp_to_name[p].status) == 'online' and \
+                    p != ctx.message.author.display_name and \
                     p != 'brochat-bot':
                 await event_handle_shot_duel(ctx, map_disp_to_name[p])
                 return
@@ -195,6 +196,7 @@ class Duels:
             await self.bot.say("You have unquipped the {}"
                                .format(get_name(item_num)))
             del(common.users[name]['equip'][slot])
+
 
 async def item_chance_roll(bot, player, channel, max_roll=100):
     """
@@ -290,6 +292,7 @@ def return_item(item, player):
     else:
         common.users[player]['inventory'][item.item_id] = item.uses - 1
         common.users[player]['equip'][item.slot] = item.item_id
+
 
 async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
     """
@@ -534,6 +537,7 @@ def add_pos_eff(pos_effects, new_poss_eff):
                 pos_effects[index] += new_poss_eff
                 return pos_effects
 
+
 async def event_handle_shot_duel(ctx, victim):
     """
     Handles a shot_duel should a victim accept.
@@ -670,7 +674,7 @@ async def event_handle_shot_duel(ctx, victim):
             if v_item is not None and "life_effect" in v_item.type:
                 v_life_start += v_item.prop['life']
 
-            # Inital ITEM CHANCE ROLLS (If needed modify chance rolls here)
+            # Initial ITEM CHANCE ROLLS (If needed modify chance rolls here)
             luck_mod = 0
             if c_item is not None and "luck_effect" in c_item.type:
                 luck_mod = c_item.prop['luck']
@@ -725,12 +729,13 @@ async def event_handle_shot_duel(ctx, victim):
                                       "{} life.".format(common.vict_name,
                                                         pos_dam, v_life))
 
-                cres, vres, death = await death_check(ctx, ctx.message.author,
-                                                      c_life, victim, v_life,
-                                                      (c_item is not None and
-                                                       "res_effect" in c_item.type),
-                                                      (v_item is not None and
-                                                       "res_effect" in v_item.type))
+                cres, vres, death = \
+                    await death_check(ctx, ctx.message.author,
+                                      c_life, victim, v_life,
+                                      (c_item is not None and
+                                       "res_effect" in c_item.type),
+                                      (v_item is not None and
+                                       "res_effect" in v_item.type))
                 if cres:
                     c_item.type.remove('res_effect')
                     v_total = [c_life_start - randint(1, 2)]
@@ -801,12 +806,13 @@ async def event_handle_shot_duel(ctx, victim):
                 await ctx.bot.say(duel_string)
 
                 _round += 1
-                cres, vres, death = await death_check(ctx, ctx.message.author,
-                                                      c_life, victim, v_life,
-                                                      (c_item is not None and
-                                                       "res_effect" in c_item.type),
-                                                      (v_item is not None and
-                                                       "res_effect" in v_item.type))
+                cres, vres, death = \
+                    await death_check(ctx, ctx.message.author,
+                                      c_life, victim, v_life,
+                                      (c_item is not None and
+                                       "res_effect" in c_item.type),
+                                      (v_item is not None and
+                                       "res_effect" in v_item.type))
                 if cres:
                     c_item.type.remove('res_effect')
                     v_total = [c_life_start - randint(1, 2)]

@@ -29,7 +29,6 @@ class WeekendGames(object):
             self.consecutive_shot_wins = db['consecutive_shot_wins']
         self.last_reddit_request = 0
 
-
         # store our games
         self.gametimes = []
         if 'gametimes' in db:

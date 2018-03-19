@@ -46,6 +46,7 @@ db = {}
 NEWS_FEED_ON = False
 NEWS_FEED_CREATED = False
 
+
 async def trigger_social(ctx):
     """Triggers a social """
     for m in ctx.bot.get_all_members():
