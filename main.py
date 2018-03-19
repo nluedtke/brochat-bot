@@ -291,6 +291,8 @@ async def reset_records():
     for user in common.users:
         if 'duel_record' in common.users[user]:
             del(common.users[user]['duel_record'])
+    # Update database
+    common.whos_in.update_db()
     await bot.say("Records reset.")
 
 
