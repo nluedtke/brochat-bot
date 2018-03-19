@@ -297,7 +297,7 @@ async def reset_records():
 
 @bot.command(name='erase-debt', hidden=True)
 @is_owner()
-async def reset_records():
+async def erase_debt():
     """Resets owed/stored drinks
     """
     for user in common.users:
