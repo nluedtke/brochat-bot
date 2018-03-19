@@ -80,6 +80,7 @@ class Twitter:
             common.NEWS_FEED_ON = True
             await self.bot.say("News Feed turned on.")
 
+
 async def get_last_tweet(_id, tweet_text, rt_text, ctx):
     """
     Gets the last tweet for id.
@@ -120,12 +121,14 @@ async def get_last_tweet(_id, tweet_text, rt_text, ctx):
                                       ['screen_name'],
                                       str(last_tweet[0]['id'])))
 
+
 async def check_trumps_mouth(bot):
     """
     Waits for an update from the prez
     :return: None
     """
     c_to_send = None
+    decay = 0
 
     await bot.wait_until_ready()
     for channel in bot.get_all_channels():
@@ -152,15 +155,21 @@ async def check_trumps_mouth(bot):
                 include_retweets=False)[0]['id']
         except:
             print("Error caught in check_trump, shortening delay")
-            delay = 10 * 60
+            delay = 60
         else:
-            delay = common.trump_del * 60
+            if decay > 0:
+                delay = (common.trump_del - decay) * 60
+                decay -= 1
+            else:
+                delay = common.trump_del * 60
             if trumps_lt_id != common.last_id:
                 common.trump_tweets_seen += 1
                 await bot.send_message(c_to_send, "New Message from the prez! "
                                                   "Try !trump")
+                decay = common.trump_del - 1
                 common.last_id = trumps_lt_id
                 common.trump_chance_roll_rdy = True
+
 
 async def handle_news(ctx):
     """
