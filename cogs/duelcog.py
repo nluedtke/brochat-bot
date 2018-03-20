@@ -548,6 +548,8 @@ async def event_handle_shot_duel(ctx, victim):
     """
     fog = False
     cap = False
+    h_life = None
+    h_dam = None
     common.shot_duel_running = True
     vict_name = common.vict_name = victim.display_name
     chal_name = ctx.message.author.display_name
@@ -638,6 +640,40 @@ async def event_handle_shot_duel(ctx, victim):
                 await ctx.bot.say("A weird pink glow surrounds the battlefield."
                                   " (Damage is capped)")
                 cap = True
+            elif e_roll == 20:
+                await ctx.bot.say("A big red button appears. Would you like "
+                                  "to press it? (If you want to type \"$press\""
+                                  ". You have 10 seconds to decide.)")
+                msg = await ctx.bot.wait_for_message(timeout=10.0,
+                                                     content='$press')
+                if msg is not None:
+                    nc = msg.author.display_name
+                    await ctx.bot.say("%s pressed the button!".format(nc))
+                    if nc not in [chal_name, vict_name]:
+                        await ctx.bot.say("%s is not in this duel and suddenly "
+                                          "feels less burdened.".format(nc))
+                        if len(list(common.users[nc]['inventory'].keys())) > 0:
+                            item_take = choice(
+                                list(common.users[nc]['inventory'].keys()))
+                            if get_slot(item_take) in common.users[nc]['equip']:
+                                del (common.users[nc]['equip']
+                                     [get_slot(item_take)])
+                            del common.users[nc]['inventory'][item_take]
+                    await ctx.bot.say("The red button disappears but a loud "
+                                      "banging noise can be heard!")
+                    await ctx.bot.send_typing(ctx.message.channel)
+                    eff = randint(0, 1)
+                    await asyncio.sleep(7)
+                    if eff == 0:
+                        h_life = choice([vict_name, chal_name])
+                        await ctx.bot.say("%s will start at half life."
+                                          .format(h_life))
+                    elif eff == 1:
+                        h_dam = choice([vict_name, chal_name])
+                        await ctx.bot.say("%s will do half damage."
+                                          .format(h_dam))
+                elif msg is None:
+                    await ctx.bot.say("Unpressed, the button disappears.")
 
             # spec_effect check (disarm_effect)
             if (c_wep is not None and 'disarm_effect' in c_wep.type) \
@@ -686,6 +722,13 @@ async def event_handle_shot_duel(ctx, victim):
                 c_life_start += c_item.prop['life']
             if v_item is not None and "life_effect" in v_item.type:
                 v_life_start += v_item.prop['life']
+
+            # half life check (red button mystery)
+            if h_life is not None:
+                if h_life == chal_name:
+                    c_life_start = int(c_life_start / 2)
+                elif h_life == vict_name:
+                    v_life_start = int(v_life_start / 2)
 
             # Initial ITEM CHANCE ROLLS (If needed modify chance rolls here)
             luck_mod = 0
@@ -790,6 +833,13 @@ async def event_handle_shot_duel(ctx, victim):
                 if cap:
                     c_roll = min(4, c_roll)
                     v_roll = min(4, v_roll)
+
+                # half dam check (red button mystery)
+                if h_dam is not None:
+                    if h_dam == chal_name:
+                        c_roll = int(c_roll / 2)
+                    elif h_dam == vict_name:
+                        v_roll = int(v_roll / 2)
 
                 # DAMAGE APPLIED HERE
                 if c_roll >= 0:
