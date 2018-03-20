@@ -103,26 +103,20 @@ async def get_last_tweet(_id, tweet_text, rt_text, ctx, c=1):
     except TwythonError as e:
         raise e
     else:
-        # if it's a retweet, send the original tweet
-        if 'retweeted_status' in last_tweet[0]:
-            if _id == 'realdonaldtrump'and \
-                            common.last_id != last_tweet[0]['id']:
-                await item_chance_roll(ctx.bot, ctx.message.author.display_name,
-                                       ctx.message.channel)
-                common.last_id = last_tweet[0]['id']
-            rt_id = last_tweet[0]['retweeted_status']['id']
-            rt_screen_name = last_tweet[0]['retweeted_status']['user'][
-                    'screen_name']
-            await ctx.bot.say('{}\n\nhttps://twitter.com/{}/status/{}'
-                              .format(rt_text, rt_screen_name, str(rt_id)))
-        # otherwise, send the tweet
-        else:
-            if _id == 'realdonaldtrump':
-                common.last_id = last_tweet[0]['id']
-            await ctx.bot.say('{}\n\nhttps://twitter.com/{}/status/{}'
-                              .format(tweet_text, last_tweet[0]['user']
-                                      ['screen_name'],
-                                      str(last_tweet[0]['id'])))
+        for i in range(c):
+            # if it's a retweet, send the original tweet
+            if 'retweeted_status' in last_tweet[i]:
+                rt_id = last_tweet[i]['retweeted_status']['id']
+                rt_screen_name = last_tweet[i]['retweeted_status']['user'][
+                        'screen_name']
+                await ctx.bot.say('{}\n\nhttps://twitter.com/{}/status/{}'
+                                  .format(rt_text, rt_screen_name, str(rt_id)))
+            # otherwise, send the tweet
+            else:
+                await ctx.bot.say('{}\n\nhttps://twitter.com/{}/status/{}'
+                                  .format(tweet_text, last_tweet[i]['user']
+                                          ['screen_name'],
+                                          str(last_tweet[i]['id'])))
 
 
 async def check_trumps_mouth(bot):

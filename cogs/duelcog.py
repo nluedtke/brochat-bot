@@ -632,14 +632,17 @@ async def event_handle_shot_duel(ctx, victim):
 
             # Environment effects
             e_roll = randint(0, 20)
+            # fog
             if e_roll == 20:
                 await ctx.bot.say("A dense fog rolls in. "
                                   "(Chance to miss increased)")
                 fog = True
+            # damper
             elif e_roll == 19:
                 await ctx.bot.say("A weird pink glow surrounds the battlefield."
                                   " (Damage is capped)")
                 cap = True
+            # red button event
             elif e_roll == 20:
                 await ctx.bot.say("A big red button appears. Would you like "
                                   "to press it? (If you want to type \"$press\""
