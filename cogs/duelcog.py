@@ -547,6 +547,7 @@ async def event_handle_shot_duel(ctx, victim):
     :return: None
     """
     fog = False
+    cap = False
     common.shot_duel_running = True
     vict_name = common.vict_name = victim.display_name
     chal_name = ctx.message.author.display_name
@@ -633,6 +634,10 @@ async def event_handle_shot_duel(ctx, victim):
                 await ctx.bot.say("A dense fog rolls in. "
                                   "(Chance to miss increased)")
                 fog = True
+            elif e_roll == 19:
+                await ctx.bot.say("A weird pink glow surrounds the battlefield."
+                                  " (Damage is capped)")
+                cap = True
 
             # spec_effect check (disarm_effect)
             if (c_wep is not None and 'disarm_effect' in c_wep.type) \
@@ -762,10 +767,12 @@ async def event_handle_shot_duel(ctx, victim):
                 await asyncio.sleep(10)
                 c_roll, v_roll = dual_dice_roll()
 
-                if fog and c_roll <= 1:
-                    c_roll -= 1
-                if fog and v_roll <= 1:
-                    v_roll -= 1
+                # Modify for fog
+                if fog:
+                    if c_roll <= 1:
+                        c_roll -= 1
+                    if v_roll <= 1:
+                        v_roll -= 1
 
                 if c_item is not None and "roll_effect" in c_item.type \
                         and c_roll >= 0:
@@ -779,6 +786,10 @@ async def event_handle_shot_duel(ctx, victim):
                 elif v_item is not None and "roll_effect" in v_item.type \
                         and v_roll < 0:
                     v_roll -= v_item.prop['roll']
+
+                if cap:
+                    c_roll = min(4, c_roll)
+                    v_roll = min(4, v_roll)
 
                 # DAMAGE APPLIED HERE
                 if c_roll >= 0:
