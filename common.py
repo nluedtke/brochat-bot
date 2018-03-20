@@ -18,6 +18,7 @@ trump_chance_roll_rdy = False
 duels_conducted = 0
 items_awarded = 0
 trump_tweets_seen = 0
+missed_trumps = 0
 
 # Shot_duel acceptance and active
 accepted = False

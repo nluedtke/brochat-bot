@@ -32,14 +32,16 @@ class Twitter:
             'usual... (RT ALERT)'
 
         try:
-            await get_last_tweet(twitter_id, tweet_text, rt_text, ctx)
+            await get_last_tweet(twitter_id, tweet_text,
+                                 rt_text, ctx, max(1, common.missed_trumps))
         except TwythonError:
             await self.bot.say("Twitter is acting up, try again later.")
-
-        if common.trump_chance_roll_rdy:
-            await item_chance_roll(ctx.bot, ctx.message.author.display_name,
-                                   ctx.message.channel)
-            common.trump_chance_roll_rdy = False
+        else:
+            if common.trump_chance_roll_rdy:
+                await item_chance_roll(ctx.bot, ctx.message.author.display_name,
+                                       ctx.message.channel)
+                common.trump_chance_roll_rdy = False
+            common.missed_trumps = 0
 
     @commands.command(name='news', pass_context=True)
     async def get_news(self, ctx):
@@ -81,13 +83,14 @@ class Twitter:
             await self.bot.say("News Feed turned on.")
 
 
-async def get_last_tweet(_id, tweet_text, rt_text, ctx):
+async def get_last_tweet(_id, tweet_text, rt_text, ctx, c=1):
     """
     Gets the last tweet for id.
     :param _id: Twitter id
     :param tweet_text: flavor text for tweets
     :param rt_text: flavor text for retweets
     :param ctx: Context
+    :param c: number of tweets to get
     :return:
     """
     if common.twitter is None:
@@ -95,7 +98,7 @@ async def get_last_tweet(_id, tweet_text, rt_text, ctx):
         return
 
     try:
-        last_tweet = common.twitter.get_user_timeline(screen_name=_id, count=1,
+        last_tweet = common.twitter.get_user_timeline(screen_name=_id, count=c,
                                                       include_retweets=True)
     except TwythonError as e:
         raise e
@@ -170,6 +173,7 @@ async def check_trumps_mouth(bot):
                 delay = (common.trump_del - decay) * 60
                 common.last_id = trumps_lt_id
                 common.trump_chance_roll_rdy = True
+                common.missed_trumps += 1
 
 
 async def handle_news(ctx):
