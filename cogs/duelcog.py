@@ -546,6 +546,7 @@ async def event_handle_shot_duel(ctx, victim):
     :param victim: Person challenged
     :return: None
     """
+    fog = False
     common.shot_duel_running = True
     vict_name = common.vict_name = victim.display_name
     chal_name = ctx.message.author.display_name
@@ -625,6 +626,13 @@ async def event_handle_shot_duel(ctx, victim):
                 await ctx.bot.say(notif_str)
 
             # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
+
+            # Environment effects
+            e_roll = randint(0, 20)
+            if e_roll == 20:
+                await ctx.bot.say("A dense fog rolls in. "
+                                  "(Chance to miss increased)")
+                fog = True
 
             # spec_effect check (disarm_effect)
             if (c_wep is not None and 'disarm_effect' in c_wep.type) \
@@ -753,6 +761,11 @@ async def event_handle_shot_duel(ctx, victim):
                 await ctx.bot.send_typing(ctx.message.channel)
                 await asyncio.sleep(10)
                 c_roll, v_roll = dual_dice_roll()
+
+                if fog and c_roll <= 1:
+                    c_roll -= 1
+                if fog and v_roll <= 1:
+                    v_roll -= 1
 
                 if c_item is not None and "roll_effect" in c_item.type \
                         and c_roll >= 0:
