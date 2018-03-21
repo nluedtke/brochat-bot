@@ -658,9 +658,9 @@ async def event_handle_shot_duel(ctx, victim):
                                                      content='$press')
                 if msg is not None:
                     nc = msg.author.display_name
-                    await ctx.bot.say("%s pressed the button!".format(nc))
+                    await ctx.bot.say("{} pressed the button!".format(nc))
                     if nc not in [chal_name, vict_name]:
-                        await ctx.bot.say("%s is not in this duel and suddenly "
+                        await ctx.bot.say("{} is not in this duel and suddenly "
                                           "feels less burdened.".format(nc))
                         if len(list(common.users[nc]['inventory'].keys())) > 0:
                             item_take = choice(
@@ -676,11 +676,11 @@ async def event_handle_shot_duel(ctx, victim):
                     await asyncio.sleep(7)
                     if eff == 0:
                         h_life = choice([vict_name, chal_name])
-                        await ctx.bot.say("%s will start at half life."
+                        await ctx.bot.say("{} will start at half life."
                                           .format(h_life))
                     elif eff == 1:
                         h_dam = choice([vict_name, chal_name])
-                        await ctx.bot.say("%s will do half damage."
+                        await ctx.bot.say("{} will do half damage."
                                           .format(h_dam))
                 elif msg is None:
                     await ctx.bot.say("Unpressed, the button disappears.")
