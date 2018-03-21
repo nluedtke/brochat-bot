@@ -649,6 +649,14 @@ async def event_handle_shot_duel(ctx, victim):
                                   "One striking each dueler!")
                 c_pos_eff.append(PoisonEffect(DuelItem(100, 9999), "env"))
                 v_pos_eff.append(PoisonEffect(DuelItem(100, 9999), "env"))
+            elif e_roll == 16:
+                targ = choice([vict_name, chal_name])
+                await ctx.bot.say("Darts begin flying across the battlefield. "
+                                  "One striking {}!".format(targ))
+                if chal_name == targ:
+                    c_pos_eff.append(PoisonEffect(DuelItem(100, 9999), "env"))
+                elif vict_name == targ:
+                    v_pos_eff.append(PoisonEffect(DuelItem(100, 9999), "env"))
             # red button event
             elif e_roll == 18:
                 await ctx.bot.say("A big red button appears. Would you like "
