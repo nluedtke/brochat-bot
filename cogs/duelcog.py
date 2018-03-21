@@ -580,6 +580,7 @@ async def event_handle_shot_duel(ctx, victim):
                                       v_rec[2]))
             c_total = []
             v_total = []
+            c_pos_eff, v_pos_eff = [], []
 
             # Check if a player has active items
             vi_list = []
@@ -642,8 +643,14 @@ async def event_handle_shot_duel(ctx, victim):
                 await ctx.bot.say("A weird pink glow surrounds the battlefield."
                                   " (Damage is capped)")
                 cap = True
+            # PoisonDarts
+            elif e_roll == 17:
+                await ctx.bot.say("Darts begin flying across the battlefield. "
+                                  "One striking each dueler!")
+                c_pos_eff.append(PoisonEffect(DuelItem(100, 9999), "env"))
+                v_pos_eff.append(PoisonEffect(DuelItem(100, 9999), "env"))
             # red button event
-            elif e_roll == 20:
+            elif e_roll == 18:
                 await ctx.bot.say("A big red button appears. Would you like "
                                   "to press it? (If you want to type \"$press\""
                                   ". You have 10 seconds to decide.)")
@@ -752,7 +759,7 @@ async def event_handle_shot_duel(ctx, victim):
             v_life = v_life_start
             # COMBAT PHASE
             _round = 1
-            c_pos_eff, v_pos_eff = [], []
+
             while True:
                 await ctx.bot.say("Round {}!".format(_round))
                 # PRE ATTACK PHASE (spec_effect check here)

@@ -305,9 +305,20 @@ rare_items = {
                     "end of each round, and will bring the wearer back to life "
                     "two times for two duels."}
 }
+# ENV items are only activated randomly they can not be owned by the player.
+env_items = {
+    "9999": {"name": "EnvDart",
+             "type": ["poison_effect"],
+             "prop": {'poison': 1, 'duration': 5},
+             "uses": 1,
+             "slot": "weapon",
+             "class": "ranged",
+             "text": "This dart poisons for 1 damage for 5 rounds."}
+}
 
 all_items = common_items
 all_items.update(rare_items)
+all_items.update(env_items)
 
 
 class DuelItem(object):
@@ -512,6 +523,7 @@ class PoisonEffect(object):
         :return:
         """
         return self.dur <= 0
+
 
 if __name__ == "__main__":
     """
