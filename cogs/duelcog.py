@@ -836,13 +836,13 @@ async def event_handle_shot_duel(ctx, victim):
                         v_roll -= 1
 
                 if c_item is not None and "roll_effect" in c_item.type \
-                        and c_roll >= 0:
+                        and c_roll > 0:
                     c_roll += c_item.prop['roll']
                 elif c_item is not None and "roll_effect" in c_item.type \
                         and c_roll < 0:
                     c_roll -= c_item.prop['roll']
                 if v_item is not None and "roll_effect" in v_item.type \
-                        and v_roll >= 0:
+                        and v_roll > 0:
                     v_roll += v_item.prop['roll']
                 elif v_item is not None and "roll_effect" in v_item.type \
                         and v_roll < 0:
