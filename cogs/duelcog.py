@@ -840,10 +840,10 @@ async def event_handle_shot_duel(ctx, victim):
 
                 # Modify for fog
                 if fog:
-                    if c_roll <= 1:
-                        c_roll -= 1
-                    if v_roll <= 1:
-                        v_roll -= 1
+                    if c_roll == 1 or (c_roll == 2 and randint(0, 1) == 0):
+                        c_roll = 0
+                    if v_roll == 1 or (v_roll == 2 and randint(0, 1) == 0):
+                        v_roll = 0
 
                 if c_item is not None and "roll_effect" in c_item.type \
                         and c_roll > 0:
