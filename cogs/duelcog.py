@@ -630,7 +630,7 @@ async def event_handle_shot_duel(ctx, victim):
                 await ctx.bot.say(notif_str)
 
             # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
-
+            await asyncio.sleep(5)
             # Environment effects
             e_roll = randint(0, 20)
             # fog
@@ -680,8 +680,8 @@ async def event_handle_shot_duel(ctx, victim):
                     await ctx.bot.say("The red button disappears but a loud "
                                       "banging noise can be heard!")
                     await ctx.bot.send_typing(ctx.message.channel)
-                    eff = randint(0, 1)
-                    await asyncio.sleep(7)
+                    eff = randint(0, 2)
+                    await asyncio.sleep(10)
                     if eff == 0:
                         h_life = choice([vict_name, chal_name])
                         await ctx.bot.say("{} will start at half life."
@@ -690,6 +690,16 @@ async def event_handle_shot_duel(ctx, victim):
                         h_dam = choice([vict_name, chal_name])
                         await ctx.bot.say("{} will do half damage."
                                           .format(h_dam))
+                    elif eff == 2:
+                        targ = choice([vict_name, chal_name])
+                        await ctx.bot.say(
+                            "A dart strikes {}!".format(targ))
+                        if chal_name == targ:
+                            c_pos_eff.append(
+                                PoisonEffect(DuelItem(100, 9999), "env"))
+                        elif vict_name == targ:
+                            v_pos_eff.append(
+                                PoisonEffect(DuelItem(100, 9999), "env"))
                 elif msg is None:
                     await ctx.bot.say("Unpressed, the button disappears.")
 
