@@ -1,5 +1,5 @@
 import asyncio
-from random import randint, choice
+from random import randint, choice, shuffle
 from discord.ext import commands
 import common
 from objs.duel_item import DuelItem, PoisonEffect, get_name, get_slot, \
@@ -196,6 +196,294 @@ class Duels:
             await self.bot.say("You have unquipped the {}"
                                .format(get_name(item_num)))
             del(common.users[name]['equip'][slot])
+
+    @commands.command(name='battle_royal', pass_context=True)
+    @commands.cooldown(1, 360)
+    async def battle_royal(self, ctx, slot: str):
+        """Start a battle royal"""
+
+        await self.bot.say("A battle royal has been started!")
+        await ctx.bot.send_typing(ctx.message.channel)
+        await asyncio.sleep(5)
+        await self.bot.say("You have a limited time to join! (Type \"$join\")")
+        battlers = []
+        wait_time = 60
+        while wait_time > 0:
+            msg = await ctx.bot.wait_for_message(timeout=10.0,
+                                                 content='$join')
+            if msg is not None:
+                battlers.append(msg.author.display_name)
+                await self.bot.say(
+                    "{} has been added to the battle royal!"
+                    .format(msg.author.display_name))
+            wait_time -= 10
+
+        await self.bot.say("Alright, here we go!")
+        await self.bot.say("The duelers are {}.".format(battlers))
+        battlers = shuffle(battlers)
+        b_items = {}
+        b_rem_items = {}
+        for b in battlers:
+            b_items[b] = []
+            b_rem_items[b] = []
+            if len(common.users[b]['equip']) > 0:
+                notif_str = "{} is using the following items:\n"\
+                            .format(b)
+                for a_item in common.users[b]['equip']:
+                    item = DuelItem(0, common.users[b]['equip'][a_item])
+                    b_items[b].append(item)
+                    common.users[b]['inventory'][item.item_id] += 1
+                    notif_str += "  {}:\n{}" \
+                                 .format(item.name, item_eff_str(item))
+                    if common.users[b]['inventory'][item.item_id] \
+                            >= item.uses:
+                        del (common.users[b]['inventory'][item.item_id])
+                        b_rem_items[b].append(item.slot)
+                        notif_str += "    This is the last use for this item!\n"
+                await ctx.bot.say(notif_str)
+
+        # spec_effect check (disarm_effect)
+        for b in b_items:
+            b_wep = None
+            for i in b_items[b]:
+                if 'disarm_effect' in i.type:
+                    b_wep = i
+                    break
+            if i is not None:
+                targ = b
+                while targ == b:
+                    targ = choice(battlers)
+                t_wep = None
+                for ti in b_items[targ]:
+                    if ti.slot == 'weapon':
+                        t_wep = ti
+                        break
+
+                # If a player losses an item, remove it from active list
+                i_to_rem, ti_to_rem = await item_disarm_check(ctx, b_wep,
+                                                              t_wep, b,
+                                                              targ)
+                if i_to_rem is not None:
+                    if i_to_rem.slot in b_rem_items[b]:
+                        b_rem_items[b].remove(i_to_rem.slot)
+                    b_items[b].remove(i_to_rem)
+                if ti_to_rem is not None:
+                    if ti_to_rem.slot in b_rem_items[targ]:
+                        b_rem_items[targ].remove(ti_to_rem.slot)
+                    b_items[targ].remove(ti_to_rem)
+
+        # Remove equipped items that were used up
+        for b in b_rem_items:
+            for i in b_rem_items[b]:
+                del (common.users[b]['equip'][i])
+
+        b_fin_items = {}
+        # Determine cumulative item effect
+        for b in b_items:
+            if len(b_items[b]) < 1:
+                c_item = None
+            else:
+                c_item = DuelItem(99)  # Set to empty item
+                for i in b_items[b]:  # Combine items into one
+                    c_item += i
+            b_fin_items[b] = c_item
+
+        await asyncio.sleep(2)
+        life = 13
+        b_life = {}
+        b_s_life = {}
+        for b in battlers:
+            b_life[b] = life
+            if b_fin_items[b] is not None and \
+               "life_effect" in b_fin_items[b].type:
+                b_life[b] += b_fin_items[b].prop['life']
+            b_s_life[b] = b_life[b]
+            await ctx.bot.say(".\n{} has {} life.".format(b, b_s_life[b]))
+
+        # COMBAT PHASE
+        _round = 1
+
+        b_pos_eff = {}
+
+        while True:
+            await ctx.bot.say("Round {}!".format(_round))
+            # PRE ATTACK PHASE (spec_effect check here)
+            # Poison Damage check
+            for b in b_pos_eff:
+                if len(b_pos_eff[b]) > 0:
+                    pos_dam = 0
+                    e_effects = []
+                    for p in b_pos_eff[b]:
+                        pos_dam += p.dam
+                        p -= 1
+                        if p.ended():
+                            e_effects.append(p)
+                    for p in e_effects:
+                        b_pos_eff[b].remove(p)
+                    b_life[b].append(pos_dam)
+                    c_life = b_s_life[b] - sum(b_life[b])
+                    await ctx.bot.say("{} takes {} poison damage and is now at "
+                                      "{} life.".format(b, pos_dam, c_life))
+            # TODO: Continue here
+            cres, vres, death = \
+                await death_check(ctx, ctx.message.author,
+                                  c_life, victim, v_life,
+                                  (c_item is not None and
+                                   "res_effect" in c_item.type),
+                                  (v_item is not None and
+                                   "res_effect" in v_item.type))
+            if cres:
+                c_item.type.remove('res_effect')
+                v_total = [c_life_start - randint(1, 2)]
+                c_life = c_life_start - sum(v_total)
+            if vres:
+                v_item.type.remove('res_effect')
+                c_total = [v_life_start - randint(1, 2)]
+                v_life = v_life_start - sum(c_total)
+            if death:
+                # END OF DUEL PHASE
+                common.whos_in.update_db()
+                break
+
+            # ATTACK PHASE (Both attacks happen at same time!)
+            await ctx.bot.send_typing(ctx.message.channel)
+            await asyncio.sleep(10)
+            c_roll, v_roll = dual_dice_roll()
+
+            # Modify for fog
+            if fog:
+                if c_roll == 1 or (c_roll == 2 and randint(0, 1) == 0):
+                    c_roll = 0
+                if v_roll == 1 or (v_roll == 2 and randint(0, 1) == 0):
+                    v_roll = 0
+
+            if c_item is not None and "roll_effect" in c_item.type \
+                    and c_roll > 0:
+                c_roll += c_item.prop['roll']
+            elif c_item is not None and "roll_effect" in c_item.type \
+                    and c_roll < 0:
+                c_roll -= c_item.prop['roll']
+            if v_item is not None and "roll_effect" in v_item.type \
+                    and v_roll > 0:
+                v_roll += v_item.prop['roll']
+            elif v_item is not None and "roll_effect" in v_item.type \
+                    and v_roll < 0:
+                v_roll -= v_item.prop['roll']
+
+            if cap:
+                c_roll = min(4, c_roll)
+                v_roll = min(4, v_roll)
+
+            # half dam check (red button mystery)
+            if h_dam is not None:
+                if h_dam == chal_name:
+                    c_roll = int(c_roll / 2)
+                elif h_dam == vict_name:
+                    v_roll = int(v_roll / 2)
+
+            # DAMAGE APPLIED HERE
+            if c_roll >= 0:
+                c_total.append(c_roll)
+            else:
+                v_total.append(abs(c_roll))
+
+            if v_roll >= 0:
+                v_total.append(v_roll)
+            else:
+                c_total.append(abs(v_roll))
+
+            c_life = c_life_start - sum(v_total)
+            v_life = v_life_start - sum(c_total)
+            duel_string = build_duel_str(chal_name, c_roll,
+                                         common.vict_name, v_roll, c_life,
+                                         v_life)
+
+            # POST COMBAT PHASE (Damage resolved here, on_death effects
+            # should be implemented here)
+            # Poison Effects
+            if c_item is not None and "poison_effect" in c_item.type and \
+                            c_roll != 0:
+                p_e = PoisonEffect(c_item, chal_name)
+                if c_roll > 0:
+                    v_pos_eff = add_pos_eff(v_pos_eff, p_e)
+                elif c_roll < 0:
+                    c_pos_eff = add_pos_eff(c_pos_eff, p_e)
+
+            if v_item is not None and "poison_effect" in v_item.type and \
+                            v_roll != 0:
+                p_e = PoisonEffect(v_item, common.vict_name)
+                if v_roll > 0:
+                    c_pos_eff = add_pos_eff(c_pos_eff, p_e)
+                elif v_roll < 0:
+                    v_pos_eff = add_pos_eff(v_pos_eff, p_e)
+
+            await ctx.bot.say(duel_string)
+
+            _round += 1
+            cres, vres, death = \
+                await death_check(ctx, ctx.message.author,
+                                  c_life, victim, v_life,
+                                  (c_item is not None and
+                                   "res_effect" in c_item.type),
+                                  (v_item is not None and
+                                   "res_effect" in v_item.type))
+            if cres:
+                c_item.type.remove('res_effect')
+                v_total = [c_life_start - randint(1, 2)]
+                c_life = c_life_start - sum(v_total)
+            if vres:
+                v_item.type.remove('res_effect')
+                c_total = [v_life_start - randint(1, 2)]
+                v_life = v_life_start - sum(c_total)
+            if death:
+                # END OF DUEL PHASE
+                common.whos_in.update_db()
+                break
+
+            # END OF ROUND PHASE
+            # regen checks
+            if c_item is not None and "regen_effect" in c_item.type \
+                    and c_life < c_life_start:
+                if (c_life_start - c_life) < c_item.prop['regen']:
+                    reg_tot = c_life_start - c_life
+                else:
+                    reg_tot = c_item.prop['regen']
+                v_total.append(-reg_tot)
+                await ctx.bot.say("{} has regen'd {} life and is now at {}."
+                                  .format(chal_name, reg_tot, (c_life +
+                                                               reg_tot)))
+
+            if v_item is not None and "regen_effect" in v_item.type \
+                    and v_life < v_life_start:
+                if (v_life_start - v_life) < v_item.prop['regen']:
+                    reg_tot = v_life_start - v_life
+                else:
+                    reg_tot = v_item.prop['regen']
+                c_total.append(-reg_tot)
+                await ctx.bot.say("{} has regen'd {} life and is now at {}."
+                                  .format(common.vict_name, reg_tot,
+                                          (v_life + reg_tot)))
+
+            # end of round drop chance
+            luck_mod = 0
+            if c_item is not None and "luck_effect" in c_item.type:
+                luck_mod = c_item.prop['luck']
+            await item_chance_roll(ctx.bot, chal_name, ctx.message.channel,
+                                   max(20, int(1000 / _round) - luck_mod))
+            luck_mod = 0
+            if v_item is not None and "luck_effect" in v_item.type:
+                luck_mod = v_item.prop['luck']
+            await item_chance_roll(ctx.bot, vict_name, ctx.message.channel,
+                                   max(20, int(1000 / _round) - luck_mod))
+
+            await asyncio.sleep(15)
+        break
+
+
+
+
+
+
 
 
 async def item_chance_roll(bot, player, channel, max_roll=100):
