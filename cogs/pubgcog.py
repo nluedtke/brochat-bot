@@ -44,8 +44,8 @@ async def check_pubg_matches(bot):
                           'MrDuck34',
                           'Janus113'])
         for p in players:
-            if p not in common.db["pubg_info"] or \
-               common.db["pubg_info"][p] != p.matches[0].id:
+            if p.name not in common.db["pubg_info"] or \
+               common.db["pubg_info"][p.name] != p.matches[0].id:
                 mp_id = p.matches[0].id
                 match = common.pubg_api.matches().get(mp_id)
                 found = False
@@ -57,7 +57,7 @@ async def check_pubg_matches(bot):
                             out_str = "{} completed a {} PUBG game. "\
                                       .format(part.name, match.game_mode)
                             out_str += "{} survived for {} dealing {} damage " \
-                                       "killing {} people. "\
+                                       "for {} kills. "\
                                        .format(part.name,
                                                str(datetime.timedelta(seconds=
                                                    part.time_survived)),
@@ -66,7 +66,8 @@ async def check_pubg_matches(bot):
                                                               part.win_place)
                             await bot.send_message(c_to_send, out_str)
                             found = True
-                            common.db["pubg_info"][p] = mp_id
+                            common.db["pubg_info"][p.name] = mp_id
+                            common.whos_in.update_db()
                             break
                 await asyncio.sleep(10)
             await asyncio.sleep(60)
