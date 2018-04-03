@@ -2,6 +2,7 @@ from pubg_python import PUBG, Shard
 import common
 import asyncio
 import datetime
+import requests
 
 
 class Puby:
@@ -19,6 +20,7 @@ async def check_pubg_matches(bot):
     c_to_send = None
 
     await bot.wait_until_ready()
+    await asyncio.sleep(60)
     for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' \
                 or channel.name == common.ARGS['channel']:
@@ -41,7 +43,7 @@ async def check_pubg_matches(bot):
         players = common.pubg_api.players().filter(
             player_names=['palu1', 'qtstrm',
                           'OhDip',
-                          'MrDuck34',
+                          'Mrduck34',
                           'Janus113'])
         for p in players:
             if p.name not in common.db["pubg_info"] or \
@@ -62,8 +64,21 @@ async def check_pubg_matches(bot):
                                                str(datetime.timedelta(seconds=
                                                    part.time_survived)),
                                                part.damage_dealt, part.kills)
-                            out_str += "{} placed {}.".format(part.name,
-                                                              part.win_place)
+                            out_str += "{} placed {}.\n".format(part.name,
+                                                                part.win_place)
+                            out_str += "Weapon Progression: None"
+                            url = match.assets[0].url
+                            r = requests.get(url)
+                            data = r.json()
+                            for t in data:
+                                if "character" in t and \
+                                   t["character"]['name'] == part.name and \
+                                   t["_T"] == "LogItemPickup" and \
+                                   t['item']['category'] == "Weapon":
+                                    wep = t['item']['itemId'].replace(
+                                        "Item_Weapon_", "").replace("_C", "")
+                                    out_str += "->{}".format(wep)
+                            del data
                             await bot.send_message(c_to_send, out_str)
                             found = True
                             common.db["pubg_info"][p.name] = mp_id
