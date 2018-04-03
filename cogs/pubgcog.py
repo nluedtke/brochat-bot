@@ -48,23 +48,23 @@ async def check_pubg_matches(bot):
                 mp_id = p.matches[0].id
                 common.db["pubg_info"][p] = mp_id
                 match = common.pubg_api.matches().get(mp_id)
-                for part in match.rosters:
-                    if part.name == p.name:
-                        await bot.send_message(c_to_send,
-                                               "{} completed a {} PUBG game."
-                                               .format(part.name,
-                                                       match.game_mode))
-                        await bot.send_message(c_to_send,
-                                               "{} survived for {} dealing {} "
-                                               "damage and killing {} people."
-                                               .format(part.name,
-                                                       part.time_survived,
-                                                       part.damage_dealt,
-                                                       part.kills))
-                        await bot.send_message(c_to_send,
-                                               "{} placed {}."
-                                               .format(part.name,
-                                                       part.win_place))
+                for r in match.rosters:
+                    for part in r.participants:
+                        if part.name == p.name:
+                            await bot.send_message(
+                                c_to_send, "{} completed a {} PUBG game."
+                                           .format(part.name, match.game_mode))
+                            await bot.send_message(
+                                c_to_send, "{} survived for {} dealing {} "
+                                           "damage and killing {} people."
+                                           .format(part.name,
+                                                   part.time_survived,
+                                                   part.damage_dealt,
+                                                   part.kills))
+                            await bot.send_message(
+                                c_to_send, "{} placed {}."
+                                           .format(part.name, part.win_place))
+                        break
             await asyncio.sleep(60)
         await asyncio.sleep(60*10)
 
