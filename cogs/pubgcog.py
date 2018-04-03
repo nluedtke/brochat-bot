@@ -1,6 +1,7 @@
 from pubg_python import PUBG, Shard
 import common
 import asyncio
+import datetime
 
 
 class Puby:
@@ -46,25 +47,28 @@ async def check_pubg_matches(bot):
             if p not in common.db["pubg_info"] or \
                common.db["pubg_info"][p] != p.matches[0].id:
                 mp_id = p.matches[0].id
-                common.db["pubg_info"][p] = mp_id
                 match = common.pubg_api.matches().get(mp_id)
+                found = False
                 for r in match.rosters:
+                    if found:
+                        break
                     for part in r.participants:
                         if part.name == p.name:
-                            await bot.send_message(
-                                c_to_send, "{} completed a {} PUBG game."
-                                           .format(part.name, match.game_mode))
-                            await bot.send_message(
-                                c_to_send, "{} survived for {} dealing {} "
-                                           "damage and killing {} people."
-                                           .format(part.name,
-                                                   part.time_survived,
-                                                   part.damage_dealt,
-                                                   part.kills))
-                            await bot.send_message(
-                                c_to_send, "{} placed {}."
-                                           .format(part.name, part.win_place))
-                        break
+                            out_str = "{} completed a {} PUBG game. "\
+                                      .format(part.name, match.game_mode)
+                            out_str += "{} survived for {} dealing {} damage " \
+                                       "killing {} people. "\
+                                       .format(part.name,
+                                               str(datetime.timedelta(seconds=
+                                                   part.time_survived)),
+                                               part.damage_dealt, part.kills)
+                            out_str += "{} placed {}.".format(part.name,
+                                                              part.win_place)
+                            await bot.send_message(c_to_send, out_str)
+                            found = True
+                            common.db["pubg_info"][p] = mp_id
+                            break
+                await asyncio.sleep(10)
             await asyncio.sleep(60)
         await asyncio.sleep(60*10)
 
