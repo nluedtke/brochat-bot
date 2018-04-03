@@ -75,8 +75,10 @@ async def check_pubg_matches(bot):
                                    t["character"]['name'] == part.name and \
                                    t["_T"] == "LogItemPickup" and \
                                    t['item']['category'] == "Weapon":
-                                    wep = t['item']['itemId'].replace(
-                                        "Item_Weapon_", "").replace("_C", "")
+                                    wep = t['item']['itemId']\
+                                        .replace("Item_Weapon_", "")\
+                                        .replace("_C", "")\
+                                        .replace("HK416", "M4")
                                     out_str += "->{}".format(wep)
                             del data
                             await bot.send_message(c_to_send, out_str)
