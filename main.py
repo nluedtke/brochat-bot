@@ -29,7 +29,8 @@ startTime = 0
 
 # this specifies what extensions to load when the bot starts up
 startup_extensions = ['cogs.redditcog', 'cogs.gametimecog', 'cogs.twittercog',
-                      'cogs.duelcog', 'cogs.textcog', 'cogs.drinkingcog']
+                      'cogs.duelcog', 'cogs.textcog', 'cogs.drinkingcog',
+                      'cogs.pubgcog']
 
 bot = commands.Bot(command_prefix='!', description=description)
 
@@ -636,6 +637,13 @@ if __name__ == "__main__":
         account_sid = tokens['twilio_account_sid']
         auth_token = tokens['twilio_auth_token']
         common.twilio_client = Client(account_sid, auth_token)
+
+    # PUBG tokens
+    if 'pubg_api_key' in tokens:
+        common.pubg_api_key = tokens['pubg_api_key']
+    else:
+        common.pubg_api_key = None
+        print("No PUBG functionality!")
 
     if not os.path.exists(common.db_file) \
             and not os.path.exists('{}'.format(common.ARGS['database'])):
