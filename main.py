@@ -637,6 +637,13 @@ if __name__ == "__main__":
         auth_token = tokens['twilio_auth_token']
         common.twilio_client = Client(account_sid, auth_token)
 
+    # PUBG tokens
+    if 'pubg_api_key' in tokens:
+        common.pubg_api_key = tokens['pubg_api_key']
+    else:
+        common.pubg_api_key = None
+        print("No PUBG functionality!")
+
     if not os.path.exists(common.db_file) \
             and not os.path.exists('{}'.format(common.ARGS['database'])):
         print("Starting DB from scratch (locally)")
