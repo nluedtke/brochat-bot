@@ -73,7 +73,7 @@ async def check_pubg_matches(bot):
                                 out_str += "{} stats:\n"
                                 out_str += "{} damage for {} kills.\n"\
                                            .format(pp.damage_dealt, pp.kills)
-                                wep_str = "WepProg: None"
+                                wep_str = "WepProg: Fist"
                                 for t in data:
                                     if "character" in t and \
                                        t["character"]['name'] == pp.name and \
