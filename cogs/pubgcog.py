@@ -45,11 +45,12 @@ async def check_pubg_matches(bot):
             player_names=names_to_find)
         for p in players:
             if p.name not in common.db["pubg_info"] or \
-                    (common.db["pubg_info"][p.name][0] != p.matches[0].id and
-                     datetime.datetime(p.matches[0].createdAt) >
-                     datetime.datetime(common.db["pubg_info"][p.name][1])):
+                    common.db["pubg_info"][p.name][0] != p.matches[0].id:
                 mp_id = p.matches[0].id
                 match = common.pubg_api.matches().get(mp_id)
+                if datetime.datetime(match.created_at) <= \
+                   datetime.datetime(common.db["pubg_info"][p.name][1]):
+                    continue
                 found = False
                 for r in match.rosters:
                     if found:
@@ -72,7 +73,7 @@ async def check_pubg_matches(bot):
                             data = r.json()
                             for pp in players:
                                 common.db["pubg_info"][pp.name] = \
-                                    [mp_id, match.createdAt]
+                                    [mp_id, match.created_at]
                                 out_str += "{} stats:\n"
                                 out_str += "{} damage for {} kills.\n"\
                                            .format(pp.damage_dealt, pp.kills)
