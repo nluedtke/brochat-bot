@@ -85,6 +85,7 @@ async def check_pubg_matches(bot):
                                 out_str += "{} damage for {} kills.\n"\
                                            .format(pp.damage_dealt, pp.kills)
                                 wep_str = "WepProg: Fist"
+
                                 # ArmShot, HeadShot, LegShot, PelvisShot, TorsoShot
                                 tor_s = 0
                                 hea_s = 0
@@ -110,10 +111,8 @@ async def check_pubg_matches(bot):
                                             first = True
 
                                     if t["_T"] == "LogPlayerTakeDamage" and \
-                                                    t["attacker"][
-                                                        "name"] == part.name and \
-                                                    t[
-                                                        "damageTypeCategory"] == "Damage_Gun":
+                                       t["attacker"]["name"] == pp.name and \
+                                       t["damageTypeCategory"] == "Damage_Gun":
                                         if t['damageReason'] == 'TorsoShot':
                                             tor_s += 1
                                         elif t['damageReason'] == 'HeadShot':
@@ -124,27 +123,30 @@ async def check_pubg_matches(bot):
                                             leg_s += 1
                                         elif t['damageReason'] == 'PelvisShot':
                                             pel_s += 1
-
-                                    # TODO re add logic for hits.
-
                                     # TODO add logic for Distance
 
                                 wep_str += "\n"
                                 out_str += wep_str
-                            del data
-                            ts = hea_s + tor_s + pel_s + arm_s + leg_s
-                            out_str += "\n{} Hits, ".format(ts)
-                            out_str += "HeadShot {} ({}%), " \
-                                       .format(hea_s, round(hea_s * 100 / ts))
-                            out_str += "TorsoShot {} ({}%), " \
-                                       .format(tor_s, round(tor_s * 100 / ts))
-                            out_str += "PelvisShot {} ({}%), " \
-                                       .format(pel_s, round(pel_s * 100 / ts))
-                            out_str += "ArmShot {} ({}%), " \
-                                       .format(arm_s, round(arm_s * 100 / ts))
-                            out_str += "LegShot {} ({}%)" \
-                                       .format(leg_s, round(leg_s * 100 / ts))
 
+                                ts = hea_s + tor_s + pel_s + arm_s + leg_s
+                                out_str += "{} Hits, ".format(ts)
+                                out_str += "HeadShot {} ({}%), " \
+                                           .format(hea_s,
+                                                   round(hea_s * 100 / ts))
+                                out_str += "TorsoShot {} ({}%), " \
+                                           .format(tor_s,
+                                                   round(tor_s * 100 / ts))
+                                out_str += "PelvisShot {} ({}%), " \
+                                           .format(pel_s,
+                                                   round(pel_s * 100 / ts))
+                                out_str += "ArmShot {} ({}%), " \
+                                           .format(arm_s,
+                                                   round(arm_s * 100 / ts))
+                                out_str += "LegShot {} ({}%)\n\n" \
+                                           .format(leg_s,
+                                                   round(leg_s * 100 / ts))
+
+                            del data
                             await bot.send_message(c_to_send, out_str)
                             found = True
                             common.db["pubg_info"][p.name] = mp_id
