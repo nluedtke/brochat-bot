@@ -70,7 +70,8 @@ async def check_pubg_matches(bot):
                             partis = [part]
                             names = [part.name]
                             for pp in r.participants:
-                                if pp.name in names_to_find:
+                                if pp.name in names_to_find and \
+                                   pp.name not in names:
                                     partis.append(pp)
                                     names.append(pp.name)
                             out_str = ".\n!!!PUBG Report!!!\n"
@@ -135,7 +136,7 @@ async def check_pubg_matches(bot):
                                 out_str += wep_str
 
                                 ts = hea_s + tor_s + pel_s + arm_s + leg_s
-                                out_str += "{} Hits, ".format(ts)
+                                out_str += "{} Hits - ".format(ts)
                                 out_str += "HeadShot {} ({}%), " \
                                            .format(hea_s,
                                                    round(hea_s * 100 / ts))
