@@ -1,7 +1,7 @@
 from pubg_python import PUBG, Shard
 import common
 import asyncio
-import datetime
+from datetime import datetime as dt
 import requests
 import math
 
@@ -55,8 +55,11 @@ async def check_pubg_matches(bot):
                     common.db["pubg_info"][p.name][0] != p.matches[0].id:
                 mp_id = p.matches[0].id
                 match = common.pubg_api.matches().get(mp_id)
-                if datetime.datetime(match.created_at) <= \
-                   datetime.datetime(common.db["pubg_info"][p.name][1]):
+
+                if p.name in common.db["pubg_info"] and \
+                   dt.strptime(match.created_at, "%Y-%m-%dT%H:%M:%SZ") <= \
+                   dt.strptime(common.db["pubg_info"][p.name][1],
+                               "%Y-%m-%dT%H:%M:%SZ"):
                     continue
                 found = False
                 for r in match.rosters:
@@ -64,13 +67,15 @@ async def check_pubg_matches(bot):
                         break
                     for part in r.participants:
                         if part.name == p.name:
-                            players = [part.name]
+                            partis = [part]
+                            names = [part.name]
                             for pp in r.participants:
                                 if pp.name in names_to_find:
-                                    players.append(pp.name)
-                            out_str = ".\n!!!PUBG Report!!\n!"
+                                    partis.append(pp)
+                                    names.append(pp.name)
+                            out_str = ".\n!!!PUBG Report!!!\n"
                             out_str += "Mode: {}\n".format(match.game_mode)
-                            out_str += "Players: {}\n".format(players)
+                            out_str += "Players: {}\n".format(names)
                             out_str += "Rank: {}/{}\n\n"\
                                        .format(part.win_place,
                                                len(match.rosters))
@@ -78,15 +83,16 @@ async def check_pubg_matches(bot):
                             url = match.assets[0].url
                             r = requests.get(url)
                             data = r.json()
-                            for pp in players:
+                            for pp in partis:
                                 common.db["pubg_info"][pp.name] = \
                                     [mp_id, match.created_at]
-                                out_str += "{} stats:\n"
+                                out_str += "{} stats:\n".format(pp.name)
                                 out_str += "{} damage for {} kills.\n"\
                                            .format(pp.damage_dealt, pp.kills)
                                 wep_str = "WepProg: Fist"
 
-                                # ArmShot, HeadShot, LegShot, PelvisShot, TorsoShot
+                                # ArmShot, HeadShot, LegShot, PelvisShot,
+                                # TorsoShot
                                 tor_s = 0
                                 hea_s = 0
                                 arm_s = 0
@@ -105,10 +111,10 @@ async def check_pubg_matches(bot):
                                             .replace("HK416", "M4")\
                                             .replace("Nagrant", "")
                                         wep_str += "->{}".format(wep)
-                                        if not first:
-                                            x1 = t['location']['x']
-                                            y1 = t['location']['y']
-                                            first = True
+                                        # if not first:
+                                        #     x1 = t['location']['x']
+                                        #     y1 = t['location']['y']
+                                        #     first = True
 
                                     if t["_T"] == "LogPlayerTakeDamage" and \
                                        t["attacker"]["name"] == pp.name and \
@@ -149,7 +155,6 @@ async def check_pubg_matches(bot):
                             del data
                             await bot.send_message(c_to_send, out_str)
                             found = True
-                            common.db["pubg_info"][p.name] = mp_id
                             common.whos_in.update_db()
                             break
             await asyncio.sleep(60)
