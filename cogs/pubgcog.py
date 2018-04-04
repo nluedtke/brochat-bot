@@ -40,11 +40,9 @@ async def check_pubg_matches(bot):
 
     while True:
         # TODO Hardcoded names, should come from database
+        names_to_find = ['palu1', 'qtstrm', 'OhDip', 'Mrduck34', 'Janus113']
         players = common.pubg_api.players().filter(
-            player_names=['palu1', 'qtstrm',
-                          'OhDip',
-                          'Mrduck34',
-                          'Janus113'])
+            player_names=names_to_find)
         for p in players:
             if p.name not in common.db["pubg_info"] or \
                common.db["pubg_info"][p.name] != p.matches[0].id:
@@ -56,30 +54,44 @@ async def check_pubg_matches(bot):
                         break
                     for part in r.participants:
                         if part.name == p.name:
-                            out_str = "{} completed a {} PUBG game. "\
-                                      .format(part.name, match.game_mode)
-                            out_str += "{} survived for {} dealing {} damage " \
-                                       "for {} kills. "\
-                                       .format(part.name,
-                                               str(datetime.timedelta(seconds=
-                                                   part.time_survived)),
-                                               part.damage_dealt, part.kills)
-                            out_str += "{} placed {}.\n".format(part.name,
-                                                                part.win_place)
-                            out_str += "Weapon Progression: None"
+                            players = [part.name]
+                            for pp in r.participants:
+                                if pp.name in names_to_find:
+                                    players.append(pp.name)
+                            out_str = ".\n!!!PUBG Report!!\n!"
+                            out_str += "Mode: {}\n".format(match.game_mode)
+                            out_str += "Players: {}\n".format(players)
+                            out_str += "Rank: {}/{}\n\n"\
+                                       .format(part.win_place,
+                                               len(match.rosters))
+
                             url = match.assets[0].url
                             r = requests.get(url)
                             data = r.json()
-                            for t in data:
-                                if "character" in t and \
-                                   t["character"]['name'] == part.name and \
-                                   t["_T"] == "LogItemPickup" and \
-                                   t['item']['category'] == "Weapon":
-                                    wep = t['item']['itemId']\
-                                        .replace("Item_Weapon_", "")\
-                                        .replace("_C", "")\
-                                        .replace("HK416", "M4")
-                                    out_str += "->{}".format(wep)
+                            for pp in players:
+                                common.db["pubg_info"][pp.name] = mp_id
+                                out_str += "{} stats:\n"
+                                out_str += "{} damage for {} kills.\n"\
+                                           .format(pp.damage_dealt, pp.kills)
+                                wep_str = "WepProg: None"
+                                for t in data:
+                                    if "character" in t and \
+                                       t["character"]['name'] == pp.name and \
+                                       t["_T"] == "LogItemPickup" and \
+                                       t['item']['category'] == "Weapon":
+                                        wep = t['item']['itemId']\
+                                            .replace("Item_Weapon_", "")\
+                                            .replace("_C", "")\
+                                            .replace("HK416", "M4")\
+                                            .replace("Nagrant", "")
+                                        wep_str += "->{}".format(wep)
+
+                                    # TODO re add logic for hits.
+
+                                    # TODO add logic for Distance
+
+                                wep_str += "\n"
+                                out_str += wep_str
                             del data
                             await bot.send_message(c_to_send, out_str)
                             found = True
