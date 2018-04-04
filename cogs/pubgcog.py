@@ -3,6 +3,9 @@ import common
 import asyncio
 import datetime
 import requests
+import math
+
+known_points = {}
 
 
 class Puby:
@@ -10,6 +13,10 @@ class Puby:
 
     def __init__(self, bot):
         self.bot = bot
+
+
+def distance(p0, p1):
+    return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
 
 async def check_pubg_matches(bot):
@@ -78,6 +85,14 @@ async def check_pubg_matches(bot):
                                 out_str += "{} damage for {} kills.\n"\
                                            .format(pp.damage_dealt, pp.kills)
                                 wep_str = "WepProg: Fist"
+                                # ArmShot, HeadShot, LegShot, PelvisShot, TorsoShot
+                                tor_s = 0
+                                hea_s = 0
+                                arm_s = 0
+                                pel_s = 0
+                                leg_s = 0
+                                first = False
+
                                 for t in data:
                                     if "character" in t and \
                                        t["character"]['name'] == pp.name and \
@@ -89,6 +104,26 @@ async def check_pubg_matches(bot):
                                             .replace("HK416", "M4")\
                                             .replace("Nagrant", "")
                                         wep_str += "->{}".format(wep)
+                                        if not first:
+                                            x1 = t['location']['x']
+                                            y1 = t['location']['y']
+                                            first = True
+
+                                    if t["_T"] == "LogPlayerTakeDamage" and \
+                                                    t["attacker"][
+                                                        "name"] == part.name and \
+                                                    t[
+                                                        "damageTypeCategory"] == "Damage_Gun":
+                                        if t['damageReason'] == 'TorsoShot':
+                                            tor_s += 1
+                                        elif t['damageReason'] == 'HeadShot':
+                                            hea_s += 1
+                                        elif t['damageReason'] == 'ArmShot':
+                                            arm_s += 1
+                                        elif t['damageReason'] == 'LegShot':
+                                            leg_s += 1
+                                        elif t['damageReason'] == 'PelvisShot':
+                                            pel_s += 1
 
                                     # TODO re add logic for hits.
 
@@ -97,6 +132,19 @@ async def check_pubg_matches(bot):
                                 wep_str += "\n"
                                 out_str += wep_str
                             del data
+                            ts = hea_s + tor_s + pel_s + arm_s + leg_s
+                            out_str += "\n{} Hits, ".format(ts)
+                            out_str += "HeadShot {} ({}%), " \
+                                       .format(hea_s, round(hea_s * 100 / ts))
+                            out_str += "TorsoShot {} ({}%), " \
+                                       .format(tor_s, round(tor_s * 100 / ts))
+                            out_str += "PelvisShot {} ({}%), " \
+                                       .format(pel_s, round(pel_s * 100 / ts))
+                            out_str += "ArmShot {} ({}%), " \
+                                       .format(arm_s, round(arm_s * 100 / ts))
+                            out_str += "LegShot {} ({}%)" \
+                                       .format(leg_s, round(leg_s * 100 / ts))
+
                             await bot.send_message(c_to_send, out_str)
                             found = True
                             common.db["pubg_info"][p.name] = mp_id
