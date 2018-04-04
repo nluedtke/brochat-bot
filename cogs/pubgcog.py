@@ -86,7 +86,6 @@ async def check_pubg_matches(bot):
                             common.db["pubg_info"][p.name] = mp_id
                             common.whos_in.update_db()
                             break
-                await asyncio.sleep(10)
             await asyncio.sleep(60)
         await asyncio.sleep(60*10)
 
