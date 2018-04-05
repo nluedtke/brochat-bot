@@ -5,8 +5,6 @@ from datetime import datetime as dt
 import requests
 import math
 
-known_points = {}
-
 
 class Puby:
     """ Pubg Fetchers"""
@@ -100,7 +98,6 @@ async def check_pubg_matches(bot):
                                 arm_s = 0
                                 pel_s = 0
                                 leg_s = 0
-                                first = False
                                 hits = []
                                 shots = []
 
@@ -115,10 +112,6 @@ async def check_pubg_matches(bot):
                                             .replace("HK416", "M4")\
                                             .replace("Nagant", "")
                                         wep_str += "->{}".format(wep)
-                                        # if not first:
-                                        #     x1 = t['location']['x']
-                                        #     y1 = t['location']['y']
-                                        #     first = True
 
                                     if t["_T"] == "LogPlayerTakeDamage" and \
                                        t["attacker"]["name"] == pp.name and \
@@ -141,7 +134,6 @@ async def check_pubg_matches(bot):
                                            "Item_Weapon_"):
                                         shots.append(t['attackId'])
 
-                                    # TODO add logic for Distance
                                 miss = len(shots) - len(hits)
                                 ts = hea_s + tor_s + pel_s + arm_s + leg_s
                                 out_str += " {}% accuracy.\n"\
