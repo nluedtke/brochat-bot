@@ -93,4 +93,4 @@ ENV/
 
 #Config files
 *.config
-*.json
+db.json

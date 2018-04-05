@@ -1,10 +1,15 @@
 from pubg_python import PUBG, Shard
+from pubg_python.exceptions import NotFoundError
 import common
 import asyncio
 from datetime import datetime as dt
 import requests
 import math
 import statistics as stats
+import json
+
+with open("itemId.json", 'r') as infile:
+    items = json.load(infile)
 
 
 class Puby:
@@ -93,8 +98,16 @@ async def check_pubg_matches(bot):
     while True:
         # TODO Hardcoded names, should come from database
         names_to_find = ['palu1', 'qtstrm', 'OhDip', 'Mrduck34', 'Janus113']
-        players = common.pubg_api.players().filter(
-            player_names=names_to_find)
+        players = None
+        while players is None:
+            try:
+                players = common.pubg_api.players().filter(
+                    player_names=names_to_find)
+                print(players[0])
+            except NotFoundError:
+                players = None
+                await asyncio.sleep(60)
+
         for p in players:
             if p.name not in common.db["pubg_info"] or \
                     common.db["pubg_info"][p.name][0] != p.matches[0].id:
@@ -163,11 +176,7 @@ async def check_pubg_matches(bot):
                            t["character"]['name'] == pp.name and \
                            t["_T"] == "LogItemPickup" and \
                            t['item']['category'] == "Weapon":
-                            wep = t['item']['itemId']\
-                                .replace("Item_Weapon_", "")\
-                                .replace("_C", "")\
-                                .replace("HK416", "M4")\
-                                .replace("Nagant", "")
+                            wep = items[t['item']['itemId']]
                             wep_str += "->{}".format(wep)
 
                         if t["_T"] == "LogPlayerTakeDamage" and \
@@ -224,7 +233,7 @@ async def check_pubg_matches(bot):
                 common.whos_in.update_db()
                 break
             await asyncio.sleep(60)
-        await asyncio.sleep(60*5)
+        await asyncio.sleep(60*15)
 
 
 def setup(bot):
