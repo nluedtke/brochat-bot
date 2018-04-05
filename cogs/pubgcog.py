@@ -16,7 +16,8 @@ class Puby:
 
 
 def distance(p0, p1):
-    return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+    return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2 +
+                     (p0[2] - p1[2])**2)
 
 
 async def check_pubg_matches(bot):
@@ -88,7 +89,7 @@ async def check_pubg_matches(bot):
                                 common.db["pubg_info"][pp.name] = \
                                     [mp_id, match.created_at]
                                 out_str += "{} stats:\n".format(pp.name)
-                                out_str += "{} damage for {} kills.\n"\
+                                out_str += "{} damage for {} kills."\
                                            .format(pp.damage_dealt, pp.kills)
                                 wep_str = "WepProg: Fist"
 
@@ -100,6 +101,8 @@ async def check_pubg_matches(bot):
                                 pel_s = 0
                                 leg_s = 0
                                 first = False
+                                hits = []
+                                shots = []
 
                                 for t in data:
                                     if "character" in t and \
@@ -130,12 +133,22 @@ async def check_pubg_matches(bot):
                                             leg_s += 1
                                         elif t['damageReason'] == 'PelvisShot':
                                             pel_s += 1
-                                    # TODO add logic for Distance
+                                        hits.append(t['attackId'])
+                                    if t["_T"] == "LogPlayerAttack" and \
+                                       t["attacker"]["name"] == pp.name and \
+                                       t['attackType'] == 'Weapon' and \
+                                       t['weapon']['itemId'].startswith(
+                                           "Item_Weapon_"):
+                                        shots.append(t['attackId'])
 
+                                    # TODO add logic for Distance
+                                miss = len(shots) - len(hits)
+                                ts = hea_s + tor_s + pel_s + arm_s + leg_s
+                                out_str += " {}% accuracy.\n"\
+                                           .format(round(ts * 100 /
+                                                         (ts + miss)))
                                 wep_str += "\n"
                                 out_str += wep_str
-
-                                ts = hea_s + tor_s + pel_s + arm_s + leg_s
                                 out_str += "{} Hits - ".format(ts)
                                 out_str += "HeadShot {} ({}%), " \
                                            .format(hea_s,
@@ -159,7 +172,7 @@ async def check_pubg_matches(bot):
                             common.whos_in.update_db()
                             break
             await asyncio.sleep(60)
-        await asyncio.sleep(60*10)
+        await asyncio.sleep(60*5)
 
 
 def setup(bot):
