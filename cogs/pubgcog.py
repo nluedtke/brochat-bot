@@ -8,7 +8,7 @@ import math
 import statistics as stats
 import json
 
-with open("itemId.json", 'r') as infile:
+with open("cogs/itemId.json", 'r') as infile:
     items = json.load(infile)
 
 
@@ -103,7 +103,6 @@ async def check_pubg_matches(bot):
             try:
                 players = common.pubg_api.players().filter(
                     player_names=names_to_find)
-                print(players[0])
             except NotFoundError:
                 players = None
                 await asyncio.sleep(60)
@@ -123,18 +122,20 @@ async def check_pubg_matches(bot):
                 # Find the team roster
                 found = False
                 r = None
+                partis = []
+                names = []
                 for wr in match.rosters:
                     if found:
                         break
                     for part in wr.participants:
                         if part.name == p.name:
+                            partis.append(part)
+                            names.append(part.name)
                             r = wr
                             break
                             found = True
 
                 # See if we know teammates
-                partis = [part]
-                names = [part.name]
                 for pp in r.participants:
                     if pp.name in names_to_find and \
                        pp.name not in names:
@@ -201,32 +202,39 @@ async def check_pubg_matches(bot):
 
                     miss = len(shots) - len(hits)
                     ts = hea_s + tor_s + pel_s + arm_s + leg_s
-                    out_str += " {}% accuracy.\n".format(round(ts * 100 /
-                                                               ts + miss))
-                    wep_str += "\n"
-                    out_str += wep_str
-                    out_str += "{} Hits - ".format(ts)
-                    out_str += "HeadShot {} ({}%), "\
-                               .format(hea_s, round(hea_s * 100 / ts))
-                    out_str += "TorsoShot {} ({}%), "\
-                               .format(tor_s,round(tor_s * 100 / ts))
-                    out_str += "PelvisShot {} ({}%), "\
-                               .format(pel_s, round(pel_s * 100 / ts))
-                    out_str += "ArmShot {} ({}%), " \
-                               .format(arm_s, round(arm_s * 100 / ts))
-                    out_str += "LegShot {} ({}%)\n" \
-                               .format(leg_s, round(leg_s * 100 / ts))
+                    if miss + ts > 0:
+                        out_str += " {}% accuracy.\n".format(round(ts * 100 /
+                                                                   ts + miss))
+                    if ts > 0:
+                        wep_str += "\n"
+                        out_str += wep_str
+                        out_str += "{} Hits - ".format(ts)
+                        out_str += "HeadShot {} ({}%), "\
+                                   .format(hea_s, round(hea_s * 100 / ts))
+                        out_str += "TorsoShot {} ({}%), "\
+                                   .format(tor_s,round(tor_s * 100 / ts))
+                        out_str += "PelvisShot {} ({}%), "\
+                                   .format(pel_s, round(pel_s * 100 / ts))
+                        out_str += "ArmShot {} ({}%), " \
+                                   .format(arm_s, round(arm_s * 100 / ts))
+                        out_str += "LegShot {} ({}%)\n" \
+                                   .format(leg_s, round(leg_s * 100 / ts))
+                    else:
+                        out_str += "No Hits.\n"
 
                     h_dists = []
                     for h in hits:
                         ar, dr = get_attackId(data, h)
-                        p0 = [ar['location']['x'], ar['location']['y'],
-                              ar['location']['z']]
-                        p1 = [dr['location']['x'], dr['location']['y'],
-                              dr['location']['z']]
+                        p0 = [ar['attacker']['location']['x'],
+                              ar['attacker']['location']['y'],
+                              ar['attacker']['location']['z']]
+                        p1 = [dr['victim']['location']['x'],
+                              dr['victim']['location']['y'],
+                              dr['victim']['location']['z']]
                         h_dists.append(distance(p0, p1))
                     out_str += "Avg Hit Dist: {}m, Longest Hit: {}m\n\n"\
-                               .format(stats.mean(h_dists), max(h_dists))
+                               .format(round(stats.mean(h_dists)),
+                                       round(max(h_dists)))
 
                 del data
                 await bot.send_message(c_to_send, out_str)
