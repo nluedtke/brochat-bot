@@ -212,7 +212,7 @@ async def check_pubg_matches(bot):
                         out_str += "HeadShot {} ({}%), "\
                                    .format(hea_s, round(hea_s * 100 / ts))
                         out_str += "TorsoShot {} ({}%), "\
-                                   .format(tor_s,round(tor_s * 100 / ts))
+                                   .format(tor_s, round(tor_s * 100 / ts))
                         out_str += "PelvisShot {} ({}%), "\
                                    .format(pel_s, round(pel_s * 100 / ts))
                         out_str += "ArmShot {} ({}%), " \
