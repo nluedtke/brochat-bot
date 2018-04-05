@@ -200,11 +200,11 @@ async def check_pubg_matches(bot):
                            t['weapon']['itemId'].startswith("Item_Weapon_"):
                             shots.append(t['attackId'])
 
-                    miss = len(shots) - len(hits)
                     ts = hea_s + tor_s + pel_s + arm_s + leg_s
-                    if miss + ts > 0:
-                        out_str += " {}% accuracy.\n".format(round(ts * 100 /
-                                                                   ts + miss))
+                    if len(shots) > 0:
+                        out_str += " {}% accuracy.\n"\
+                                   .format(round(len(hits) * 100 /
+                                                 len(shots)))
                     if ts > 0:
                         wep_str += "\n"
                         out_str += wep_str
