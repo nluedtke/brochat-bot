@@ -94,3 +94,4 @@ ENV/
 #Config files
 *.config
 db.json
+*settings.json
