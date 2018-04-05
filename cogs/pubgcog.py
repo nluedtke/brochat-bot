@@ -113,7 +113,7 @@ async def check_pubg_matches(bot):
                                             .replace("Item_Weapon_", "")\
                                             .replace("_C", "")\
                                             .replace("HK416", "M4")\
-                                            .replace("Nagrant", "")
+                                            .replace("Nagant", "")
                                         wep_str += "->{}".format(wep)
                                         # if not first:
                                         #     x1 = t['location']['x']
