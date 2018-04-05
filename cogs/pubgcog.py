@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime as dt
 import requests
 import math
+import statistics as stats
 
 
 class Puby:
@@ -14,8 +15,53 @@ class Puby:
 
 
 def distance(p0, p1):
+    """
+    returns distance between two pubg points in meters
+    :param p0: point 1
+    :param p1: point 2
+    :return:
+    """
     return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2 +
-                     (p0[2] - p1[2])**2)
+                     (p0[2] - p1[2])**2) / 100
+
+
+def filter_data(d_to_filt, names_to_include):
+    """
+    Filters telemetry data
+    :param d_to_filt: Unfiltered telemetry data
+    :param names_to_include: list of names to include
+    :return: filter event list
+    """
+    data = []
+    for t in d_to_filt:
+        if 'character' in t and t['character']['name'] in names_to_include:
+            data.append(t)
+        elif 'attacker' in t and t['attacker']['name'] in names_to_include:
+            data.append(t)
+        elif 'victim' in t and t['victim']['name'] in names_to_include:
+            data.append(t)
+    return data
+
+
+def get_attackId(data, aId):
+    """
+    returns the Attack record and Damage record given an attack id
+    :param data: data to scan.
+    :param aId: Attack id to look for
+    :return: pair [AttackRecord, DamageRecord]
+    """
+
+    dr = None
+    ar = None
+    for t in data:
+        if 'attackId' in t and t['attackId'] == aId:
+            if t['_T'] == 'LogPlayerAttack':
+                ar = t
+            elif t['_T'] == 'LogPlayerTakeDamage':
+                dr = t
+        if dr is not None and ar is not None:
+            break
+    return ar, dr
 
 
 async def check_pubg_matches(bot):
@@ -60,109 +106,123 @@ async def check_pubg_matches(bot):
                    dt.strptime(common.db["pubg_info"][p.name][1],
                                "%Y-%m-%dT%H:%M:%SZ"):
                     continue
+
+                # Find the team roster
                 found = False
-                for r in match.rosters:
+                r = None
+                for wr in match.rosters:
                     if found:
                         break
-                    for part in r.participants:
+                    for part in wr.participants:
                         if part.name == p.name:
-                            partis = [part]
-                            names = [part.name]
-                            for pp in r.participants:
-                                if pp.name in names_to_find and \
-                                   pp.name not in names:
-                                    partis.append(pp)
-                                    names.append(pp.name)
-                            out_str = ".\n!!!PUBG Report!!!\n"
-                            out_str += "Mode: {}\n".format(match.game_mode)
-                            out_str += "Players: {}\n".format(names)
-                            out_str += "Rank: {}/{}\n\n"\
-                                       .format(part.win_place,
-                                               len(match.rosters))
-
-                            url = match.assets[0].url
-                            r = requests.get(url)
-                            data = r.json()
-                            for pp in partis:
-                                common.db["pubg_info"][pp.name] = \
-                                    [mp_id, match.created_at]
-                                out_str += "{} stats:\n".format(pp.name)
-                                out_str += "{} damage for {} kills."\
-                                           .format(pp.damage_dealt, pp.kills)
-                                wep_str = "WepProg: Fist"
-
-                                # ArmShot, HeadShot, LegShot, PelvisShot,
-                                # TorsoShot
-                                tor_s = 0
-                                hea_s = 0
-                                arm_s = 0
-                                pel_s = 0
-                                leg_s = 0
-                                hits = []
-                                shots = []
-
-                                for t in data:
-                                    if "character" in t and \
-                                       t["character"]['name'] == pp.name and \
-                                       t["_T"] == "LogItemPickup" and \
-                                       t['item']['category'] == "Weapon":
-                                        wep = t['item']['itemId']\
-                                            .replace("Item_Weapon_", "")\
-                                            .replace("_C", "")\
-                                            .replace("HK416", "M4")\
-                                            .replace("Nagant", "")
-                                        wep_str += "->{}".format(wep)
-
-                                    if t["_T"] == "LogPlayerTakeDamage" and \
-                                       t["attacker"]["name"] == pp.name and \
-                                       t["damageTypeCategory"] == "Damage_Gun":
-                                        if t['damageReason'] == 'TorsoShot':
-                                            tor_s += 1
-                                        elif t['damageReason'] == 'HeadShot':
-                                            hea_s += 1
-                                        elif t['damageReason'] == 'ArmShot':
-                                            arm_s += 1
-                                        elif t['damageReason'] == 'LegShot':
-                                            leg_s += 1
-                                        elif t['damageReason'] == 'PelvisShot':
-                                            pel_s += 1
-                                        hits.append(t['attackId'])
-                                    if t["_T"] == "LogPlayerAttack" and \
-                                       t["attacker"]["name"] == pp.name and \
-                                       t['attackType'] == 'Weapon' and \
-                                       t['weapon']['itemId'].startswith(
-                                           "Item_Weapon_"):
-                                        shots.append(t['attackId'])
-
-                                miss = len(shots) - len(hits)
-                                ts = hea_s + tor_s + pel_s + arm_s + leg_s
-                                out_str += " {}% accuracy.\n"\
-                                           .format(round(ts * 100 /
-                                                         (ts + miss)))
-                                wep_str += "\n"
-                                out_str += wep_str
-                                out_str += "{} Hits - ".format(ts)
-                                out_str += "HeadShot {} ({}%), " \
-                                           .format(hea_s,
-                                                   round(hea_s * 100 / ts))
-                                out_str += "TorsoShot {} ({}%), " \
-                                           .format(tor_s,
-                                                   round(tor_s * 100 / ts))
-                                out_str += "PelvisShot {} ({}%), " \
-                                           .format(pel_s,
-                                                   round(pel_s * 100 / ts))
-                                out_str += "ArmShot {} ({}%), " \
-                                           .format(arm_s,
-                                                   round(arm_s * 100 / ts))
-                                out_str += "LegShot {} ({}%)\n\n" \
-                                           .format(leg_s,
-                                                   round(leg_s * 100 / ts))
-
-                            del data
-                            await bot.send_message(c_to_send, out_str)
-                            found = True
-                            common.whos_in.update_db()
+                            r = wr
                             break
+                            found = True
+
+                # See if we know teammates
+                partis = [part]
+                names = [part.name]
+                for pp in r.participants:
+                    if pp.name in names_to_find and \
+                       pp.name not in names:
+                        partis.append(pp)
+                        names.append(pp.name)
+
+                # Construct the report
+                out_str = ".\n!!!PUBG Report!!!\n"
+                out_str += "Mode: {}\n".format(match.game_mode)
+                out_str += "Players: {}\n".format(names)
+                out_str += "Rank: {}/{}\n\n"\
+                           .format(part.win_place,
+                                   len(match.rosters))
+
+                url = match.assets[0].url
+                r = requests.get(url)
+                data = r.json()
+                data = filter_data(data, names_to_find)
+
+                # Get individual stats
+                for pp in partis:
+                    common.db["pubg_info"][pp.name] = \
+                        [mp_id, match.created_at]
+                    out_str += "{} stats:\n".format(pp.name)
+                    out_str += "{} damage for {} kills.".format(pp.damage_dealt,
+                                                                pp.kills)
+                    wep_str = "WepProg: Fist"
+                    # ArmShot, HeadShot, LegShot, PelvisShot, TorsoShot
+                    tor_s = 0
+                    hea_s = 0
+                    arm_s = 0
+                    pel_s = 0
+                    leg_s = 0
+                    hits = []
+                    shots = []
+
+                    for t in data:
+                        if "character" in t and \
+                           t["character"]['name'] == pp.name and \
+                           t["_T"] == "LogItemPickup" and \
+                           t['item']['category'] == "Weapon":
+                            wep = t['item']['itemId']\
+                                .replace("Item_Weapon_", "")\
+                                .replace("_C", "")\
+                                .replace("HK416", "M4")\
+                                .replace("Nagant", "")
+                            wep_str += "->{}".format(wep)
+
+                        if t["_T"] == "LogPlayerTakeDamage" and \
+                           t["attacker"]["name"] == pp.name and \
+                           t["damageTypeCategory"] == "Damage_Gun":
+                            if t['damageReason'] == 'TorsoShot':
+                                tor_s += 1
+                            elif t['damageReason'] == 'HeadShot':
+                                hea_s += 1
+                            elif t['damageReason'] == 'ArmShot':
+                                arm_s += 1
+                            elif t['damageReason'] == 'LegShot':
+                                leg_s += 1
+                            elif t['damageReason'] == 'PelvisShot':
+                                pel_s += 1
+                            hits.append(t['attackId'])
+                        if t["_T"] == "LogPlayerAttack" and \
+                           t["attacker"]["name"] == pp.name and \
+                           t['attackType'] == 'Weapon' and \
+                           t['weapon']['itemId'].startswith("Item_Weapon_"):
+                            shots.append(t['attackId'])
+
+                    miss = len(shots) - len(hits)
+                    ts = hea_s + tor_s + pel_s + arm_s + leg_s
+                    out_str += " {}% accuracy.\n".format(round(ts * 100 /
+                                                               ts + miss))
+                    wep_str += "\n"
+                    out_str += wep_str
+                    out_str += "{} Hits - ".format(ts)
+                    out_str += "HeadShot {} ({}%), "\
+                               .format(hea_s, round(hea_s * 100 / ts))
+                    out_str += "TorsoShot {} ({}%), "\
+                               .format(tor_s,round(tor_s * 100 / ts))
+                    out_str += "PelvisShot {} ({}%), "\
+                               .format(pel_s, round(pel_s * 100 / ts))
+                    out_str += "ArmShot {} ({}%), " \
+                               .format(arm_s, round(arm_s * 100 / ts))
+                    out_str += "LegShot {} ({}%)\n" \
+                               .format(leg_s, round(leg_s * 100 / ts))
+
+                    h_dists = []
+                    for h in hits:
+                        ar, dr = get_attackId(data, h)
+                        p0 = [ar['location']['x'], ar['location']['y'],
+                              ar['location']['z']]
+                        p1 = [dr['location']['x'], dr['location']['y'],
+                              dr['location']['z']]
+                        h_dists.append(distance(p0, p1))
+                    out_str += "Avg Hit Dist: {}m, Longest Hit: {}m\n\n"\
+                               .format(stats.mean(h_dists), max(h_dists))
+
+                del data
+                await bot.send_message(c_to_send, out_str)
+                common.whos_in.update_db()
+                break
             await asyncio.sleep(60)
         await asyncio.sleep(60*5)
 
