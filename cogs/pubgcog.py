@@ -97,7 +97,8 @@ async def check_pubg_matches(bot):
 
     while True:
         # TODO Hardcoded names, should come from database
-        names_to_find = ['palu1', 'qtstrm', 'OhDip', 'Mrduck34', 'Janus113']
+        names_to_find = ['palu1', 'qtstrm', 'OhDip', 'Mrduck34', 'Janus113',
+                         'chicagopolitics']
         players = None
         while players is None:
             try:
