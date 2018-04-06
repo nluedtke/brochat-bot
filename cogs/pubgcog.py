@@ -106,7 +106,7 @@ async def check_pubg_matches(bot):
                     player_names=names_to_find)
             except NotFoundError:
                 players = None
-                await asyncio.sleep(60)
+                await asyncio.sleep(60*10)
 
         for p in players:
             if p.name not in common.db["pubg_info"] or \
