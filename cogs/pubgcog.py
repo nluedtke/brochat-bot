@@ -125,6 +125,7 @@ async def check_pubg_matches(bot):
                 r = None
                 partis = []
                 names = []
+                rank = None
                 for wr in match.rosters:
                     if found:
                         break
@@ -133,8 +134,9 @@ async def check_pubg_matches(bot):
                             partis.append(part)
                             names.append(part.name)
                             r = wr
-                            break
+                            rank = part.win_place
                             found = True
+                            break
 
                 # See if we know teammates
                 for pp in r.participants:
@@ -148,8 +150,7 @@ async def check_pubg_matches(bot):
                 out_str += "Mode: {}\n".format(match.game_mode)
                 out_str += "Players: {}\n".format(names)
                 out_str += "Rank: {}/{}\n\n"\
-                           .format(part.win_place,
-                                   len(match.rosters))
+                           .format(rank, len(match.rosters))
 
                 url = match.assets[0].url
                 r = requests.get(url)
@@ -161,8 +162,8 @@ async def check_pubg_matches(bot):
                     common.db["pubg_info"][pp.name] = \
                         [mp_id, match.created_at]
                     out_str += "{} stats:\n".format(pp.name)
-                    out_str += "{} damage for {} kills.".format(pp.damage_dealt,
-                                                                pp.kills)
+                    out_str += "{} damage for {} kills."\
+                               .format(pp.damage_dealt, pp.kills)
                     wep_str = "WepProg: Fist"
                     # ArmShot, HeadShot, LegShot, PelvisShot, TorsoShot
                     tor_s = 0
