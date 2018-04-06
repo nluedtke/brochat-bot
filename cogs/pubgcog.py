@@ -94,6 +94,8 @@ async def check_pubg_matches(bot):
     # TODO New database should be added to users info
     if "pubg_info" not in common.db:
         common.db['pubg_info'] = {}
+    if "pubg_recs" not in common.db:
+        common.db['pubg_recs'] = {}
 
     while True:
         # TODO Hardcoded names, should come from database
@@ -125,7 +127,6 @@ async def check_pubg_matches(bot):
                 r = None
                 partis = []
                 names = []
-                rank = None
                 for wr in match.rosters:
                     if found:
                         break
@@ -134,7 +135,6 @@ async def check_pubg_matches(bot):
                             partis.append(part)
                             names.append(part.name)
                             r = wr
-                            rank = part.win_place
                             found = True
                             break
 
@@ -150,7 +150,7 @@ async def check_pubg_matches(bot):
                 out_str += "Mode: {}\n".format(match.game_mode)
                 out_str += "Players: {}\n".format(names)
                 out_str += "Rank: {}/{}\n\n"\
-                           .format(rank, len(match.rosters))
+                           .format(partis[0].win_place, len(match.rosters))
 
                 url = match.assets[0].url
                 r = requests.get(url)
@@ -234,16 +234,33 @@ async def check_pubg_matches(bot):
                               dr['victim']['location']['y'],
                               dr['victim']['location']['z']]
                         h_dists.append(distance(p0, p1))
-                    out_str += "Avg Hit Dist: {}m, Longest Hit: {}m\n\n"\
+                    out_str += "Avg Hit Dist: {}m, Longest Hit: {}m\n"\
                                .format(round(stats.mean(h_dists)),
                                        round(max(h_dists)))
+                    if pp.name not in common.db['pubg_recs']:
+                        common.db['pubg_recs'][pp.name] = {}
+                    r_data = common.db['pubg_recs'][pp.name]
+                    if "dam" not in r_data or pp.damage_dealt > r_data['dam']:
+                        out_str += "New personal best in damage! ({})\n"\
+                                   .format(pp.damage_dealt)
+                        r_data['dam'] = pp.damage_dealt
+                    if "kills" not in r_data or pp.kills > r_data['kills']:
+                        out_str += "New personal best in kills! ({})\n"\
+                                   .format(pp.kills)
+                        r_data['kills'] = pp.kills
+                    if "long_h" not in r_data or \
+                       max(h_dists) > r_data['long_h']:
+                        out_str += "New personal best in longest hit! ({})\n"\
+                                   .format(max(h_dists))
+                        r_data['long_h'] = max(h_dists)
+                    out_str += "\n"
 
                 del data
                 await bot.send_message(c_to_send, out_str)
                 common.whos_in.update_db()
                 break
             await asyncio.sleep(60)
-        await asyncio.sleep(60*15)
+        await asyncio.sleep(60*10)
 
 
 def setup(bot):
