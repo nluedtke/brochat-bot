@@ -221,8 +221,6 @@ async def check_pubg_matches(bot):
                                    .format(arm_s, round(arm_s * 100 / ts))
                         out_str += "LegShot {} ({}%)\n" \
                                    .format(leg_s, round(leg_s * 100 / ts))
-                    else:
-                        out_str += "No Hits.\n"
 
                     h_dists = []
                     for h in hits:
@@ -234,25 +232,27 @@ async def check_pubg_matches(bot):
                               dr['victim']['location']['y'],
                               dr['victim']['location']['z']]
                         h_dists.append(distance(p0, p1))
-                    out_str += "Avg Hit Dist: {}m, Longest Hit: {}m\n"\
-                               .format(round(stats.mean(h_dists)),
-                                       round(max(h_dists)))
-                    if pp.name not in common.db['pubg_recs']:
-                        common.db['pubg_recs'][pp.name] = {}
-                    r_data = common.db['pubg_recs'][pp.name]
-                    if "dam" not in r_data or pp.damage_dealt > r_data['dam']:
-                        out_str += "New personal best in damage! ({})\n"\
-                                   .format(pp.damage_dealt)
-                        r_data['dam'] = pp.damage_dealt
-                    if "kills" not in r_data or pp.kills > r_data['kills']:
-                        out_str += "New personal best in kills! ({})\n"\
-                                   .format(pp.kills)
-                        r_data['kills'] = pp.kills
-                    if "long_h" not in r_data or \
-                       max(h_dists) > r_data['long_h']:
-                        out_str += "New personal best in longest hit! ({})\n"\
-                                   .format(max(h_dists))
-                        r_data['long_h'] = max(h_dists)
+                    if len(h_dists) > 0:
+                        out_str += "Avg Hit Dist: {}m, Longest Hit: {}m\n"\
+                                   .format(round(stats.mean(h_dists)),
+                                           round(max(h_dists)))
+                        if pp.name not in common.db['pubg_recs']:
+                            common.db['pubg_recs'][pp.name] = {}
+                        r_data = common.db['pubg_recs'][pp.name]
+                        if "dam" not in r_data or pp.damage_dealt > r_data['dam']:
+                            out_str += "New personal best in damage! ({})\n"\
+                                       .format(pp.damage_dealt)
+                            r_data['dam'] = pp.damage_dealt
+                        if "kills" not in r_data or pp.kills > r_data['kills']:
+                            out_str += "New personal best in kills! ({})\n"\
+                                       .format(pp.kills)
+                            r_data['kills'] = pp.kills
+                        if "long_h" not in r_data or \
+                           max(h_dists) > r_data['long_h']:
+                            out_str += "New personal best in longest hit! " \
+                                       "({})\n"\
+                                       .format(max(h_dists))
+                            r_data['long_h'] = max(h_dists)
                     out_str += "\n"
 
                 del data
