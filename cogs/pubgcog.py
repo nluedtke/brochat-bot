@@ -1,6 +1,6 @@
 from pubg_python import PUBG, Shard
 from pubg_python.exceptions import NotFoundError
-import common
+import common as c
 import asyncio
 import requests
 import math
@@ -79,32 +79,30 @@ async def check_pubg_matches(bot):
     await asyncio.sleep(60)
     for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' \
-                or channel.name == common.ARGS['channel']:
+                or channel.name == c.ARGS['channel']:
             c_to_send = channel
             break
 
-    if common.pubg_api_key is None:
+    if c.pubg_api_key is None:
         await bot.say("PUBG not activated.")
         return
 
-    if common.pubg_api is None:
-        common.pubg_api = PUBG(common.pubg_api_key, Shard.PC_NA)
-
-    # TODO New database should be added to users info
-    if "pubg_info" not in common.db:
-        common.db['pubg_info'] = {}
-    if "pubg_recs" not in common.db:
-        common.db['pubg_recs'] = {}
+    if c.pubg_api is None:
+        c.pubg_api = PUBG(c.pubg_api_key, Shard.PC_NA)
 
     while True:
+        # get pubg account names to look for and build a reverse map to discord
         names_to_find = []
-        for u in common.users:
-            if 'pubg' in common.users[u]:
-                names_to_find.append(common.users[u]['pubg'])
+        r_map = {}
+
+        for u in c.users:
+            if 'pubg' in c.users[u]:
+                names_to_find.append(c.users[u]['pubg'])
+                r_map[c.users[u]['pubg']] = u
         players = None
         while players is None:
             try:
-                players = common.pubg_api.players().filter(
+                players = c.pubg_api.players().filter(
                     player_names=names_to_find)
             except NotFoundError:
                 players = None
@@ -119,10 +117,10 @@ async def check_pubg_matches(bot):
                     break
 
                 # if that match isn't in the players queue
-                if p.name not in common.db["pubg_info"] or \
-                   m.id not in common.db["pubg_info"][p.name]:
+                if 'pubg_match' not in c.users[r_map[p.name]] or \
+                   m.id not in c.users[r_map[p.name]]['pubg_match']:
                     mp_id = m.id
-                    match = common.pubg_api.matches().get(mp_id)
+                    match = c.pubg_api.matches().get(mp_id)
 
                     # Find the team roster
                     found = False
@@ -161,11 +159,11 @@ async def check_pubg_matches(bot):
 
                     # Get individual stats
                     for pp in partis:
-                        if pp.name not in common.db["pubg_info"]:
-                            common.db["pubg_info"][pp.name] = []
-                        common.db["pubg_info"][pp.name].append(mp_id)
-                        if len(common.db["pubg_info"][pp.name]) > 7:
-                            common.db["pubg_info"][pp.name].pop(0)
+                        if 'pubg_match' not in c.users[r_map[pp.name]]:
+                            c.users[r_map[pp.name]]["pubg_match"] = []
+                        c.users[r_map[pp.name]]["pubg_match"].append(mp_id)
+                        if len(c.users[r_map[pp.name]]["pubg_match"]) > 7:
+                            c.users[r_map[pp.name]]["pubg_match"].pop(0)
                         out_str += "{} stats:\n".format(pp.name)
                         out_str += "{} damage for {} kills and {} knocks."\
                                    .format(pp.damage_dealt, pp.kills, pp.dbnos)
@@ -248,9 +246,9 @@ async def check_pubg_matches(bot):
                             out_str += "Avg Hit Dist: {}m, Longest Hit: {}m\n"\
                                        .format(round(stats.mean(h_dists)),
                                                round(max(h_dists)))
-                            if pp.name not in common.db['pubg_recs']:
-                                common.db['pubg_recs'][pp.name] = {}
-                            r_data = common.db['pubg_recs'][pp.name]
+                            if 'pubg_recs' not in c.users[r_map[pp.name]]:
+                                c.users[r_map[pp.name]]['pubg_recs'] = {}
+                            r_data = c.users[r_map[pp.name]]['pubg_recs']
                             if "dam" not in r_data or \
                                pp.damage_dealt > r_data['dam']:
                                 out_str += "New personal best in damage! " \
@@ -272,7 +270,7 @@ async def check_pubg_matches(bot):
 
                     del data
                     await bot.send_message(c_to_send, out_str)
-                common.whos_in.update_db()
+                c.whos_in.update_db()
             await asyncio.sleep(60)
         await asyncio.sleep(60*10)
 
