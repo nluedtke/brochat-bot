@@ -97,9 +97,10 @@ async def check_pubg_matches(bot):
         common.db['pubg_recs'] = {}
 
     while True:
-        # TODO Hardcoded names, should come from database
-        names_to_find = ['palu1', 'qtstrm', 'OhDip', 'Mrduck34', 'Janus113',
-                         'chicagopolitics']
+        names_to_find = []
+        for u in common.users:
+            if 'pubg' in common.users[u]:
+                names_to_find.append(common.users[u]['pubg'])
         players = None
         while players is None:
             try:
@@ -163,7 +164,7 @@ async def check_pubg_matches(bot):
                         if pp.name not in common.db["pubg_info"]:
                             common.db["pubg_info"][pp.name] = []
                         common.db["pubg_info"][pp.name].append(mp_id)
-                        if len(common.db["pubg_info"][pp.name]) > 5:
+                        if len(common.db["pubg_info"][pp.name]) > 7:
                             common.db["pubg_info"][pp.name].pop(0)
                         out_str += "{} stats:\n".format(pp.name)
                         out_str += "{} damage for {} kills and {} knocks."\
