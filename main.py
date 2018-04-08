@@ -186,10 +186,11 @@ async def set_command(ctx):
     valid_arguments = {'name': "Okay, I'll call you {} now.",
                        'battletag': "Okay, your battletag is {} from here"
                                     " on out.",
-                       'mobile': "Got your digits: {}."}
+                       'mobile': "Got your digits: {}.",
+                       'pubg': "Okay, you pubg name is {}."}
     if len(arguments) != 2:
         await bot.say("To !set information about yourself, please use:\n\n"
-                      "**!set** <name/battletag/mobile> <value>")
+                      "**!set** <name/battletag/mobile/pubg> <value>")
     elif arguments[0] in valid_arguments:
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
@@ -485,6 +486,8 @@ async def whoami(ctx):
                     output = "Your inventory of dueling items:"
                     for item, count in v.items():
                         output += "\n    - {}".format(get_name(item))
+            elif k == "pubg_match":
+                continue
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
