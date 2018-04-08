@@ -162,7 +162,7 @@ async def check_pubg_matches(bot):
                         if 'pubg_match' not in c.users[r_map[pp.name]]:
                             c.users[r_map[pp.name]]["pubg_match"] = []
                         c.users[r_map[pp.name]]["pubg_match"].append(mp_id)
-                        if len(c.users[r_map[pp.name]]["pubg_match"]) > 7:
+                        if len(c.users[r_map[pp.name]]["pubg_match"]) > 10:
                             c.users[r_map[pp.name]]["pubg_match"].pop(0)
                         out_str += "{} stats:\n".format(pp.name)
                         out_str += "{} damage for {} kills and {} knocks."\
