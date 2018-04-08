@@ -486,6 +486,8 @@ async def whoami(ctx):
                     output = "Your inventory of dueling items:"
                     for item, count in v.items():
                         output += "\n    - {}".format(get_name(item))
+            elif k == "pubg_match":
+                continue
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
