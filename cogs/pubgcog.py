@@ -214,9 +214,9 @@ async def check_pubg_matches(bot):
                                        .format(round(len(hits) * 100 /
                                                      len(shots)))
                         out_str += "\n"
+                        wep_str += "\n"
+                        out_str += wep_str
                         if ts > 0:
-                            wep_str += "\n"
-                            out_str += wep_str
                             out_str += "{} Hits - ".format(ts)
                             out_str += "Head: {} ({}%), "\
                                        .format(hea_s, round(hea_s * 100 / ts))
