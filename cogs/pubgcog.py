@@ -7,7 +7,7 @@ import math
 import statistics as stats
 import json
 
-with open("cogs/itemId.json", 'r') as infile:
+with open("objs/itemId.json", 'r') as infile:
     items = json.load(infile)
 
 
