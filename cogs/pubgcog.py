@@ -149,7 +149,7 @@ async def check_pubg_matches(bot):
                     # Construct the report
                     out_str = ".\n!!!PUBG Report!!!\n"
                     out_str += "Mode: {}\n".format(match.game_mode)
-                    out_str += "Players: {}\n".format(names)
+                    out_str += "Players: {}\n".format(", ".join(names))
                     out_str += "Rank: {}/{}\n\n"\
                                .format(partis[0].win_place, len(match.rosters))
 
@@ -166,8 +166,8 @@ async def check_pubg_matches(bot):
                         if len(common.db["pubg_info"][pp.name]) > 5:
                             common.db["pubg_info"][pp.name].pop(0)
                         out_str += "{} stats:\n".format(pp.name)
-                        out_str += "{} damage for {} kills."\
-                                   .format(pp.damage_dealt, pp.kills)
+                        out_str += "{} damage for {} kills and {} knocks."\
+                                   .format(pp.damage_dealt, pp.kills, pp.dbnos)
                         wep_str = "WepProg: Fist"
                         # ArmShot, HeadShot, LegShot, PelvisShot, TorsoShot
                         tor_s = 0
@@ -227,7 +227,7 @@ async def check_pubg_matches(bot):
                                        .format(pel_s, round(pel_s * 100 / ts))
                             out_str += "Arm: {} ({}%), " \
                                        .format(arm_s, round(arm_s * 100 / ts))
-                            out_str += "Leg: {} ({}%)\n" \
+                            out_str += "Leg: {} ({}%), " \
                                        .format(leg_s, round(leg_s * 100 / ts))
                             out_str += "Unk: {} ({}%)\n" \
                                 .format(ns_s, round(ns_s * 100 / ts))
