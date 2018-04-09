@@ -138,9 +138,8 @@ def get_pubg_report(match, names, partis, r_map):
     # Get individual stats
     for pp in partis:
         add_match_id(pp.name, r_map, match.id)
-        avg_rank = add_rank(pp.name, r_map, partis[0].win_place)
+        add_rank(pp.name, r_map, partis[0].win_place)
         out_str += "{} stats:\n".format(pp.name)
-        out_str += "Last 10gms avg rank: {}\n".format(round(avg_rank))
         out_str += "{} damage for {} kills and {} knocks. " \
                    .format(pp.damage_dealt, pp.kills, pp.dbnos)
 
