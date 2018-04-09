@@ -10,6 +10,8 @@ import json
 with open("objs/itemId.json", 'r') as infile:
     items = json.load(infile)
 
+# Number of match ids to store
+max_mids_records = 20
 
 class Puby:
     """ Pubg Fetchers"""
@@ -109,7 +111,7 @@ def add_rank(name, r_map, rank):
     if 'pubg_ranks' not in c.users[r_map[name]]:
         c.users[r_map[name]]["pubg_ranks"] = []
     c.users[r_map[name]]["pubg_ranks"].append(rank)
-    if len(c.users[r_map[name]]["pubg_ranks"]) > 10:
+    if len(c.users[r_map[name]]["pubg_ranks"]) > max_mids_records:
         c.users[r_map[name]]["pubg_ranks"].pop(0)
     return stats.mean(c.users[r_map[name]]["pubg_ranks"])
 
