@@ -68,6 +68,166 @@ def get_attackId(data, aId):
     return ar, dr
 
 
+def add_match_id(name, r_map, mp_id):
+    """
+    Adds a match id to players record and removes an old if needed
+    :param name: Name of player
+    :param r_map: Reverse map of pubg to user
+    :param mp_id: match id to add
+    :return:
+    """
+    if 'pubg_match' not in c.users[r_map[name]]:
+        c.users[r_map[name]]["pubg_match"] = []
+    c.users[r_map[name]]["pubg_match"].append(mp_id)
+    if len(c.users[r_map[name]]["pubg_match"]) > 10:
+        c.users[r_map[name]]["pubg_match"].pop(0)
+
+
+def calc_p_dist(player1, player2):
+    """
+    Calculates the distance between two players
+    :param player2: First player
+    :param player1: Second player
+    :return: distance in meters
+    """
+    p0 = [player1['location']['x'], player1['location']['y'],
+          player1['location']['z']]
+    p1 = [player2['location']['x'], player2['location']['y'],
+          player2['location']['z']]
+    return distance(p0, p1)
+
+
+def add_rank(name, r_map, rank):
+    """
+    Manages average rank over last 10 games for player
+
+    :param name: Name of player
+    :param r_map: PUBG_name to User name
+    :param rank: rank to add
+    :return: Average rank
+    """
+    if 'pubg_ranks' not in c.users[r_map[name]]:
+        c.users[r_map[name]]["pubg_ranks"] = []
+    c.users[r_map[name]]["pubg_ranks"].append(rank)
+    if len(c.users[r_map[name]]["pubg_ranks"]) > 10:
+        c.users[r_map[name]]["pubg_ranks"].pop(0)
+    return stats.mean(c.users[r_map[name]]["pubg_ranks"])
+
+
+def get_pubg_report(match, names, partis, r_map):
+    """
+    Constructs and returns a pubg match report
+    :param match: Match Object
+    :param names: Names to filter for in report
+    :param partis: Participant Objects
+    :param r_map: PUBG name to Discord name
+    :return: Str containing report
+    """
+
+    out_str = ".\n!!!PUBG Report!!!\n"
+    out_str += "Mode: {}\n".format(match.game_mode)
+    out_str += "Players: {}\n".format(", ".join(names))
+    out_str += "Rank: {}/{}\n\n" \
+        .format(partis[0].win_place, len(match.rosters))
+
+    url = match.assets[0].url
+    r = requests.get(url)
+    data = r.json()
+    data = filter_data(data, names)
+
+    # Get individual stats
+    for pp in partis:
+        add_match_id(pp.name, r_map, match.id)
+        avg_rank = add_rank(pp.name, r_map, partis[0].win_place)
+        out_str += "{} stats:\n".format(pp.name)
+        out_str += "Last 10gms avg rank: {}\n".format(round(avg_rank))
+        out_str += "{} damage for {} kills and {} knocks. " \
+                   .format(pp.damage_dealt, pp.kills, pp.dbnos)
+
+        wep_str = "WepProg: Fist"
+        # ArmShot, HeadShot, LegShot, PelvisShot, TorsoShot
+        tor_s = 0
+        hea_s = 0
+        arm_s = 0
+        pel_s = 0
+        leg_s = 0
+        ns_s = 0
+        hits = []
+        shots = []
+
+        for t in data:
+            if "character" in t and t["character"]['name'] == pp.name and \
+               t["_T"] == "LogItemPickup" and t['item']['category'] == "Weapon":
+                wep = items[t['item']['itemId']]
+                wep_str += "->{}".format(wep)
+
+            if t["_T"] == "LogPlayerTakeDamage" and \
+               t["attacker"]["name"] == pp.name and \
+               t["damageTypeCategory"] == "Damage_Gun":
+                if t['damageReason'] == 'TorsoShot':
+                    tor_s += 1
+                elif t['damageReason'] == 'HeadShot':
+                    hea_s += 1
+                elif t['damageReason'] == 'ArmShot':
+                    arm_s += 1
+                elif t['damageReason'] == 'LegShot':
+                    leg_s += 1
+                elif t['damageReason'] == 'PelvisShot':
+                    pel_s += 1
+                else:
+                    ns_s += 1
+                hits.append(t['attackId'])
+            if t["_T"] == "LogPlayerAttack" and \
+               t["attacker"]["name"] == pp.name and \
+               t['attackType'] == 'Weapon' and \
+               t['weapon']['itemId'].startswith("Item_Weapon_"):
+                shots.append(t['attackId'])
+
+        ts = hea_s + tor_s + pel_s + arm_s + leg_s + ns_s
+        if len(shots) > 0:
+            out_str += "{}% accuracy.".format(round(len(hits) * 100 /
+                                                    len(shots)))
+        out_str += "\n"
+        wep_str += "\n"
+        out_str += wep_str
+        if ts > 0:
+            out_str += "{} Hits - ".format(ts)
+            out_str += "Head: {} ({}%), ".format(hea_s, round(hea_s * 100 / ts))
+            out_str += "Torso: {} ({}%), ".format(tor_s, round(tor_s * 100 /
+                                                               ts))
+            out_str += "Pelvis: {} ({}%), ".format(pel_s, round(pel_s * 100 /
+                                                                ts))
+            out_str += "Arm: {} ({}%), ".format(arm_s, round(arm_s * 100 / ts))
+            out_str += "Leg: {} ({}%), ".format(leg_s, round(leg_s * 100 / ts))
+            out_str += "Unk: {} ({}%)\n".format(ns_s, round(ns_s * 100 / ts))
+
+        h_dists = []
+        for h in hits:
+            ar, dr = get_attackId(data, h)
+            if 'victim' in dr and 'attacker' in ar:
+                h_dists.append(calc_p_dist(ar['attacker'], dr['victim']))
+        if len(h_dists) > 0:
+            out_str += "Avg Hit Dist: {}m, Longest Hit: {}m\n" \
+                       .format(round(stats.mean(h_dists)), round(max(h_dists)))
+            if 'pubg_recs' not in c.users[r_map[pp.name]]:
+                c.users[r_map[pp.name]]['pubg_recs'] = {}
+            r_data = c.users[r_map[pp.name]]['pubg_recs']
+            if "dam" not in r_data or pp.damage_dealt > r_data['dam']:
+                out_str += "New personal best in damage! ({})\n" \
+                           .format(pp.damage_dealt)
+                r_data['dam'] = pp.damage_dealt
+            if "kills" not in r_data or pp.kills > r_data['kills']:
+                out_str += "New personal best in kills! ({})\n".format(pp.kills)
+                r_data['kills'] = pp.kills
+            if "long_h" not in r_data or max(h_dists) > r_data['long_h']:
+                out_str += "New personal best in longest hit! ({})\n" \
+                           .format(max(h_dists))
+                r_data['long_h'] = max(h_dists)
+        out_str += "\n"
+    del data
+    return out_str
+
+
 async def check_pubg_matches(bot):
     """
     Checks for new matches
@@ -146,129 +306,8 @@ async def check_pubg_matches(bot):
                             names.append(pp.name)
 
                     # Construct the report
-                    out_str = ".\n!!!PUBG Report!!!\n"
-                    out_str += "Mode: {}\n".format(match.game_mode)
-                    out_str += "Players: {}\n".format(", ".join(names))
-                    out_str += "Rank: {}/{}\n\n"\
-                               .format(partis[0].win_place, len(match.rosters))
+                    out_str = get_pubg_report(match, names, partis, r_map)
 
-                    url = match.assets[0].url
-                    r = requests.get(url)
-                    data = r.json()
-                    data = filter_data(data, names_to_find)
-
-                    # Get individual stats
-                    for pp in partis:
-                        if 'pubg_match' not in c.users[r_map[pp.name]]:
-                            c.users[r_map[pp.name]]["pubg_match"] = []
-                        c.users[r_map[pp.name]]["pubg_match"].append(mp_id)
-                        if len(c.users[r_map[pp.name]]["pubg_match"]) > 10:
-                            c.users[r_map[pp.name]]["pubg_match"].pop(0)
-                        out_str += "{} stats:\n".format(pp.name)
-                        out_str += "{} damage for {} kills and {} knocks."\
-                                   .format(pp.damage_dealt, pp.kills, pp.dbnos)
-                        wep_str = "WepProg: Fist"
-                        # ArmShot, HeadShot, LegShot, PelvisShot, TorsoShot
-                        tor_s = 0
-                        hea_s = 0
-                        arm_s = 0
-                        pel_s = 0
-                        leg_s = 0
-                        ns_s = 0
-                        hits = []
-                        shots = []
-
-                        for t in data:
-                            if "character" in t and \
-                               t["character"]['name'] == pp.name and \
-                               t["_T"] == "LogItemPickup" and \
-                               t['item']['category'] == "Weapon":
-                                wep = items[t['item']['itemId']]
-                                wep_str += "->{}".format(wep)
-
-                            if t["_T"] == "LogPlayerTakeDamage" and \
-                               t["attacker"]["name"] == pp.name and \
-                               t["damageTypeCategory"] == "Damage_Gun":
-                                if t['damageReason'] == 'TorsoShot':
-                                    tor_s += 1
-                                elif t['damageReason'] == 'HeadShot':
-                                    hea_s += 1
-                                elif t['damageReason'] == 'ArmShot':
-                                    arm_s += 1
-                                elif t['damageReason'] == 'LegShot':
-                                    leg_s += 1
-                                elif t['damageReason'] == 'PelvisShot':
-                                    pel_s += 1
-                                else:
-                                    ns_s += 1
-                                hits.append(t['attackId'])
-                            if t["_T"] == "LogPlayerAttack" and \
-                               t["attacker"]["name"] == pp.name and \
-                               t['attackType'] == 'Weapon' and \
-                               t['weapon']['itemId'].startswith("Item_Weapon_"):
-                                shots.append(t['attackId'])
-
-                        ts = hea_s + tor_s + pel_s + arm_s + leg_s + ns_s
-                        if len(shots) > 0:
-                            out_str += " {}% accuracy."\
-                                       .format(round(len(hits) * 100 /
-                                                     len(shots)))
-                        out_str += "\n"
-                        wep_str += "\n"
-                        out_str += wep_str
-                        if ts > 0:
-                            out_str += "{} Hits - ".format(ts)
-                            out_str += "Head: {} ({}%), "\
-                                       .format(hea_s, round(hea_s * 100 / ts))
-                            out_str += "Torso: {} ({}%), "\
-                                       .format(tor_s, round(tor_s * 100 / ts))
-                            out_str += "Pelvis: {} ({}%), "\
-                                       .format(pel_s, round(pel_s * 100 / ts))
-                            out_str += "Arm: {} ({}%), " \
-                                       .format(arm_s, round(arm_s * 100 / ts))
-                            out_str += "Leg: {} ({}%), " \
-                                       .format(leg_s, round(leg_s * 100 / ts))
-                            out_str += "Unk: {} ({}%)\n" \
-                                .format(ns_s, round(ns_s * 100 / ts))
-
-                        h_dists = []
-                        for h in hits:
-                            ar, dr = get_attackId(data, h)
-                            if 'victim' in dr and 'attacker' in ar:
-                                p0 = [ar['attacker']['location']['x'],
-                                      ar['attacker']['location']['y'],
-                                      ar['attacker']['location']['z']]
-                                p1 = [dr['victim']['location']['x'],
-                                      dr['victim']['location']['y'],
-                                      dr['victim']['location']['z']]
-                                h_dists.append(distance(p0, p1))
-                        if len(h_dists) > 0:
-                            out_str += "Avg Hit Dist: {}m, Longest Hit: {}m\n"\
-                                       .format(round(stats.mean(h_dists)),
-                                               round(max(h_dists)))
-                            if 'pubg_recs' not in c.users[r_map[pp.name]]:
-                                c.users[r_map[pp.name]]['pubg_recs'] = {}
-                            r_data = c.users[r_map[pp.name]]['pubg_recs']
-                            if "dam" not in r_data or \
-                               pp.damage_dealt > r_data['dam']:
-                                out_str += "New personal best in damage! " \
-                                           "({})\n" \
-                                           .format(pp.damage_dealt)
-                                r_data['dam'] = pp.damage_dealt
-                            if "kills" not in r_data or \
-                               pp.kills > r_data['kills']:
-                                out_str += "New personal best in kills! ({})\n"\
-                                           .format(pp.kills)
-                                r_data['kills'] = pp.kills
-                            if "long_h" not in r_data or \
-                               max(h_dists) > r_data['long_h']:
-                                out_str += "New personal best in longest hit!" \
-                                           " ({})\n"\
-                                           .format(max(h_dists))
-                                r_data['long_h'] = max(h_dists)
-                        out_str += "\n"
-
-                    del data
                     await bot.send_message(c_to_send, out_str)
                 c.whos_in.update_db()
             await asyncio.sleep(60)

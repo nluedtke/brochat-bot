@@ -486,8 +486,11 @@ async def whoami(ctx):
                     output = "Your inventory of dueling items:"
                     for item, count in v.items():
                         output += "\n    - {}".format(get_name(item))
-            elif k == "pubg_match":
+            elif k == "pubg_match" or k == "pubg_ranks":
                 continue
+            elif k == "drinks_owed":
+                output = "You owe {} drinks to the Grand Friendship Bank of " \
+                         "Drinks!".format(v)
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
