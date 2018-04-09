@@ -4,5 +4,6 @@
     "twitter_api_secret": "TWITTER_API_SECRET",
     "twilio_account_sid": "TWILIO_ACCOUNT_SID",
     "twilio_auth_token": "TWILIO_AUTH_TOKEN",
-    "smmry_api_key": "SMMRY_API_KEY"
+    "smmry_api_key": "SMMRY_API_KEY",
+    "pubg_api_key": "PUBG_API_KEY"
 }
