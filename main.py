@@ -406,6 +406,13 @@ async def whoami(ctx):
             elif k == "drinks_owed":
                 output = "You owe {} drinks to the Grand Friendship Bank of " \
                          "Drinks!".format(v)
+            elif k == "pubg_recs":
+                output = "Your personal best in PUBG damage is {}."\
+                         .format(v['dam'])
+                output += "\nYour personal best in PUBG kills is {}"\
+                          .format(v["kills"])
+                output += "\nYour longest hit in PUBG is {}m."\
+                          .format(round(v['long_h']))
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
