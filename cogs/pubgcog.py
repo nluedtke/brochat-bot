@@ -70,19 +70,18 @@ def get_attackId(data, aId):
     return ar, dr
 
 
-def add_match_id(name, r_map, mp_id):
+def add_match_id(name, mp_id):
     """
     Adds a match id to players record and removes an old if needed
     :param name: Name of player
-    :param r_map: Reverse map of pubg to user
     :param mp_id: match id to add
     :return:
     """
-    if 'pubg_match' not in c.users[r_map[name]]:
-        c.users[r_map[name]]["pubg_match"] = []
-    c.users[r_map[name]]["pubg_match"].append(mp_id)
-    if len(c.users[r_map[name]]["pubg_match"]) > 10:
-        c.users[r_map[name]]["pubg_match"].pop(0)
+    if 'pubg_match' not in c.users[name]:
+        c.users[name]["pubg_match"] = []
+    c.users[name]["pubg_match"].append(mp_id)
+    if len(c.users[name]["pubg_match"]) > 10:
+        c.users[name]["pubg_match"].pop(0)
 
 
 def calc_p_dist(player1, player2):
@@ -99,21 +98,35 @@ def calc_p_dist(player1, player2):
     return distance(p0, p1)
 
 
-def add_rank(name, r_map, rank):
+def add_rank(name, rank):
     """
     Manages average rank over last 10 games for player
 
     :param name: Name of player
-    :param r_map: PUBG_name to User name
     :param rank: rank to add
     :return: Average rank
     """
-    if 'pubg_ranks' not in c.users[r_map[name]]:
-        c.users[r_map[name]]["pubg_ranks"] = []
-    c.users[r_map[name]]["pubg_ranks"].append(rank)
-    if len(c.users[r_map[name]]["pubg_ranks"]) > max_mids_records:
-        c.users[r_map[name]]["pubg_ranks"].pop(0)
-    return stats.mean(c.users[r_map[name]]["pubg_ranks"])
+    if 'pubg_ranks' not in c.users[name]:
+        c.users[name]["pubg_ranks"] = []
+    c.users[name]["pubg_ranks"].append(rank)
+    if len(c.users[name]["pubg_ranks"]) > max_mids_records:
+        c.users[name]["pubg_ranks"].pop(0)
+    return stats.mean(c.users[name]["pubg_ranks"])
+
+
+def add_wep_kill(name, weapon):
+    """
+    Manage weapon kills in player record
+    :param name: name of player
+    :param weapon: weapon to add kill to
+    :return:
+    """
+    if "pubg_weps" not in c.users[name]:
+        c.users[name]["pubg_weps"] = {}
+    if weapon not in c.users[name]["pub_weps"]:
+        c.users[name]["pub_weps"][weapon] = 1
+    else:
+        c.users[name]["pub_weps"][weapon] += 1
 
 
 def get_pubg_report(match, names, partis, r_map):
@@ -139,8 +152,8 @@ def get_pubg_report(match, names, partis, r_map):
 
     # Get individual stats
     for pp in partis:
-        add_match_id(pp.name, r_map, match.id)
-        add_rank(pp.name, r_map, partis[0].win_place)
+        add_match_id(r_map[pp.name], match.id)
+        add_rank(r_map[pp.name], partis[0].win_place)
         out_str += "{} stats:\n".format(pp.name)
         out_str += "{} damage for {} kills and {} knocks. " \
                    .format(pp.damage_dealt, pp.kills, pp.dbnos)
@@ -178,11 +191,15 @@ def get_pubg_report(match, names, partis, r_map):
                 else:
                     ns_s += 1
                 hits.append(t['attackId'])
-            if t["_T"] == "LogPlayerAttack" and \
+            elif t["_T"] == "LogPlayerAttack" and \
                t["attacker"]["name"] == pp.name and \
                t['attackType'] == 'Weapon' and \
                t['weapon']['itemId'].startswith("Item_Weapon_"):
                 shots.append(t['attackId'])
+            elif t["_T"] == "LogPlayerKill" and \
+                            t["attacker"]["name"] == pp.name and \
+                            "damageCauserName" in t:
+                add_wep_kill(r_map[pp.name], items[t["damageCauserName"]])
 
         ts = hea_s + tor_s + pel_s + arm_s + leg_s + ns_s
         if len(shots) > 0:
