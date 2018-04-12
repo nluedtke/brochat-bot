@@ -13,6 +13,7 @@ with open("objs/itemId.json", 'r') as infile:
 # Number of match ids to store
 max_mids_records = 20
 
+
 class Puby:
     """ Pubg Fetchers"""
 
@@ -27,8 +28,8 @@ def distance(p0, p1):
     :param p1: point 2
     :return:
     """
-    return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2 +
-                     (p0[2] - p1[2])**2) / 100
+    return math.sqrt((p0[0] - p1[0]) ** 2 + (p0[1] - p1[1]) ** 2 +
+                     (p0[2] - p1[2]) ** 2) / 100
 
 
 def filter_data(d_to_filt, names_to_include):
@@ -45,6 +46,8 @@ def filter_data(d_to_filt, names_to_include):
         elif 'attacker' in t and t['attacker']['name'] in names_to_include:
             data.append(t)
         elif 'victim' in t and t['victim']['name'] in names_to_include:
+            data.append(t)
+        elif 'killer' in t and t['killer']['name'] in names_to_include:
             data.append(t)
     return data
 
@@ -80,7 +83,7 @@ def add_match_id(name, mp_id):
     if 'pubg_match' not in c.users[name]:
         c.users[name]["pubg_match"] = []
     c.users[name]["pubg_match"].append(mp_id)
-    if len(c.users[name]["pubg_match"]) > 10:
+    while len(c.users[name]["pubg_match"]) > max_mids_records:
         c.users[name]["pubg_match"].pop(0)
 
 
@@ -109,7 +112,7 @@ def add_rank(name, rank):
     if 'pubg_ranks' not in c.users[name]:
         c.users[name]["pubg_ranks"] = []
     c.users[name]["pubg_ranks"].append(rank)
-    if len(c.users[name]["pubg_ranks"]) > max_mids_records:
+    while len(c.users[name]["pubg_ranks"]) > 10:
         c.users[name]["pubg_ranks"].pop(0)
     return stats.mean(c.users[name]["pubg_ranks"])
 
@@ -123,10 +126,10 @@ def add_wep_kill(name, weapon):
     """
     if "pubg_weps" not in c.users[name]:
         c.users[name]["pubg_weps"] = {}
-    if weapon not in c.users[name]["pub_weps"]:
-        c.users[name]["pub_weps"][weapon] = 1
+    if weapon not in c.users[name]["pubg_weps"]:
+        c.users[name]["pubg_weps"][weapon] = 1
     else:
-        c.users[name]["pub_weps"][weapon] += 1
+        c.users[name]["pubg_weps"][weapon] += 1
 
 
 def get_pubg_report(match, names, partis, r_map):
@@ -156,7 +159,7 @@ def get_pubg_report(match, names, partis, r_map):
         add_rank(r_map[pp.name], partis[0].win_place)
         out_str += "{} stats:\n".format(pp.name)
         out_str += "{} damage for {} kills and {} knocks. " \
-                   .format(pp.damage_dealt, pp.kills, pp.dbnos)
+            .format(pp.damage_dealt, pp.kills, pp.dbnos)
 
         wep_str = "WepProg: Fist"
         # ArmShot, HeadShot, LegShot, PelvisShot, TorsoShot
@@ -171,13 +174,14 @@ def get_pubg_report(match, names, partis, r_map):
 
         for t in data:
             if "character" in t and t["character"]['name'] == pp.name and \
-               t["_T"] == "LogItemPickup" and t['item']['category'] == "Weapon":
+                            t["_T"] == "LogItemPickup" and \
+                            t['item']['category'] == "Weapon":
                 wep = items[t['item']['itemId']]
                 wep_str += "->{}".format(wep)
 
             if t["_T"] == "LogPlayerTakeDamage" and \
-               t["attacker"]["name"] == pp.name and \
-               t["damageTypeCategory"] == "Damage_Gun":
+                            t["attacker"]["name"] == pp.name and \
+                            t["damageTypeCategory"] == "Damage_Gun":
                 if t['damageReason'] == 'TorsoShot':
                     tor_s += 1
                 elif t['damageReason'] == 'HeadShot':
@@ -192,14 +196,15 @@ def get_pubg_report(match, names, partis, r_map):
                     ns_s += 1
                 hits.append(t['attackId'])
             elif t["_T"] == "LogPlayerAttack" and \
-               t["attacker"]["name"] == pp.name and \
-               t['attackType'] == 'Weapon' and \
-               t['weapon']['itemId'].startswith("Item_Weapon_"):
+                            t["attacker"]["name"] == pp.name and \
+                            t['attackType'] == 'Weapon' and \
+                    t['weapon']['itemId'].startswith("Item_Weapon_"):
                 shots.append(t['attackId'])
             elif t["_T"] == "LogPlayerKill" and \
-                            t["attacker"]["name"] == pp.name and \
+                            t["killer"]["name"] == pp.name and \
+                            t["damageTypeCategory"] == "Damage_Gun" and \
                             "damageCauserName" in t:
-                add_wep_kill(r_map[pp.name], items[t["damageCauserName"]])
+                add_wep_kill(r_map[pp.name], t["damageCauserName"])
 
         ts = hea_s + tor_s + pel_s + arm_s + leg_s + ns_s
         if len(shots) > 0:
@@ -226,20 +231,20 @@ def get_pubg_report(match, names, partis, r_map):
                 h_dists.append(calc_p_dist(ar['attacker'], dr['victim']))
         if len(h_dists) > 0:
             out_str += "Avg Hit Dist: {}m, Longest Hit: {}m\n" \
-                       .format(round(stats.mean(h_dists)), round(max(h_dists)))
+                .format(round(stats.mean(h_dists)), round(max(h_dists)))
             if 'pubg_recs' not in c.users[r_map[pp.name]]:
                 c.users[r_map[pp.name]]['pubg_recs'] = {}
             r_data = c.users[r_map[pp.name]]['pubg_recs']
             if "dam" not in r_data or pp.damage_dealt > r_data['dam']:
                 out_str += "New personal best in damage! ({})\n" \
-                           .format(pp.damage_dealt)
+                    .format(pp.damage_dealt)
                 r_data['dam'] = pp.damage_dealt
             if "kills" not in r_data or pp.kills > r_data['kills']:
                 out_str += "New personal best in kills! ({})\n".format(pp.kills)
                 r_data['kills'] = pp.kills
             if "long_h" not in r_data or max(h_dists) > r_data['long_h']:
                 out_str += "New personal best in longest hit! ({})\n" \
-                           .format(max(h_dists))
+                    .format(max(h_dists))
                 r_data['long_h'] = max(h_dists)
         out_str += "\n"
     del data
@@ -284,7 +289,7 @@ async def check_pubg_matches(bot):
                     player_names=names_to_find)
             except NotFoundError:
                 players = None
-                await asyncio.sleep(60*10)
+                await asyncio.sleep(60 * 10)
 
         for p in players:
             i = 0
@@ -296,7 +301,8 @@ async def check_pubg_matches(bot):
 
                 # if that match isn't in the players queue
                 if 'pubg_match' not in c.users[r_map[p.name]] or \
-                   m.id not in c.users[r_map[p.name]]['pubg_match']:
+                                m.id not in c.users[r_map[p.name]][
+                            'pubg_match']:
                     mp_id = m.id
                     match = c.pubg_api.matches().get(mp_id)
 
@@ -319,7 +325,7 @@ async def check_pubg_matches(bot):
                     # See if we know teammates
                     for pp in r.participants:
                         if pp.name in names_to_find and \
-                           pp.name not in names:
+                                        pp.name not in names:
                             partis.append(pp)
                             names.append(pp.name)
 
@@ -329,7 +335,7 @@ async def check_pubg_matches(bot):
                     await bot.send_message(c_to_send, out_str)
                 c.whos_in.update_db()
             await asyncio.sleep(60)
-        await asyncio.sleep(60*10)
+        await asyncio.sleep(60 * 10)
 
 
 def setup(bot):

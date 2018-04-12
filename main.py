@@ -401,18 +401,22 @@ async def whoami(ctx):
             elif k == "pubg_match" or k == "last_seen":
                 continue
             elif k == "pubg_ranks":
-                output = "Your average rank over the last 10 games is {}."\
+                output = "Your average rank over the last 10 games is **{}**."\
                          .format(round(stats.mean(v)))
             elif k == "drinks_owed":
-                output = "You owe {} drinks to the Grand Friendship Bank of " \
-                         "Drinks!".format(v)
+                output = "You owe **{}** drinks to the Grand Friendship Bank " \
+                         "of Drinks!".format(v)
             elif k == "pubg_recs":
-                output = "Your personal best in PUBG damage is {}."\
+                output = "Your personal best in PUBG damage is **{}**."\
                          .format(v['dam'])
-                output += "\nYour personal best in PUBG kills is {}"\
+                output += "\nYour personal best in PUBG kills is **{}**"\
                           .format(v["kills"])
-                output += "\nYour longest hit in PUBG is {}m."\
+                output += "\nYour longest hit in PUBG is **{}m**."\
                           .format(round(v['long_h']))
+            elif k == 'pubg_weps':
+                wep = sorted(v.items(), key=lambda v: v[1], reverse=True)[0][0]
+                output = "Your deadliest weapon in PUBG is the **{}**." \
+                         .format(wep)
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
@@ -420,7 +424,7 @@ async def whoami(ctx):
         await bot.say(message_output)
 
     else:
-        await bot.say("You're {}, but that's all I know about you."
+        await bot.say("You're **{}**, but that's all I know about you."
                       .format(author))
 
 
