@@ -70,9 +70,9 @@ def build_map(url, names):
             continue
 
     if map_name == 'Erangel_Main':
-        img = imread("objs/Erangel_Minimap.jpg".encode('utf-8'))
+        img = imread("objs/Erangel_Minimap.jpg")
     else:
-        img = imread("objs/Miramar_Minimap.jpg".encode('utf-8'))
+        img = imread("objs/Miramar_Minimap.jpg")
 
     longest_player = names[0]
     for t in reversed(data):
