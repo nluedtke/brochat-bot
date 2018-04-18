@@ -1,3 +1,6 @@
+from json import JSONDecodeError
+import matplotlib
+matplotlib.use('Agg')
 from pubg_python import PUBG, Shard
 from pubg_python.exceptions import NotFoundError
 import common as c
@@ -6,6 +9,9 @@ import requests
 import math
 import statistics as stats
 import json
+from discord.ext import commands
+from scipy.misc import imread
+import matplotlib.pyplot as plt
 
 with open("objs/itemId.json", 'r') as infile:
     items = json.load(infile)
@@ -19,6 +25,135 @@ class Puby:
 
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.group(name='getmap', pass_context=True)
+    async def get_map(self, ctx):
+        """ Gets the Map of your last PUBG Match"""
+
+        auth = ctx.message.author.display_name
+        if auth not in c.users or 'pubg' not in c.users[auth]:
+            await self.bot.say('I don\'t know your PUBG name')
+            return
+        elif 'pubg_match' not in c.users[auth] or \
+                        len(c.users[auth]['pubg_match']) < 1:
+            await self.bot.say('I haven\'t see you play a match yet.')
+            return
+        await self.bot.say("Plotting map. One minute.")
+        await self.bot.send_typing(ctx.message.channel)
+        match_to_get = c.users[auth]['pubg_match'][-1]
+        map_file = get_map_byid(match_to_get)
+        await self.bot.send_file(ctx.message.channel, map_file)
+
+
+def build_map(url, names):
+    """
+    Builds a map by the telemetry url
+    :param url: telemetry url
+    :param names: names to include in map
+    :return: map file
+    """
+
+    map_name = "Unk"
+    fig, ax = plt.subplots(figsize=(8.192, 8.192), dpi=100)
+    fig.subplots_adjust(0, 0, 1, 1)
+
+    r = requests.get(url)
+    data = r.json()
+    for t in data:
+        try:
+            map_name = t['common']['mapName']
+            if map_name == "":
+                map_name = 'Unk'
+            if map_name != 'Unk':
+                break
+        except:
+            continue
+
+    if map_name == 'Erangel_Main':
+        img = imread("objs/Erangel_Minimap.jpg")
+    else:
+        img = imread("objs/Miramar_Minimap.jpg")
+
+    longest_player = names[0]
+    for t in reversed(data):
+        if t["_T"] == "LogPlayerPosition" and t["character"]["name"] in names:
+            longest_player = t["character"]["name"]
+            break
+
+    for n in names:
+        startlogging = False
+        x = []
+        y = []
+        for t in data:
+            if t["_T"] == "LogItemUnequip" and \
+                            t["character"]["name"] == n:
+                startlogging = True
+            if startlogging and t["_T"] == "LogPlayerPosition" and \
+                            t["character"]["name"] == n:
+                x.append(t["character"]["location"]["x"] / 100)
+                y.append(t["character"]["location"]["y"] / 100)
+
+            if t["_T"] == "LogPlayerKill" and t["killer"]["name"] == n:
+                kl = t['killer']['location']
+                vl = t['victim']['location']
+                if kl['x'] == 0 or vl['x'] == 0:
+                    continue
+                plt.plot([kl['x'] / 100, vl['x'] / 100],
+                         [kl['y'] / 100, vl['y'] / 100], color="lime",
+                         zorder = 2)
+                plt.plot(vl['x'] / 100, vl['y'] / 100, 'g+', zorder=3)
+            elif t["_T"] == "LogPlayerKill" and t["victim"]["name"] == n:
+                kl = t['killer']['location']
+                vl = t['victim']['location']
+                if kl['x'] == 0 or vl['x'] == 0:
+                    continue
+                plt.plot([kl['x'] / 100, vl['x'] / 100],
+                         [kl['y'] / 100, vl['y'] / 100], color="red", zorder=2)
+                plt.plot(vl['x']/100, vl['y']/100, 'rx', zorder=3)
+                ax.annotate(n, (vl['x']/100, vl['y']/100))
+        if len(x) > 0 and len(y) > 0:
+            plt.plot(x[0], y[0], 'k+', label="SP", zorder=5)
+            plt.plot(x, y, color="yellow", zorder=1)
+    ax.set_aspect('equal', 'datalim')
+    ax.autoscale(False)
+    # plt.axis([0, 8192, 0, 8192])
+    ax.invert_yaxis()
+    plt.axis('off')
+    plt.imshow(img)
+
+    # plt.show()
+    plt.savefig('/tmp/map.png', dpi=200)
+    return '/tmp/map.png'
+
+
+def get_known_pubg_names():
+    """
+    Gets known pubg names from data base
+
+    :return:
+    """
+    names_to_find = []
+    r_map = {}
+
+    for u in c.users:
+        if 'pubg' in c.users[u]:
+            names_to_find.append(c.users[u]['pubg'])
+            r_map[c.users[u]['pubg']] = u
+    return names_to_find, r_map
+
+
+def get_map_byid(match_to_get):
+    """
+    Gets a map by match id
+    :param match_to_get: match id
+    :return: returns the filename of the map
+    """
+    if c.pubg_api is None:
+        c.pubg_api = PUBG(c.pubg_api_key, Shard.PC_NA)
+    match = c.pubg_api.matches().get(match_to_get)
+    url = match.assets[0].url
+    names, toss = get_known_pubg_names()
+    return build_map(url, names)
 
 
 def distance(p0, p1):
@@ -132,14 +267,16 @@ def add_wep_kill(name, weapon):
         c.users[name]["pubg_weps"][weapon] += 1
 
 
-def get_pubg_report(match, names, partis, r_map):
+async def get_pubg_report(match, names, partis, r_map, bot, chan):
     """
     Constructs and returns a pubg match report
     :param match: Match Object
     :param names: Names to filter for in report
     :param partis: Participant Objects
     :param r_map: PUBG name to Discord name
-    :return: Str containing report
+    :param bot: Bot to use
+    :param chan: channel to send to
+    :return: None
     """
 
     out_str = ".\n!!!PUBG Report!!!\n"
@@ -149,8 +286,20 @@ def get_pubg_report(match, names, partis, r_map):
         .format(partis[0].win_place, len(match.rosters))
 
     url = match.assets[0].url
+    if partis[0].win_place <= 10:
+        map_file = build_map(url, names)
+        await bot.send_message(chan, out_str)
+        await bot.send_file(chan, map_file)
+        out_str = ""
+
     r = requests.get(url)
-    data = r.json()
+    try:
+        data = r.json()
+    except JSONDecodeError:
+        for pp in partis:
+            add_match_id(r_map[pp.name], match.id)
+            add_rank(r_map[pp.name], partis[0].win_place)
+        return
     data = filter_data(data, names)
 
     # Get individual stats
@@ -194,7 +343,8 @@ def get_pubg_report(match, names, partis, r_map):
                     pel_s += 1
                 else:
                     ns_s += 1
-                hits.append(t['attackId'])
+                if t['attackId'] not in hits:
+                    hits.append(t['attackId'])
             elif t["_T"] == "LogPlayerAttack" and \
                             t["attacker"]["name"] == pp.name and \
                             t['attackType'] == 'Weapon' and \
@@ -248,7 +398,7 @@ def get_pubg_report(match, names, partis, r_map):
                 r_data['long_h'] = max(h_dists)
         out_str += "\n"
     del data
-    return out_str
+    await bot.send_message(chan, out_str)
 
 
 async def check_pubg_matches(bot):
@@ -275,13 +425,8 @@ async def check_pubg_matches(bot):
 
     while True:
         # get pubg account names to look for and build a reverse map to discord
-        names_to_find = []
-        r_map = {}
+        names_to_find, r_map = get_known_pubg_names()
 
-        for u in c.users:
-            if 'pubg' in c.users[u]:
-                names_to_find.append(c.users[u]['pubg'])
-                r_map[c.users[u]['pubg']] = u
         players = None
         while players is None:
             try:
@@ -301,10 +446,11 @@ async def check_pubg_matches(bot):
 
                 # if that match isn't in the players queue
                 if 'pubg_match' not in c.users[r_map[p.name]] or \
-                                m.id not in c.users[r_map[p.name]][
-                            'pubg_match']:
+                            m.id not in c.users[r_map[p.name]]['pubg_match']:
                     mp_id = m.id
                     match = c.pubg_api.matches().get(mp_id)
+                    if match.game_mode.startswith("warmode"):
+                        continue
 
                     # Find the team roster
                     found = False
@@ -330,9 +476,9 @@ async def check_pubg_matches(bot):
                             names.append(pp.name)
 
                     # Construct the report
-                    out_str = get_pubg_report(match, names, partis, r_map)
+                    await get_pubg_report(match, names, partis, r_map, bot,
+                                          c_to_send)
 
-                    await bot.send_message(c_to_send, out_str)
                 c.whos_in.update_db()
             await asyncio.sleep(60)
         await asyncio.sleep(60 * 10)
