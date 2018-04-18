@@ -1,3 +1,6 @@
+from json import JSONDecodeError
+import matplotlib
+matplotlib.use('Agg')
 from pubg_python import PUBG, Shard
 from pubg_python.exceptions import NotFoundError
 import common as c
@@ -119,7 +122,7 @@ def build_map(url, names):
     plt.imshow(img)
 
     # plt.show()
-    plt.savefig('/tmp/map.png')
+    plt.savefig('/tmp/map.png', dpi=200)
     return '/tmp/map.png'
 
 
@@ -290,7 +293,13 @@ async def get_pubg_report(match, names, partis, r_map, bot, chan):
         out_str = ""
 
     r = requests.get(url)
-    data = r.json()
+    try:
+        data = r.json()
+    except JSONDecodeError:
+        for pp in partis:
+            add_match_id(r_map[pp.name], match.id)
+            add_rank(r_map[pp.name], partis[0].win_place)
+        return
     data = filter_data(data, names)
 
     # Get individual stats
@@ -334,7 +343,8 @@ async def get_pubg_report(match, names, partis, r_map, bot, chan):
                     pel_s += 1
                 else:
                     ns_s += 1
-                hits.append(t['attackId'])
+                if t['attackId'] not in hits:
+                    hits.append(t['attackId'])
             elif t["_T"] == "LogPlayerAttack" and \
                             t["attacker"]["name"] == pp.name and \
                             t['attackType'] == 'Weapon' and \
@@ -439,6 +449,8 @@ async def check_pubg_matches(bot):
                             m.id not in c.users[r_map[p.name]]['pubg_match']:
                     mp_id = m.id
                     match = c.pubg_api.matches().get(mp_id)
+                    if match.game_mode.startswith("warmode"):
+                        continue
 
                     # Find the team roster
                     found = False
