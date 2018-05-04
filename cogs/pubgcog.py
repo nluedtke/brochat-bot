@@ -325,7 +325,10 @@ async def get_pubg_report(match, names, partis, r_map, bot, chan):
             if "character" in t and t["character"]['name'] == pp.name and \
                             t["_T"] == "LogItemPickup" and \
                             t['item']['category'] == "Weapon":
-                wep = items[t['item']['itemId']]
+                if "FlareGun" in t['item']['itemId']:
+                    wep = "FlareGun"
+                else:
+                    wep = items[t['item']['itemId']]
                 wep_str += "->{}".format(wep)
 
             if t["_T"] == "LogPlayerTakeDamage" and \
@@ -349,7 +352,8 @@ async def get_pubg_report(match, names, partis, r_map, bot, chan):
                             t["attacker"]["name"] == pp.name and \
                             t['attackType'] == 'Weapon' and \
                     t['weapon']['itemId'].startswith("Item_Weapon_"):
-                shots.append(t['attackId'])
+                if t['attackId'] not in shots:
+                    shots.append(t['attackId'])
             elif t["_T"] == "LogPlayerKill" and \
                             t["killer"]["name"] == pp.name and \
                             t["damageTypeCategory"] == "Damage_Gun" and \

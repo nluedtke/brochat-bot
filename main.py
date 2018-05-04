@@ -28,6 +28,7 @@ from objs.duel_item import all_items, get_name
 description = "A bot to enforce friendship."
 startTime = 0
 
+
 # this specifies what extensions to load when the bot starts up
 startup_extensions = ['cogs.redditcog', 'cogs.gametimecog', 'cogs.twittercog',
                       'cogs.duelcog', 'cogs.textcog', 'cogs.drinkingcog',
@@ -154,10 +155,12 @@ async def on_ready():
         " what you tell me to do. ",
         "You know what cheers me up? Other people’s misfortune."
     ]
-    for channel in bot.get_all_channels():
-        if channel.name == 'gen_testing' or \
-                channel.name == common.ARGS['channel']:
-            await bot.send_message(channel, choice(connect_strings))
+    if common.first:
+        for channel in bot.get_all_channels():
+            if channel.name == 'gen_testing' or \
+                    channel.name == common.ARGS['channel']:
+                await bot.send_message(channel, choice(connect_strings))
+                common.first = False
 
 
 @bot.command(name='battletag', pass_context=True)
