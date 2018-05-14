@@ -11,5 +11,5 @@ RUN apt-get update && \
 COPY *.py ./
 COPY objs/* ./objs/
 COPY cogs/* ./cogs/
-ENTRYPOINT ["python3", "main.py"]
+ENTRYPOINT ["python3", "-u", "main.py"]
 

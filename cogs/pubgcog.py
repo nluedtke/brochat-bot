@@ -1,8 +1,11 @@
+import traceback
 from json import JSONDecodeError
 import matplotlib
+import sys
+
 matplotlib.use('Agg')
 from pubg_python import PUBG, Shard
-from pubg_python.exceptions import NotFoundError
+from pubg_python.exceptions import NotFoundError, APIError
 import common as c
 import asyncio
 import requests
@@ -405,6 +408,123 @@ async def get_pubg_report(match, names, partis, r_map, bot, chan):
     await bot.send_message(chan, out_str)
 
 
+async def update_last_10():
+    """
+    Updates the last ten matches silently.
+    :return: None
+    """
+    try:
+        names_to_find, r_map = get_known_pubg_names()
+        players = None
+        while players is None:
+            players = c.pubg_api.players().filter(
+                player_names=names_to_find)
+            await asyncio.sleep(60)
+
+        for p in players:
+            i = 0
+            m_to_add = []
+            if not hasattr(p, 'matches'):
+                continue
+            for m in p.matches:
+                # for the first 3 matches
+                i += 1
+                if i > 10:
+                    break
+
+                # if that match isn't in the players queue
+                if 'pubg_match' not in c.users[r_map[p.name]] or \
+                                m.id not in c.users[r_map[p.name]]['pubg_match']:
+                    mp_id = m.id
+                    m_to_add.append(c.pubg_api.matches().get(mp_id))
+                    await asyncio.sleep(10)
+
+            for m in reversed(m_to_add):
+                if m.game_mode.startswith("warmode"):
+                    continue
+
+                # Find the team roster
+                found = False
+                partis = []
+                names = []
+                for wr in m.rosters:
+                    if found:
+                        break
+                    for part in wr.participants:
+                        if part.name == p.name:
+                            partis.append(part)
+                            names.append(part.name)
+                            found = True
+                            break
+
+                url = m.assets[0].url
+                r = requests.get(url)
+                try:
+                    data = r.json()
+                except JSONDecodeError:
+                    for pp in partis:
+                        add_match_id(r_map[pp.name], m.id)
+                        add_rank(r_map[pp.name], partis[0].win_place)
+                    return
+                data = filter_data(data, names)
+
+                # Get individual stats
+                for pp in partis:
+                    add_match_id(r_map[pp.name], m.id)
+                    add_rank(r_map[pp.name], partis[0].win_place)
+
+                    # ArmShot, HeadShot, LegShot, PelvisShot, TorsoShot
+                    hits = []
+                    shots = []
+
+                    for t in data:
+                        if t["_T"] == "LogPlayerTakeDamage" and \
+                                        t["attacker"]["name"] == pp.name and \
+                                        t["damageTypeCategory"] == "Damage_Gun":
+                            if t['attackId'] not in hits:
+                                hits.append(t['attackId'])
+                        elif t["_T"] == "LogPlayerAttack" and \
+                                        t["attacker"]["name"] == pp.name and \
+                                        t['attackType'] == 'Weapon' and \
+                                t['weapon']['itemId'].startswith("Item_Weapon_"):
+                            if t['attackId'] not in shots:
+                                shots.append(t['attackId'])
+                        elif t["_T"] == "LogPlayerKill" and \
+                                        t["killer"]["name"] == pp.name and \
+                                        t[
+                                            "damageTypeCategory"] == "Damage_Gun" and \
+                                        "damageCauserName" in t:
+                            add_wep_kill(r_map[pp.name], t["damageCauserName"])
+
+                    h_dists = []
+                    for h in hits:
+                        ar, dr = get_attackId(data, h)
+                        if 'victim' in dr and 'attacker' in ar:
+                            h_dists.append(
+                                calc_p_dist(ar['attacker'], dr['victim']))
+                    if len(h_dists) > 0:
+                        if 'pubg_recs' not in c.users[r_map[pp.name]]:
+                            c.users[r_map[pp.name]]['pubg_recs'] = {}
+                        r_data = c.users[r_map[pp.name]]['pubg_recs']
+                        if "dam" not in r_data or pp.damage_dealt > r_data[
+                            'dam']:
+                            r_data['dam'] = pp.damage_dealt
+                        if "kills" not in r_data or pp.kills > r_data['kills']:
+                            r_data['kills'] = pp.kills
+                        if "long_h" not in r_data or max(h_dists) > r_data[
+                            'long_h']:
+                            r_data['long_h'] = max(h_dists)
+                del data
+                await asyncio.sleep(10)
+            await asyncio.sleep(60)
+
+    except (APIError, NotFoundError) as e:
+        print("PUBG API Error caught, ignoring.")
+        traceback.print_exception(type(e), e, e.__traceback__, file=sys.stderr)
+    c.whos_in.update_db()
+    print("Finished updating last 10.")
+
+
 async def check_pubg_matches(bot):
     """
     Checks for new matches
@@ -427,64 +547,70 @@ async def check_pubg_matches(bot):
     if c.pubg_api is None:
         c.pubg_api = PUBG(c.pubg_api_key, Shard.PC_NA)
 
-    while True:
-        # get pubg account names to look for and build a reverse map to discord
-        names_to_find, r_map = get_known_pubg_names()
+    await update_last_10()
 
-        players = None
-        while players is None:
-            try:
+    while True:
+        try:
+            # get pubg account names to look for and build a reverse map to discord
+            names_to_find, r_map = get_known_pubg_names()
+
+            players = None
+            while players is None:
                 players = c.pubg_api.players().filter(
                     player_names=names_to_find)
-            except NotFoundError:
-                players = None
-                await asyncio.sleep(60 * 10)
+                await asyncio.sleep(60)
 
-        for p in players:
-            i = 0
-            for m in p.matches:
-                # for the first 3 matches
-                i += 1
-                if i > 3:
-                    break
+            for p in players:
+                i = 0
+                if not hasattr(p, 'matches'):
+                    continue
+                for m in p.matches:
+                    # for the first 3 matches
+                    i += 1
+                    if i > 3:
+                        break
 
-                # if that match isn't in the players queue
-                if 'pubg_match' not in c.users[r_map[p.name]] or \
-                            m.id not in c.users[r_map[p.name]]['pubg_match']:
-                    mp_id = m.id
-                    match = c.pubg_api.matches().get(mp_id)
-                    if match.game_mode.startswith("warmode"):
-                        continue
+                    # if that match isn't in the players queue
+                    if 'pubg_match' not in c.users[r_map[p.name]] or \
+                                m.id not in c.users[r_map[p.name]]['pubg_match']:
+                        mp_id = m.id
+                        match = c.pubg_api.matches().get(mp_id)
+                        if match.game_mode.startswith("warmode"):
+                            continue
 
-                    # Find the team roster
-                    found = False
-                    r = None
-                    partis = []
-                    names = []
-                    for wr in match.rosters:
-                        if found:
-                            break
-                        for part in wr.participants:
-                            if part.name == p.name:
-                                partis.append(part)
-                                names.append(part.name)
-                                r = wr
-                                found = True
+                        # Find the team roster
+                        found = False
+                        r = None
+                        partis = []
+                        names = []
+                        for wr in match.rosters:
+                            if found:
                                 break
+                            for part in wr.participants:
+                                if part.name == p.name:
+                                    partis.append(part)
+                                    names.append(part.name)
+                                    r = wr
+                                    found = True
+                                    break
 
-                    # See if we know teammates
-                    for pp in r.participants:
-                        if pp.name in names_to_find and \
-                                        pp.name not in names:
-                            partis.append(pp)
-                            names.append(pp.name)
+                        # See if we know teammates
+                        for pp in r.participants:
+                            if pp.name in names_to_find and \
+                                            pp.name not in names:
+                                partis.append(pp)
+                                names.append(pp.name)
 
-                    # Construct the report
-                    await get_pubg_report(match, names, partis, r_map, bot,
-                                          c_to_send)
+                        # Construct the report
+                        await get_pubg_report(match, names, partis, r_map, bot,
+                                              c_to_send)
 
-                c.whos_in.update_db()
-            await asyncio.sleep(60)
+                    c.whos_in.update_db()
+                await asyncio.sleep(60)
+        except (APIError, NotFoundError) as e:
+            print("PUBG API Error caught, ignoring.")
+            traceback.print_exception(type(e), e, e.__traceback__,
+                                      file=sys.stderr)
         await asyncio.sleep(60 * 10)
 
 
