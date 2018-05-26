@@ -109,6 +109,14 @@ class Gametime(object):
         """
         pass
 
+    def get_now(self):
+        """
+        Returns a datetime object for now in the proper timezone.
+
+        :return: datetime object for now
+        """
+        return datetime.datetime.now(self.timezone)
+
     def status(self):
         """
         Returns the status of the Gametime object

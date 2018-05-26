@@ -76,6 +76,19 @@ class WeekendGames(object):
                         player['name'], status)
         return upcoming_days
 
+    def remove_old_gametimes(self):
+        """
+        Removes old gametimes from the gametimes object.
+
+        :return: None
+        """
+        to_remove = []
+        for gt in self.gametimes:
+            if gt.get_date() < gt.get_now():
+                to_remove.append(gt)
+        for gt in to_remove:
+            self.gametimes.remove(gt)
+
     def gametime_actions(self, message):
         """
         Routes a gametime action, specified in the second

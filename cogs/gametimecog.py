@@ -212,6 +212,7 @@ async def print_at_midnight(bot):
             midnight = midnight.replace(day=(now.day + 1))
         print("Scheduling next list print at {}".format(pretty_date(midnight)))
         await asyncio.sleep((midnight - now).seconds)
+        common.whos_in.remove_old_gametimes()
         await bot.send_message(c_to_send, common.whos_in.whos_in())
 
         # Community Drop Time
