@@ -198,7 +198,7 @@ class Duels:
             del(common.users[name]['equip'][slot])
 
 
-async def item_chance_roll(bot, player, channel, max_roll=100):
+async def item_chance_roll(bot, player, channel, max_roll=90):
     """
     Rolls for a chance at an item
 

@@ -316,9 +316,9 @@ env_items = {
              "text": "This dart poisons for 1 damage for 5 rounds."}
 }
 
-all_items = common_items
-all_items.update(rare_items)
-all_items.update(env_items)
+all_items = copy.deepcopy(common_items)
+all_items.update(copy.deepcopy(rare_items))
+all_items.update(copy.deepcopy(env_items))
 
 
 class DuelItem(object):
