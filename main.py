@@ -28,7 +28,6 @@ from objs.duel_item import all_items, get_name
 description = "A bot to enforce friendship."
 startTime = 0
 
-
 # this specifies what extensions to load when the bot starts up
 startup_extensions = ['cogs.redditcog', 'cogs.gametimecog', 'cogs.twittercog',
                       'cogs.duelcog', 'cogs.textcog', 'cogs.drinkingcog',
@@ -62,7 +61,7 @@ async def on_member_update(before, after):
     if before.display_name != after.display_name:
         if before.display_name in common.users:
             common.users[after.display_name] = common.users[before.display_name]
-            del(common.users[before.display_name])
+            del (common.users[before.display_name])
 
         for gt in common.whos_in.gametimes:
             for player in gt.players:
@@ -158,7 +157,7 @@ async def on_ready():
     if common.first:
         for channel in bot.get_all_channels():
             if channel.name == 'gen_testing' or \
-                    channel.name == common.ARGS['channel']:
+                            channel.name == common.ARGS['channel']:
                 await bot.send_message(channel, choice(connect_strings))
                 common.first = False
 
@@ -199,8 +198,8 @@ async def set_command(ctx):
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
                 (len(arguments[1]) != 12 or
-                 arguments[1][0] != '+' or not
-                 isinstance(int(arguments[1][1:]), int)):
+                         arguments[1][0] != '+' or not
+                isinstance(int(arguments[1][1:]), int)):
             await bot.say("You'll need to use the format **+14148888888** for "
                           "your mobile number.")
         else:
@@ -273,6 +272,7 @@ def get_smmry(message):
 def is_owner():
     def predicate(ctx):
         return ctx.message.author.id == "277173844467384321"
+
     return commands.check(predicate)
 
 
@@ -295,7 +295,7 @@ async def reset_records():
     """
     for user in common.users:
         if 'duel_record' in common.users[user]:
-            del(common.users[user]['duel_record'])
+            del (common.users[user]['duel_record'])
     # Update database
     common.whos_in.update_db()
     await bot.say("Records reset.")
@@ -308,7 +308,7 @@ async def erase_debt():
     """
     for user in common.users:
         if 'drinks_owed' in common.users[user]:
-            del(common.users[user]['drinks_owed'])
+            del (common.users[user]['drinks_owed'])
     # Update database
     common.whos_in.update_db()
     await bot.say("Debts erased, slackers.")
@@ -328,7 +328,9 @@ async def item_giveaway(ctx):
     i = False
     while not i_awarded:
         for m in bot.get_all_members():
-            if m.display_name != 'brochat-bot' and str(m.status) == 'online':
+            if m.display_name != 'brochat-bot' and str(m.status) == 'online' \
+                    and m.display_name in common.users and \
+                    'duel_record' in common.users[m.display_name]:
                 i = await item_chance_roll(bot, m.display_name,
                                            ctx.message.channel)
             i_awarded = i_awarded or i
@@ -392,7 +394,7 @@ async def whoami(ctx):
                 if v is None:
                     output = "You don't have a dueling item equipped."
                 else:
-                    output = "You have **{}** equipped."\
+                    output = "You have **{}** equipped." \
                         .format(get_name(v))
             elif k == "inventory":
                 if v == {}:
@@ -404,22 +406,22 @@ async def whoami(ctx):
             elif k == "pubg_match" or k == "last_seen":
                 continue
             elif k == "pubg_ranks":
-                output = "Your average rank over the last 10 games is **{}**."\
-                         .format(round(stats.mean(v)))
+                output = "Your average rank over the last 10 games is **{}**." \
+                    .format(round(stats.mean(v)))
             elif k == "drinks_owed":
                 output = "You owe **{}** drinks to the Grand Friendship Bank " \
                          "of Drinks!".format(v)
             elif k == "pubg_recs":
-                output = "Your personal best in PUBG damage is **{}**."\
-                         .format(v['dam'])
-                output += "\nYour personal best in PUBG kills is **{}**"\
-                          .format(v["kills"])
-                output += "\nYour longest hit in PUBG is **{}m**."\
-                          .format(round(v['long_h']))
+                output = "Your personal best in PUBG damage is **{}**." \
+                    .format(v['dam'])
+                output += "\nYour personal best in PUBG kills is **{}**" \
+                    .format(v["kills"])
+                output += "\nYour longest hit in PUBG is **{}m**." \
+                    .format(round(v['long_h']))
             elif k == 'pubg_weps':
                 wep = sorted(v.items(), key=lambda v: v[1], reverse=True)[0][0]
                 output = "Your deadliest weapon in PUBG is the **{}**." \
-                         .format(wep).replace("Weap", "").replace("_C", "")
+                    .format(wep).replace("Weap", "").replace("_C", "")
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
