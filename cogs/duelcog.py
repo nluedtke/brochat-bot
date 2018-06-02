@@ -632,7 +632,7 @@ async def event_handle_shot_duel(ctx, victim):
             # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
             await asyncio.sleep(5)
             # Environment effects
-            e_roll = randint(0, 20)
+            e_roll = randint(5, 20)
             # fog
             if e_roll == 20:
                 await ctx.bot.say("A dense fog rolls in. "
