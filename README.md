@@ -3,6 +3,55 @@ A Discord bot to enable friendship (and at times enforce it).
 
 [![Build Status](https://travis-ci.org/nluedtke/brochat-bot.svg?branch=master)](https://travis-ci.org/nluedtke/brochat-bot.svg?branch=master)
 
+List of commands (!help):
+````
+A bot to enforce friendship.
+
+DrinkBank:
+  drankbank    See your *assets and liabilities* with the bank of drank
+  drink        Log a drink taken
+  shot-lottery Runs a shot-lottery
+Duels:
+  duel         Duel someone
+  accept       Accept a challenge
+  unequip      Unequips an item in use
+  use          Use an item
+Gametime:
+  vote         Vote in a poll
+  gametime     Handles gametime actions
+  in           Marks you as in for a gametime
+  late         Marks you as going to be late for a gametime
+  out          Removes you from a gametime
+  poll         Handles Polls actions
+  possible     Marks you as possible for a gametime
+  clear-record Clears the session record.
+  draw         Add a draw to the record books
+  get-record   Get the current record.
+  loss         Add a loss to the record books
+  win          Add a win to the record books
+  whosin       See who is in for a gametime
+Puby:
+  getmap       Gets the Map of your last PUBG Match
+Reddit:
+  bertstrip    Ruin your childhood
+  dankmeme     Get a succulent dank may-may
+Texting:
+  text         Get a fool in the loop
+Twitter:
+  news         Grab a news story
+  trump        Get Trump's latest Yuge success!
+​No Category:
+  help         Shows this message.
+  seen         Get last seen time for a player
+  battletag    Get your battletag to share!
+  set          Add some info to the db about you
+  clear        Clears Bot chat history
+  summary      Gets a summary of a url
+  me           Tell me about myself
+
+Type !help command for more info on a command.
+You can also type !help category for more info on a category.
+````
 ### Requires:
   - discord.py
   - asyncio
