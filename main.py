@@ -6,7 +6,7 @@ import sys
 import traceback
 from datetime import datetime
 from difflib import get_close_matches
-from random import choice
+from random import choice, randint
 from sys import stderr
 from time import time
 import statistics as stats
@@ -208,6 +208,28 @@ async def set_command(ctx):
                           .format(common.users[author][arguments[0]]))
     # Update database
     common.whos_in.update_db()
+
+
+@bot.command(name='roll')
+async def roll_command(sides, num=1):
+    """Roll dice
+
+    :param sides: Number of sides to the dice
+    :param num: Number of rolls to make
+    """
+    try:
+        int(sides)
+    except ValueError:
+        await bot.say("Invalid Value in arguments.")
+        return
+    if num > 20:
+        await bot.say("20 is the max number of rolls at once that I "
+                      "will handle!")
+        return
+    rolls = []
+    for i in range(num):
+        rolls.append(randint(1, int(sides)+1))
+    await bot.say("Your {0}d{1} rolls are: {2}".format(num, sides, rolls))
 
 
 @bot.command(hidden=True)
@@ -475,6 +497,9 @@ async def on_command_error(exception, context):
         await bot.send_message(context.message.channel,
                                "You are missing a required argument for that "
                                "command.")
+    elif type(exception) == commands.BadArgument:
+        await bot.send_message(context.message.channel,
+                               "Invalid Argument.")
     else:
         await bot.send_message(context.message.channel,
                                "Unhandled command error ({})"
