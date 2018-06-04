@@ -19,6 +19,9 @@ import matplotlib.pyplot as plt
 with open("objs/itemId.json", 'r') as infile:
     items = json.load(infile)
 
+with open("objs/damageCauserName.json", 'r') as infile:
+    dcauses = json.load(infile)
+
 # Number of match ids to store
 max_mids_records = 20
 
@@ -76,12 +79,6 @@ def build_map(url, names):
         img = imread("objs/Erangel_Minimap.jpg")
     else:
         img = imread("objs/Miramar_Minimap.jpg")
-
-    longest_player = names[0]
-    for t in reversed(data):
-        if t["_T"] == "LogPlayerPosition" and t["character"]["name"] in names:
-            longest_player = t["character"]["name"]
-            break
 
     for n in names:
         startlogging = False
@@ -361,7 +358,7 @@ async def get_pubg_report(match, names, partis, r_map, bot, chan):
                             t["killer"]["name"] == pp.name and \
                             t["damageTypeCategory"] == "Damage_Gun" and \
                             "damageCauserName" in t:
-                add_wep_kill(r_map[pp.name], t["damageCauserName"])
+                add_wep_kill(r_map[pp.name], dcauses[t["damageCauserName"]])
 
         ts = hea_s + tor_s + pel_s + arm_s + leg_s + ns_s
         if len(shots) > 0:
@@ -494,7 +491,8 @@ async def update_last_10():
                                         t[
                                             "damageTypeCategory"] == "Damage_Gun" and \
                                         "damageCauserName" in t:
-                            add_wep_kill(r_map[pp.name], t["damageCauserName"])
+                            add_wep_kill(r_map[pp.name],
+                                         dcauses[t["damageCauserName"]])
 
                     h_dists = []
                     for h in hits:

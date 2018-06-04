@@ -443,7 +443,7 @@ async def whoami(ctx):
             elif k == 'pubg_weps':
                 wep = sorted(v.items(), key=lambda v: v[1], reverse=True)[0][0]
                 output = "Your deadliest weapon in PUBG is the **{}**." \
-                    .format(wep).replace("Weap", "").replace("_C", "")
+                    .format(wep)
             else:
                 output = "Your {} is **{}**.".format(k, v)
 
