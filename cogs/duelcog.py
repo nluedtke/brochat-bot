@@ -273,6 +273,11 @@ def item_eff_str(item):
         ret_str += "    The opponent, when hit, will be poisoned for {} " \
                    "round(s), taking {} damage each round.\n" \
             .format(item.prop['duration'], item.prop['poison'])
+    if 'sh_effect' in item.type:
+        ret_str += "    {}% chance to block an attack.\n"\
+            .format(item.prop['shield'])
+    if 'hm_effect' in item.type:
+        ret_str += "    50% chance to hit with fixed damage.\n"
     if len(ret_str) > 1:
         return ret_str
     else:
