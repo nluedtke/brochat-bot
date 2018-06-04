@@ -204,7 +204,13 @@ common_items = {
            "uses": 2,
            "slot": "other",
            "text": "This pendant will bring the wearer back to life one time "
-                   "for two duels."}
+                   "for two duels."},
+    "24": {"name": "Target Shield",
+           "type": ["sh_effect"],
+           "prop": {'shield': 20},
+           "uses": 2,
+           "slot": "offhand",
+           "text": "This shield has a 20% chance to block an attack."}
 }
 
 # Rare items go here and generally considered be more powerful either in

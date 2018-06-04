@@ -468,7 +468,7 @@ async def death_check(ctx, chal, c_life, vict, v_life, c_res, v_res):
     return cres, vres, death
 
 
-def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
+def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life, cblk, vblk):
     """
     :param c_name: Challenger's name
     :param c_roll: Challenger's roll
@@ -476,6 +476,8 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     :param v_life: Victim's life
     :param v_name: Victim's name
     :param v_roll: Victim's roll
+    :param cblk: Did chal block?
+    :param vblk: Did vict block?
     """
     a_types = ["lunge", "jab", "chop", "slice", "sweep", "thrust"]
 
@@ -483,6 +485,9 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     if c_roll < 0:
         r_string += ":banana: **{}** fell on his own sword and did {} to " \
                     "himself!".format(c_name, abs(c_roll))
+    elif vblk:
+        r_string += ":shield: **{}** blocks {}'s attack!".format(v_name,
+                                                                 c_name)
     elif c_roll == 0:
         r_string += ":cloud_tornado: **{}** misses with his attack!" \
             .format(c_name)
@@ -497,6 +502,9 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life):
     if v_roll < 0:
         r_string += ":banana: **{}** fell on his own sword and did {} to " \
                     "himself!".format(v_name, abs(v_roll))
+    elif cblk:
+        r_string += ":shield: **{}** blocks {}'s attack!".format(c_name,
+                                                                 v_name)
     elif v_roll == 0:
         r_string += ":cloud_tornado: **{}** misses with his attack!" \
             .format(v_name)
@@ -893,6 +901,20 @@ async def event_handle_shot_duel(ctx, victim):
                     elif h_dam == vict_name:
                         v_roll = int(v_roll / 2)
 
+                # Blocks
+                cblk = False
+                if c_item is not None and v_roll > 0 \
+                        and "sh_effect" in c_item.type:
+                    if randint(0, 100/c_item.prop['shield']) == 0:
+                        cblk = True
+                        v_roll = 0
+                vblk = False
+                if v_item is not None and c_roll > 0 \
+                        and "sh_effect" in v_item.type:
+                    if randint(0, 100 / v_item.prop['shield']) == 0:
+                        vblk = True
+                        c_roll = 0
+
                 # DAMAGE APPLIED HERE
                 if c_roll >= 0:
                     c_total.append(c_roll)
@@ -908,7 +930,7 @@ async def event_handle_shot_duel(ctx, victim):
                 v_life = v_life_start - sum(c_total)
                 duel_string = build_duel_str(chal_name, c_roll,
                                              common.vict_name, v_roll, c_life,
-                                             v_life)
+                                             v_life, cblk, vblk)
 
                 # POST COMBAT PHASE (Damage resolved here, on_death effects
                 # should be implemented here)
