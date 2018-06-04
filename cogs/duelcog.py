@@ -140,7 +140,8 @@ class Duels:
                 if len(equip) > 0:
                     icons = {'armor': ":shirt:",
                              'weapon': ":dagger:",
-                             'other': ":ring:"}
+                             'other': ":ring:",
+                             'offhand': ":shield:"}
                     inv_string += "\nYour current loadout is:\n"
                     for i in equip:
                         item_num = equip[i]
@@ -316,7 +317,7 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
         else:  # Does the victim have an item that can be disarmed?
             poss_items = []
             for i in common.users[v_name]['equip']:
-                if i == 'armor' or i == 'other':
+                if i != 'weapon':
                     poss_items.append(i)
                 elif i == 'weapon' and 'disarm_effect' not in v_item.type:
                     poss_items.append(i)
@@ -344,7 +345,7 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
         else:  # Does the challenger have an item that can be disarmed?
             poss_items = []
             for i in common.users[c_name]['equip']:
-                if i == 'armor' or i == 'other':
+                if i != 'weapon':
                     poss_items.append(i)
                 elif i == 'weapon' and 'disarm_effect' not in c_item.type:
                     poss_items.append(i)
