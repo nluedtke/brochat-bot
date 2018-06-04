@@ -845,12 +845,29 @@ async def event_handle_shot_duel(ctx, victim):
                     if v_roll == 1 or (v_roll == 2 and randint(0, 1) == 0):
                         v_roll = 0
 
+                # Hit/Miss Items
+                if c_item is not None and "hm_effect" in c_item.type:
+                    if c_roll > 3:
+                        c_roll = c_item.prop['damage']
+                    elif c_roll < 2:
+                        c_roll = -1 * c_item.prop['damage']
+                    else:
+                        c_roll = 0
+                if v_item is not None and "hm_effect" in v_item.type:
+                    if v_roll > 3:
+                        v_roll = v_item.prop['damage']
+                    elif v_roll < 2:
+                        v_roll = -1 * v_item.prop['damage']
+                    else:
+                        v_roll = 0
+
                 if c_item is not None and "roll_effect" in c_item.type \
                         and c_roll > 0:
                     c_roll += c_item.prop['roll']
                 elif c_item is not None and "roll_effect" in c_item.type \
                         and c_roll < 0:
                     c_roll -= c_item.prop['roll']
+
                 if v_item is not None and "roll_effect" in v_item.type \
                         and v_roll > 0:
                     v_roll += v_item.prop['roll']

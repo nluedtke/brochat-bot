@@ -303,7 +303,16 @@ rare_items = {
             "slot": "other",
             "text": "This pendant allows the user to regenerate 1 life at the "
                     "end of each round, and will bring the wearer back to life "
-                    "two times for two duels."}
+                    "two times for two duels."},
+    "112": {"name": "Jim Bob's Big Thumb Ring",
+            "type": ["hm_effect"],
+            "prop": {'damage': 7},
+            "uses": 4,
+            "slot": "other",
+            "text": "Jim Bob goes big or not at all. This ring turns all rolls "
+                    "into a binary option. Hit or Miss, dealing 7 damage on any"
+                    " hit. This damage stacks with any other roll effect. The "
+                    "ring lasts 4 duels."}
 }
 # ENV items are only activated randomly they can not be owned by the player.
 env_items = {
