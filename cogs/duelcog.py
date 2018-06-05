@@ -179,7 +179,7 @@ class Duels:
         elif slot == "all":
             for s in common.users[name]['equip']:
                 item_num = common.users[name]['equip'][s]
-                await self.bot.say("You have unquipped the {}"
+                await self.bot.say("You have unquipped the {}."
                                    .format(get_name(item_num)))
             common.users[name]['equip'] = {}
             return
