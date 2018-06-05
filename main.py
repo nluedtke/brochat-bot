@@ -228,7 +228,7 @@ async def roll_command(sides, num=1):
         return
     rolls = []
     for i in range(num):
-        rolls.append(randint(1, int(sides)+1))
+        rolls.append(randint(1, int(sides)))
     await bot.say("Your {0}d{1} rolls are: {2}".format(num, sides, rolls))
 
 

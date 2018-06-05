@@ -856,9 +856,11 @@ async def event_handle_shot_duel(ctx, victim):
 
                 # Modify for fog
                 if fog:
-                    if c_roll == 1 or (c_roll == 2 and randint(0, 1) == 0):
+                    if c_roll == 1 or (c_roll == 2 and randint(0, 1) == 0) \
+                       or (c_roll == 3 and randint(0, 2) == 0):
                         c_roll = 0
-                    if v_roll == 1 or (v_roll == 2 and randint(0, 1) == 0):
+                    if v_roll == 1 or (v_roll == 2 and randint(0, 1) == 0) \
+                       or (v_roll == 3 and randint(0, 2) == 0):
                         v_roll = 0
 
                 # Item modifications
