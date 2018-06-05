@@ -1021,6 +1021,7 @@ async def event_handle_shot_duel(ctx, victim):
     if not common.accepted:
         await ctx.bot.say("Shot duel not accepted! Clearly {} is better than "
                           "{}.".format(chal_name, common.vict_name))
+        await item_chance_roll(ctx.bot, vict_name, ctx.message.channel, 250)
         await item_chance_roll(ctx.bot, vict_name, ctx.message.channel, 500)
         ctx.bot.get_command('duel').reset_cooldown(ctx)
 
