@@ -776,13 +776,15 @@ async def event_handle_shot_duel(ctx, victim):
             luck_mod = 0
             if c_item is not None and "luck_effect" in c_item.type:
                 luck_mod = c_item.prop['luck']
-            await item_chance_roll(ctx.bot, chal_name, ctx.message.channel,
-                                   100 - luck_mod)
+            for i in range(3):
+                await item_chance_roll(ctx.bot, chal_name, ctx.message.channel,
+                                       (100 - luck_mod)*(i+1))
             luck_mod = 0
             if v_item is not None and "luck_effect" in v_item.type:
                 luck_mod = v_item.prop['luck']
-            await item_chance_roll(ctx.bot, vict_name, ctx.message.channel,
-                                   100 - luck_mod)
+            for i in range(3):
+                await item_chance_roll(ctx.bot, vict_name, ctx.message.channel,
+                                       (100 - luck_mod)*(i+1))
 
             await ctx.bot.say(".\n{} has {} life.\n{} has {} life."
                               .format(chal_name, c_life_start,
@@ -1021,10 +1023,10 @@ async def event_handle_shot_duel(ctx, victim):
     if not common.accepted:
         await ctx.bot.say("Shot duel not accepted! Clearly {} is better than "
                           "{}.".format(chal_name, common.vict_name))
-        await item_chance_roll(ctx.bot, vict_name, ctx.message.channel, 250)
-        await item_chance_roll(ctx.bot, vict_name, ctx.message.channel, 500)
+        await item_chance_roll(ctx.bot, chal_name, ctx.message.channel, 250)
+        await item_chance_roll(ctx.bot, common.vict_name,
+                               ctx.message.channel, 500)
         ctx.bot.get_command('duel').reset_cooldown(ctx)
-
     common.shot_duel_running = False
     common.accepted = False
     common.vict_name = ""
