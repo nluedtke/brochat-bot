@@ -208,9 +208,15 @@ common_items = {
     "24": {"name": "Target Shield",
            "type": ["sh_effect"],
            "prop": {'shield': 20},
-           "uses": 2,
+           "uses": 4,
            "slot": "offhand",
-           "text": "This shield has a 20% chance to block an attack."}
+           "text": "This shield has a 20% chance to block an attack."},
+    "25": {"name": "Kite Shield",
+           "type": ["sh_effect"],
+           "prop": {'shield': 25},
+           "uses": 4,
+           "slot": "offhand",
+           "text": "This shield has a 25% chance to block an attack."}
 }
 
 # Rare items go here and generally considered be more powerful either in
