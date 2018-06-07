@@ -871,7 +871,7 @@ async def event_handle_shot_duel(ctx, victim):
                         if c_roll > 4:
                             c_roll = c_item.prop['damage']
                         elif c_roll < 1:
-                            c_roll = -1 * c_item.prop['damage']
+                            c_roll = -1 * c_item.prop['damage'] / 2
                         else:
                             c_roll = 0
 
@@ -888,7 +888,7 @@ async def event_handle_shot_duel(ctx, victim):
                         if v_roll > 4:
                             v_roll = v_item.prop['damage']
                         elif v_roll < 1:
-                            v_roll = -1 * v_item.prop['damage']
+                            v_roll = -1 * v_item.prop['damage'] / 2
                         else:
                             v_roll = 0
 
