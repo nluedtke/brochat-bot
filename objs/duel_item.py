@@ -8,6 +8,7 @@ import copy
 #   Any item with more than 4 duels in duration is RARE.
 #   Any item with a modifier greater than 2 damage or 4 life is RARE.
 #   Any item with life_regen greater than 2 is RARE.
+#   Shields should always last 5 duels for common, 10 for rare
 # The key is the id of the item
 # The item is a dictionary with key:value pairs describing the item
 #   1) type: effect types SEE NOTE BELOW
@@ -35,6 +36,11 @@ import copy
 #   round and 'duration' the amount of rounds it hits for following a
 #   successful strike. Poison damage does not stack, but the duration does.
 #   deadly = 3 duration, moderate = 2 duration, irritating/oily = 1 duration.
+#   7) hm_effect = hit/misses 50% of the time, does fixed damage.
+#   8) res_effect = revives users on death
+#   9) sh_effect = chance of block.
+
+
 common_items = {
     "0": {"name": "Copper Ring of One Better",
           "type": ["roll_effect"],
@@ -208,13 +214,13 @@ common_items = {
     "24": {"name": "Target Shield",
            "type": ["sh_effect"],
            "prop": {'shield': 20},
-           "uses": 4,
+           "uses": 5,
            "slot": "offhand",
            "text": "This shield has a 20% chance to block an attack."},
     "25": {"name": "Kite Shield",
            "type": ["sh_effect"],
            "prop": {'shield': 25},
-           "uses": 4,
+           "uses": 5,
            "slot": "offhand",
            "text": "This shield has a 25% chance to block an attack."}
 }

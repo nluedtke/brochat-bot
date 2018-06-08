@@ -914,13 +914,13 @@ async def event_handle_shot_duel(ctx, victim):
                 cblk = False
                 if c_item is not None and v_roll > 0 \
                         and "sh_effect" in c_item.type:
-                    if randint(0, 100/c_item.prop['shield']) == 0:
+                    if randint(0, 100/c_item.prop['shield'] - 1) == 0:
                         cblk = True
                         v_roll = 0
                 vblk = False
                 if v_item is not None and c_roll > 0 \
                         and "sh_effect" in v_item.type:
-                    if randint(0, 100 / v_item.prop['shield']) == 0:
+                    if randint(0, 100 / v_item.prop['shield'] - 1) == 0:
                         vblk = True
                         c_roll = 0
 
