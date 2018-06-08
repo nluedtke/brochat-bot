@@ -491,7 +491,7 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life, cblk, vblk):
         r_string += ":banana: **{}** fell on his own sword and did {} to " \
                     "himself!".format(c_name, abs(c_roll))
     elif vblk:
-        r_string += ":shield: **{}** blocks {}'s attack!".format(v_name,
+        r_string += ":shield: **{}** blocks **{}'s** attack!".format(v_name,
                                                                  c_name)
     elif c_roll == 0:
         r_string += ":cloud_tornado: **{}** misses with his attack!" \
@@ -508,7 +508,7 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life, cblk, vblk):
         r_string += ":banana: **{}** fell on his own sword and did {} to " \
                     "himself!".format(v_name, abs(v_roll))
     elif cblk:
-        r_string += ":shield: **{}** blocks {}'s attack!".format(c_name,
+        r_string += ":shield: **{}** blocks **{}'s** attack!".format(c_name,
                                                                  v_name)
     elif v_roll == 0:
         r_string += ":cloud_tornado: **{}** misses with his attack!" \
