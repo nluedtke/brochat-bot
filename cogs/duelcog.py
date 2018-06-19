@@ -104,7 +104,8 @@ class Duels:
             p = choice(list(map_disp_to_name.keys()))[:]
             if str(map_disp_to_name[p].status) == 'online' and \
                     p != ctx.message.author.display_name and \
-                    p != 'brochat-bot':
+                    p != 'brochat-bot' and 'duel_record' in \
+                    common.users[map_disp_to_name[p].display_name]:
                 await event_handle_shot_duel(ctx, map_disp_to_name[p])
                 return
             else:
