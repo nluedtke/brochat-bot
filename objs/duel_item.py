@@ -35,7 +35,7 @@ import copy
 #   prop list. 'poison' which is the amount the poison actually does right
 #   round and 'duration' the amount of rounds it hits for following a
 #   successful strike. Poison damage does not stack, but the duration does.
-#   deadly = 3 duration, moderate = 2 duration, irritating/oily = 1 duration.
+#   deadly = 4+ duration, moderate = 3 duration, irritating/oily = 2 duration.
 #   7) hm_effect = hit/misses 50% of the time, does fixed damage.
 #   8) res_effect = revives users on death
 #   9) sh_effect = chance of block.
@@ -153,7 +153,7 @@ common_items = {
                    "increases chance for an item for two duels."},
     "16": {"name": "Oily Hook",
            "type": ["poison_effect", "disarm_effect"],
-           "prop": {'poison': 1, 'duration': 1},
+           "prop": {'poison': 1, 'duration': 2},
            "uses": 2,
            "slot": "weapon",
            "class": "edged",
@@ -251,7 +251,7 @@ rare_items = {
                     "duels."},
     "103": {"name": "Stinger",
             "type": ["poison_effect", "roll_effect"],
-            "prop": {'roll': 1, 'poison': 1, 'duration': 3},
+            "prop": {'roll': 1, 'poison': 1, 'duration': 4},
             "uses": 5,
             "slot": "weapon",
             "class": "edged",
