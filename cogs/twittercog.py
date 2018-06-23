@@ -39,7 +39,8 @@ class Twitter:
         else:
             if common.trump_chance_roll_rdy:
                 await item_chance_roll(ctx.bot, ctx.message.author.display_name,
-                                       ctx.message.channel)
+                                       ctx.message.channel,
+                                       92 - (common.missed_trumps * 2))
                 common.trump_chance_roll_rdy = False
             common.missed_trumps = 0
 
