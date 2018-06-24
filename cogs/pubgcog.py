@@ -58,8 +58,6 @@ def build_map(url, names):
     :param names: names to include in map
     :return: map file
     """
-    print(url)
-
     scale = 100
     map_name = "Unk"
     fig, ax = plt.subplots(figsize=(8.192, 8.192), dpi=100)
