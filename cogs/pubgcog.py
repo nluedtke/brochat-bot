@@ -75,12 +75,7 @@ def build_map(url, names):
         except:
             continue
 
-    if map_name == 'Erangel_Main':
-        img = imread("objs/Erangel_Main.jpg")
-    elif map_name == 'Desert_Main':
-        img = imread("objs/Miramar_Main.jpg")
-    else:
-        img = imread("objs/Savage_Main.jpg")
+    img = imread("objs/{0}.jpg".format(map_name))
 
     for n in names:
         startlogging = False

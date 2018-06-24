@@ -36,7 +36,7 @@ news_handles = ['mashable', 'cnnbrk', 'whitehouse', 'cnn', 'nytimes',
 
 # Delays for Newsfeed and Check_trump, These are in minutes
 # remember that news_del is fuzzed + (0-10)
-trump_del = 15
+trump_del = 25
 news_del = 55
 
 # Location of db.json and tokens.config
