@@ -58,7 +58,9 @@ def build_map(url, names):
     :param names: names to include in map
     :return: map file
     """
+    print(url)
 
+    scale = 100
     map_name = "Unk"
     fig, ax = plt.subplots(figsize=(8.192, 8.192), dpi=100)
     fig.subplots_adjust(0, 0, 1, 1)
@@ -77,37 +79,41 @@ def build_map(url, names):
 
     img = imread("objs/{0}.jpg".format(map_name))
 
+    if "Savage" in map_name:
+        scale = 50
+
     for n in names:
         startlogging = False
         x = []
         y = []
         for t in data:
             if t["_T"] == "LogItemUnequip" and \
-                            t["character"]["name"] == n:
+                    t["character"]["name"] == n and \
+                t["item"]["itemId"] == "Item_Back_B_01_StartParachutePack_C":
                 startlogging = True
             if startlogging and t["_T"] == "LogPlayerPosition" and \
                             t["character"]["name"] == n:
-                x.append(t["character"]["location"]["x"] / 100)
-                y.append(t["character"]["location"]["y"] / 100)
+                x.append(t["character"]["location"]["x"] / scale)
+                y.append(t["character"]["location"]["y"] / scale)
 
             if t["_T"] == "LogPlayerKill" and t["killer"]["name"] == n:
                 kl = t['killer']['location']
                 vl = t['victim']['location']
                 if kl['x'] == 0 or vl['x'] == 0:
                     continue
-                plt.plot([kl['x'] / 100, vl['x'] / 100],
-                         [kl['y'] / 100, vl['y'] / 100], color="lime",
+                plt.plot([kl['x'] / scale, vl['x'] / scale],
+                         [kl['y'] / scale, vl['y'] / scale], color="lime",
                          zorder = 2)
-                plt.plot(vl['x'] / 100, vl['y'] / 100, 'g+', zorder=3)
+                plt.plot(vl['x'] / scale, vl['y'] / scale, 'g+', zorder=3)
             elif t["_T"] == "LogPlayerKill" and t["victim"]["name"] == n:
                 kl = t['killer']['location']
                 vl = t['victim']['location']
                 if kl['x'] == 0 or vl['x'] == 0:
                     continue
-                plt.plot([kl['x'] / 100, vl['x'] / 100],
-                         [kl['y'] / 100, vl['y'] / 100], color="red", zorder=2)
-                plt.plot(vl['x']/100, vl['y']/100, 'rx', zorder=3)
-                ax.annotate(n, (vl['x']/100, vl['y']/100))
+                plt.plot([kl['x'] / scale, vl['x'] / scale],
+                         [kl['y'] / scale, vl['y'] / scale], color="red", zorder=2)
+                plt.plot(vl['x']/scale, vl['y']/scale, 'rx', zorder=3)
+                ax.annotate(n, (vl['x']/scale, vl['y']/scale))
         if len(x) > 0 and len(y) > 0:
             plt.plot(x[0], y[0], 'k+', label="SP", zorder=5)
             plt.plot(x, y, color="yellow", zorder=1)
