@@ -66,14 +66,9 @@ def build_map(url, names):
     r = requests.get(url)
     data = r.json()
     for t in data:
-        try:
-            map_name = t['common']['mapName']
-            if map_name == "":
-                map_name = 'Unk'
-            if map_name != 'Unk':
-                break
-        except:
-            continue
+        if t['_T'] == "LogMatchStart":
+            map_name = t['mapName']
+            break
 
     img = imread("objs/{0}.jpg".format(map_name))
 
