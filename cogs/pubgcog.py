@@ -331,6 +331,7 @@ async def get_pubg_report(match, names, partis, r_map, bot, chan):
                 wep_str += "->{}".format(wep)
 
             if t["_T"] == "LogPlayerTakeDamage" and \
+                            t["attacker"] is not None and \
                             t["attacker"]["name"] == pp.name and \
                             t["damageTypeCategory"] == "Damage_Gun":
                 if t['damageReason'] == 'TorsoShot':
@@ -348,6 +349,7 @@ async def get_pubg_report(match, names, partis, r_map, bot, chan):
                 if t['attackId'] not in hits:
                     hits.append(t['attackId'])
             elif t["_T"] == "LogPlayerAttack" and \
+                            t["attacker"] is not None and \
                             t["attacker"]["name"] == pp.name and \
                             t['attackType'] == 'Weapon' and \
                     t['weapon']['itemId'].startswith("Item_Weapon_"):
@@ -476,11 +478,13 @@ async def update_last_10():
 
                     for t in data:
                         if t["_T"] == "LogPlayerTakeDamage" and \
+                                        t["attacker"] is not None and \
                                         t["attacker"]["name"] == pp.name and \
                                         t["damageTypeCategory"] == "Damage_Gun":
                             if t['attackId'] not in hits:
                                 hits.append(t['attackId'])
                         elif t["_T"] == "LogPlayerAttack" and \
+                                        t["attacker"] is not None and \
                                         t["attacker"]["name"] == pp.name and \
                                         t['attackType'] == 'Weapon' and \
                                 t['weapon']['itemId'].startswith(
@@ -489,8 +493,7 @@ async def update_last_10():
                                 shots.append(t['attackId'])
                         elif t["_T"] == "LogPlayerKill" and \
                                         t["killer"]["name"] == pp.name and \
-                                        t[
-                                            "damageTypeCategory"] == "Damage_Gun" and \
+                                        t["damageTypeCategory"] == "Damage_Gun" and \
                                         "damageCauserName" in t:
                             add_wep_kill(r_map[pp.name],
                                          dcauses[t["damageCauserName"]])
@@ -499,8 +502,7 @@ async def update_last_10():
                     for h in hits:
                         ar, dr = get_attackId(data, h)
                         if 'victim' in dr and 'attacker' in ar:
-                            h_dists.append(
-                                calc_p_dist(ar['attacker'], dr['victim']))
+                            h_dists.append(calc_p_dist(ar['attacker'], dr['victim']))
                     if len(h_dists) > 0:
                         if 'pubg_recs' not in c.users[r_map[pp.name]]:
                             c.users[r_map[pp.name]]['pubg_recs'] = {}
