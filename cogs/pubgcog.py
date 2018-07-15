@@ -81,8 +81,9 @@ def build_map(url, names):
         y = []
         for t in data:
             if t["_T"] == "LogItemUnequip" and \
-                    t["character"]["name"] == n and \
-                t["item"]["itemId"] == "Item_Back_B_01_StartParachutePack_C":
+                            t["character"]["name"] == n and \
+                            t["item"][
+                                "itemId"] == "Item_Back_B_01_StartParachutePack_C":
                 startlogging = True
             if startlogging and t["_T"] == "LogPlayerPosition" and \
                             t["character"]["name"] == n:
@@ -96,7 +97,7 @@ def build_map(url, names):
                     continue
                 plt.plot([kl['x'] / scale, vl['x'] / scale],
                          [kl['y'] / scale, vl['y'] / scale], color="lime",
-                         zorder = 2)
+                         zorder=2)
                 plt.plot(vl['x'] / scale, vl['y'] / scale, 'g+', zorder=3)
             elif t["_T"] == "LogPlayerKill" and t["victim"]["name"] == n:
                 kl = t['killer']['location']
@@ -104,9 +105,10 @@ def build_map(url, names):
                 if kl['x'] == 0 or vl['x'] == 0:
                     continue
                 plt.plot([kl['x'] / scale, vl['x'] / scale],
-                         [kl['y'] / scale, vl['y'] / scale], color="red", zorder=2)
-                plt.plot(vl['x']/scale, vl['y']/scale, 'rx', zorder=3)
-                ax.annotate(n, (vl['x']/scale, vl['y']/scale))
+                         [kl['y'] / scale, vl['y'] / scale], color="red",
+                         zorder=2)
+                plt.plot(vl['x'] / scale, vl['y'] / scale, 'rx', zorder=3)
+                ax.annotate(n, (vl['x'] / scale, vl['y'] / scale))
         if len(x) > 0 and len(y) > 0:
             plt.plot(x[0], y[0], 'k+', label="SP", zorder=5)
             plt.plot(x, y, color="yellow", zorder=1)
@@ -174,7 +176,8 @@ def filter_data(d_to_filt, names_to_include):
     for t in d_to_filt:
         if 'character' in t and t['character']['name'] in names_to_include:
             data.append(t)
-        elif 'attacker' in t and t['attacker']['name'] in names_to_include:
+        elif 'attacker' in t and t['attacker'] is not None and \
+                t['attacker']['name'] in names_to_include:
             data.append(t)
         elif 'victim' in t and t['victim']['name'] in names_to_include:
             data.append(t)
@@ -427,7 +430,8 @@ async def update_last_10():
 
                 # if that match isn't in the players queue
                 if 'pubg_match' not in c.users[r_map[p.name]] or \
-                                m.id not in c.users[r_map[p.name]]['pubg_match']:
+                                m.id not in c.users[r_map[p.name]][
+                            'pubg_match']:
                     mp_id = m.id
                     m_to_add.append(c.pubg_api.matches().get(mp_id))
                     await asyncio.sleep(10)
@@ -479,7 +483,8 @@ async def update_last_10():
                         elif t["_T"] == "LogPlayerAttack" and \
                                         t["attacker"]["name"] == pp.name and \
                                         t['attackType'] == 'Weapon' and \
-                                t['weapon']['itemId'].startswith("Item_Weapon_"):
+                                t['weapon']['itemId'].startswith(
+                                    "Item_Weapon_"):
                             if t['attackId'] not in shots:
                                 shots.append(t['attackId'])
                         elif t["_T"] == "LogPlayerKill" and \
@@ -566,7 +571,8 @@ async def check_pubg_matches(bot):
 
                     # if that match isn't in the players queue
                     if 'pubg_match' not in c.users[r_map[p.name]] or \
-                                m.id not in c.users[r_map[p.name]]['pubg_match']:
+                                    m.id not in c.users[r_map[p.name]][
+                                'pubg_match']:
                         mp_id = m.id
                         match = c.pubg_api.matches().get(mp_id)
                         if match.game_mode.startswith("warmode"):
