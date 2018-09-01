@@ -330,7 +330,13 @@ rare_items = {
             "text": "Jim Bob goes big or not at all. This ring turns all rolls "
                     "into a binary option. Hit or Miss, dealing 7 damage on any"
                     " hit. This damage stacks with any other roll effect. The "
-                    "ring lasts 4 duels."}
+                    "ring lasts 4 duels."},
+    "113": {"name": "Tower Shield",
+            "type": ["sh_effect"],
+            "prop": {'shield': 50},
+            "uses": 5,
+            "slot": "offhand",
+            "text": "This shield has a 50% chance to block an attack."}
 }
 # ENV items are only activated randomly they can not be owned by the player.
 env_items = {
