@@ -280,7 +280,7 @@ def item_eff_str(item):
     if 'hm_effect' in item.type:
         ret_str += "    50% chance to hit with fixed damage.\n"
     if 'p_effect' in item.type:
-        ret_str += "    Self-Inflicted wounds heal the wearer."
+        ret_str += "    Self-Inflicted wounds heal the wearer.\n"
     if len(ret_str) > 1:
         return ret_str
     else:
