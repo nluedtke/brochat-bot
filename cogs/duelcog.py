@@ -491,7 +491,7 @@ def build_duel_str(params):
     c_roll = params['c_roll']
     v_name = params['v_name']
     v_roll = params['v_roll']
-    c_life = params['c_live']
+    c_life = params['c_life']
     v_life = params['v_life']
     a_types = ["lunge", "jab", "chop", "slice", "sweep", "thrust"]
 
@@ -499,7 +499,7 @@ def build_duel_str(params):
     if c_roll < 0:
         if 'c_heal' in params:
             r_string += ":banana: **{}** fell on his own sword and magically" \
-                        " healed himself for {}" \
+                        " healed himself for {}!" \
                         .format(c_name, params['c_heal'])
         else:
             r_string += ":banana: **{}** fell on his own sword and did {} to" \
@@ -521,7 +521,7 @@ def build_duel_str(params):
     if v_roll < 0:
         if 'v_heal' in params:
             r_string += ":banana: **{}** fell on his own sword and magically" \
-                        " healed himself for {}" \
+                        " healed himself for {}!" \
                         .format(v_name, params['v_heal'])
         else:
             r_string += ":banana: **{}** fell on his own sword and did {} to" \
@@ -953,12 +953,14 @@ async def event_handle_shot_duel(ctx, victim):
                     if (c_life_start - c_life) < c_heal_amt:
                         c_heal_amt = c_life_start - c_life
                     v_total.append(-c_heal_amt)
+                    c_total.append(-c_heal_amt)
                 if v_item is not None and 'p_effect' in v_item.type and \
                    v_roll < 0:
                     v_heal = True
                     v_heal_amt = v_roll * -1
                     if (v_life_start - v_life) < v_heal_amt:
                         v_heal_amt = v_life_start - v_life
+                    c_total.append(-v_heal_amt)
                     c_total.append(-v_heal_amt)
 
                 # DAMAGE APPLIED HERE
