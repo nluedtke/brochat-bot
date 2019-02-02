@@ -279,6 +279,8 @@ def item_eff_str(item):
             .format(item.prop['shield'])
     if 'hm_effect' in item.type:
         ret_str += "    50% chance to hit with fixed damage.\n"
+    if 'p_effect' in item.type:
+        ret_str += "    Self-Inflicted wounds heal the wearer."
     if len(ret_str) > 1:
         return ret_str
     else:
@@ -474,7 +476,7 @@ async def death_check(ctx, chal, c_life, vict, v_life, c_res, v_res):
     return cres, vres, death
 
 
-def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life, cblk, vblk):
+def build_duel_str(params):
     """
     :param c_name: Challenger's name
     :param c_roll: Challenger's roll
@@ -485,15 +487,26 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life, cblk, vblk):
     :param cblk: Did chal block?
     :param vblk: Did vict block?
     """
+    c_name = params['c_name']
+    c_roll = params['c_roll']
+    v_name = params['v_name']
+    v_roll = params['v_roll']
+    c_life = params['c_live']
+    v_life = params['v_life']
     a_types = ["lunge", "jab", "chop", "slice", "sweep", "thrust"]
 
     r_string = ".\n"
     if c_roll < 0:
-        r_string += ":banana: **{}** fell on his own sword and did {} to " \
-                    "himself!".format(c_name, abs(c_roll))
-    elif vblk:
-        r_string += ":shield: **{}** blocks **{}'s** attack!".format(v_name,
-                                                                 c_name)
+        if c_heal in params:
+            r_string += ":banana: **{}** fell on his own sword and magically" \
+                        " healed himself for {}" \
+                        .format(c_name, params['c_heal'])
+        else:
+            r_string += ":banana: **{}** fell on his own sword and did {} to" \
+                        " himself!".format(c_name, abs(c_roll))
+    elif vblk in params:
+        r_string += ":shield: **{}** blocks **{}'s** attack!" \
+                    .format(v_name, c_name)
     elif c_roll == 0:
         r_string += ":cloud_tornado: **{}** misses with his attack!" \
             .format(c_name)
@@ -506,11 +519,16 @@ def build_duel_str(c_name, c_roll, v_name, v_roll, c_life, v_life, cblk, vblk):
 
     r_string += "\n"
     if v_roll < 0:
-        r_string += ":banana: **{}** fell on his own sword and did {} to " \
-                    "himself!".format(v_name, abs(v_roll))
-    elif cblk:
-        r_string += ":shield: **{}** blocks **{}'s** attack!".format(c_name,
-                                                                 v_name)
+        if v_heal in params:
+            r_string += ":banana: **{}** fell on his own sword and magically" \
+                        " healed himself for {}" \
+                        .format(v_name, params['v_heal'])
+        else:
+            r_string += ":banana: **{}** fell on his own sword and did {} to" \
+                        " himself!".format(v_name, abs(v_roll))
+    elif cblk in params:
+        r_string += ":shield: **{}** blocks **{}'s** attack!" \
+                    .format(c_name, v_name)
     elif v_roll == 0:
         r_string += ":cloud_tornado: **{}** misses with his attack!" \
             .format(v_name)
@@ -925,6 +943,22 @@ async def event_handle_shot_duel(ctx, victim):
                         vblk = True
                         c_roll = 0
 
+                c_heal = False
+                v_heal = False
+                # Hit Affects
+                if c_item is not None and 'p_effect' in c_item and c_roll < 0:
+                    c_heal = True
+                    c_heal_amt = c_roll * -1
+                    if (c_life_start - c_life) < c_heal_amt:
+                        c_heal_amt = c_life_start - c_life
+                    v_total.append(-c_heal_amt)
+                if v_item is not None and 'p_effect' in v_item and v_roll < 0:
+                    v_heal = True
+                    v_heal_amt = v_roll * -1
+                    if (v_life_start - v_life) < v_heal_amt:
+                        v_heal_amt = v_life_start - v_life
+                    c_total.append(-v_heal_amt)
+
                 # DAMAGE APPLIED HERE
                 if c_roll >= 0:
                     c_total.append(c_roll)
@@ -938,9 +972,22 @@ async def event_handle_shot_duel(ctx, victim):
 
                 c_life = c_life_start - sum(v_total)
                 v_life = v_life_start - sum(c_total)
-                duel_string = build_duel_str(chal_name, c_roll,
-                                             common.vict_name, v_roll, c_life,
-                                             v_life, cblk, vblk)
+                d_params = {'c_name': chal_name,
+                            'c_roll': c_roll,
+                            'v_name': common.vict_name,
+                            'v_roll': v_roll,
+                            'c_life': c_life,
+                            'v_life': v_life}
+                if cblk:
+                    d_params['cblk'] = cblk
+                if vblk:
+                    d_params['vblk'] = vblk
+                if c_heal:
+                    d_params['c_heal'] = c_heal_amt
+                if v_heal:
+                    d_params['v_heal'] = v_heal_amt
+
+                duel_string = build_duel_str(d_params)
 
                 # POST COMBAT PHASE (Damage resolved here, on_death effects
                 # should be implemented here)

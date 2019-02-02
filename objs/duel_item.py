@@ -39,6 +39,7 @@ import copy
 #   7) hm_effect = hit/misses 50% of the time, does fixed damage.
 #   8) res_effect = revives users on death
 #   9) sh_effect = chance of block.
+#  10) p_effect = self inflicted wounds heal instead
 
 
 common_items = {
@@ -222,7 +223,13 @@ common_items = {
            "prop": {'shield': 25},
            "uses": 5,
            "slot": "offhand",
-           "text": "This shield has a 25% chance to block an attack."}
+           "text": "This shield has a 25% chance to block an attack."},
+    "26": {"name": "Torn Arborist Chaps",
+           "type": ["p_effect"],
+           "prop": {},
+           "uses": 2,
+           "slot": "armor",
+           "text": "These chaps turn self-inflicted wounds into heals."}
 }
 
 # Rare items go here and generally considered be more powerful either in
@@ -336,7 +343,13 @@ rare_items = {
             "prop": {'shield': 50},
             "uses": 5,
             "slot": "offhand",
-            "text": "This shield has a 50% chance to block an attack."}
+            "text": "This shield has a 50% chance to block an attack."},
+    "114": {"name": "Bright Orange Arborist Chaps",
+            "type": ["p_effect"],
+            "prop": {},
+            "uses": 5,
+            "slot": "armor",
+            "text": "These chaps turn self-inflicted wounds into heals."}
 }
 # ENV items are only activated randomly they can not be owned by the player.
 env_items = {
