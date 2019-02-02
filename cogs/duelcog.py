@@ -497,14 +497,14 @@ def build_duel_str(params):
 
     r_string = ".\n"
     if c_roll < 0:
-        if c_heal in params:
+        if 'c_heal' in params:
             r_string += ":banana: **{}** fell on his own sword and magically" \
                         " healed himself for {}" \
                         .format(c_name, params['c_heal'])
         else:
             r_string += ":banana: **{}** fell on his own sword and did {} to" \
                         " himself!".format(c_name, abs(c_roll))
-    elif vblk in params:
+    elif 'vblk' in params:
         r_string += ":shield: **{}** blocks **{}'s** attack!" \
                     .format(v_name, c_name)
     elif c_roll == 0:
@@ -519,14 +519,14 @@ def build_duel_str(params):
 
     r_string += "\n"
     if v_roll < 0:
-        if v_heal in params:
+        if 'v_heal' in params:
             r_string += ":banana: **{}** fell on his own sword and magically" \
                         " healed himself for {}" \
                         .format(v_name, params['v_heal'])
         else:
             r_string += ":banana: **{}** fell on his own sword and did {} to" \
                         " himself!".format(v_name, abs(v_roll))
-    elif cblk in params:
+    elif 'cblk' in params:
         r_string += ":shield: **{}** blocks **{}'s** attack!" \
                     .format(c_name, v_name)
     elif v_roll == 0:
