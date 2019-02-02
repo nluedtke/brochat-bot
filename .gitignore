@@ -95,3 +95,7 @@ ENV/
 *.config
 db.json
 *settings.json
+
+# Other
+*.tar
+*.sh
