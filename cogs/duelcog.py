@@ -949,15 +949,15 @@ async def event_handle_shot_duel(ctx, victim):
                 if c_item is not None and 'p_effect' in c_item.type and \
                    c_roll < 0:
                     c_heal = True
-                    c_heal_amt = c_roll * -1
+                    c_heal_amt = abs(c_roll)
                     if (c_life_start - c_life) < c_heal_amt:
                         c_heal_amt = c_life_start - c_life
                     v_total.append(-c_heal_amt)
-                    c_total.append(-c_heal_amt)
+                    v_total.append(-c_heal_amt)
                 if v_item is not None and 'p_effect' in v_item.type and \
                    v_roll < 0:
                     v_heal = True
-                    v_heal_amt = v_roll * -1
+                    v_heal_amt = abs(v_roll)
                     if (v_life_start - v_life) < v_heal_amt:
                         v_heal_amt = v_life_start - v_life
                     c_total.append(-v_heal_amt)
