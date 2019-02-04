@@ -1,10 +1,11 @@
 import asyncio
-from random import randint, choice
-from discord.ext import commands
+from random import choice, randint
+
 import common
-from objs.duel_item import DuelItem, PoisonEffect, get_name, get_slot, \
-    get_text, get_uses, item_exists
 from cogs.drinkingcog import in_deep_debt
+from discord.ext import commands
+from objs.duel_item import (DuelItem, PoisonEffect, get_name, get_slot,
+                            get_text, get_uses, item_exists)
 
 
 class Duels:

@@ -1,7 +1,8 @@
+import asyncio
+from random import randint
+
 import common
 from discord.ext import commands
-from random import randint
-import asyncio
 
 
 class DrinkBank:

@@ -1,8 +1,7 @@
 import json
 
-from objs.gametime import Gametime
-
 import common
+from objs.gametime import Gametime
 from objs.poll import Poll
 
 

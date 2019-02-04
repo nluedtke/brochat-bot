@@ -1,7 +1,10 @@
 # Standard imports
+import argparse
+import asyncio
 import json
 import os
 import socket
+import statistics as stats
 import sys
 import traceback
 from datetime import datetime
@@ -9,21 +12,17 @@ from difflib import get_close_matches
 from random import choice, randint
 from sys import stderr
 from time import time
-import statistics as stats
 
 import pytz
 import requests
-import asyncio
-import argparse
 
-# NonStandard Imports
+import common
+from cogs.duelcog import event_handle_shot_duel, item_chance_roll
 from discord.ext import commands
+from objs.duel_item import all_items, get_name
+from objs.weekend_games import WeekendGames, argument_parser, pretty_date
 from twilio.rest import Client
 from twython import Twython
-from objs.weekend_games import WeekendGames, argument_parser, pretty_date
-import common
-from cogs.duelcog import item_chance_roll, event_handle_shot_duel
-from objs.duel_item import all_items, get_name
 
 description = "A bot to enforce friendship."
 startTime = 0

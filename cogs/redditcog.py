@@ -1,8 +1,10 @@
+from random import randint
+
+import requests
+
+import common
 import discord
 from discord.ext import commands
-import requests
-from random import randint
-import common
 
 
 class Reddit:

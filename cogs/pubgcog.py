@@ -1,20 +1,22 @@
-import traceback
-from json import JSONDecodeError
-import matplotlib
-import sys
-
-matplotlib.use('Agg')
-from pubg_python import PUBG, Shard
-from pubg_python.exceptions import NotFoundError, APIError
-import common as c
 import asyncio
-import requests
+import json
 import math
 import statistics as stats
-import json
-from discord.ext import commands
-from scipy.misc import imread
+import sys
+import traceback
+from json import JSONDecodeError
+
+import matplotlib
 import matplotlib.pyplot as plt
+import requests
+from scipy.misc import imread
+
+import common as c
+from discord.ext import commands
+from pubg_python import PUBG, Shard
+from pubg_python.exceptions import APIError, NotFoundError
+
+matplotlib.use('Agg')
 
 with open("objs/itemId.json", 'r') as infile:
     items = json.load(infile)
