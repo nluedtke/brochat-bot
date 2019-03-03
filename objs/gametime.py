@@ -229,8 +229,7 @@ class Gametime(object):
         :return: bool indicating whether self equal to other (In value)
         """
 
-        if self.date.weekday() == other.date.weekday() and \
-           self.time == other.time:
+        if self.date == other.date:
             return True
         else:
             return False
