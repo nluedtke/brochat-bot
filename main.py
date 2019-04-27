@@ -110,7 +110,7 @@ async def on_message(message):
         for u in common.users:
             if 'civ_name' not in common.users[u]:
                 continue
-            elif civ_name = common.users[u]['civ_name']:
+            elif civ_name == common.users[u]['civ_name']:
                 members = self.bot.get_all_members()
                 map_disp_to_name = {}
                 for m in members:
