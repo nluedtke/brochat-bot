@@ -105,6 +105,19 @@ async def on_message(message):
 
     if message.author == bot.user:
         return
+    elif message.author.display_name == 'Captain Hook':
+        civ_name = message.content.split(',')[0]
+        for u in common.users:
+            if 'civ_name' not in common.users[u]:
+                continue
+            elif civ_name = common.users[u]['civ_name']:
+                members = self.bot.get_all_members()
+                map_disp_to_name = {}
+                for m in members:
+                    map_disp_to_name[m.display_name.lower()] = m
+                bot.say("{} play your turn!"
+                        .format(map_disp_to_name[u].mention))
+                break
 
     if message.author.display_name not in common.users:
         common.users[message.author.display_name] = {}
@@ -197,8 +210,8 @@ async def set_command(ctx):
         # Added format check for mobile
         if arguments[0] == 'mobile' and \
                 (len(arguments[1]) != 12 or
-                         arguments[1][0] != '+' or not
-                isinstance(int(arguments[1][1:]), int)):
+                    arguments[1][0] != '+' or not
+                    isinstance(int(arguments[1][1:]), int)):
             await bot.say("You'll need to use the format **+14148888888** for "
                           "your mobile number.")
         else:
