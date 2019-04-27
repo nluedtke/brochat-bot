@@ -10,20 +10,17 @@ from discord.ext import commands
 class Reddit(commands.Cog):
     """ Reddit Fetchers"""
 
-    def __init__(self, bot):
-        self.bot = bot
-
     @commands.command(name='dankmeme', aliases=['dankmay', 'dankmaymay'])
     @commands.cooldown(2, 60 * 5)
-    async def dankmeme(self):
+    async def dankmeme(ctx):
         """Get a succulent dank may-may"""
-        await self.bot.say(get_reddit("dankmemes"))
+        await ctx.send(get_reddit("dankmemes"))
 
     @commands.command(name='bertstrip', aliases=['badchildhood'])
     @commands.cooldown(2, 60 * 5)
-    async def bertstrip(self):
+    async def bertstrip(ctx):
         """Ruin your childhood"""
-        await self.bot.say(get_reddit("bertstrips"))
+        await ctx.send(get_reddit("bertstrips"))
 
 
 def get_reddit(subreddit):

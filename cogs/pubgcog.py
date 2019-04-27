@@ -31,26 +31,23 @@ max_mids_records = 20
 class Puby(commands.Cog):
     """ Pubg Fetchers"""
 
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.group(name='getmap', pass_context=True)
-    async def get_map(self, ctx):
+    @commands.group(name='getmap')
+    async def get_map(ctx):
         """ Gets the Map of your last PUBG Match"""
 
         auth = ctx.message.author.display_name
         if auth not in c.users or 'pubg' not in c.users[auth]:
-            await self.bot.say('I don\'t know your PUBG name')
+            await ctx.send('I don\'t know your PUBG name')
             return
         elif 'pubg_match' not in c.users[auth] or \
                         len(c.users[auth]['pubg_match']) < 1:
-            await self.bot.say('I haven\'t see you play a match yet.')
+            await ctx.send('I haven\'t see you play a match yet.')
             return
-        await self.bot.say("Plotting map. One minute.")
-        await self.bot.send_typing(ctx.message.channel)
+        await ctx.send("Plotting map. One minute.")
+        await ctx.send_typing(ctx.message.channel)
         match_to_get = c.users[auth]['pubg_match'][-1]
         map_file = get_map_byid(match_to_get)
-        await self.bot.send_file(ctx.message.channel, map_file)
+        await ctx.send("", file=discord.File(map_file))
 
 
 def build_map(url, names):
@@ -268,14 +265,13 @@ def add_wep_kill(name, weapon):
         c.users[name]["pubg_weps"][weapon] += 1
 
 
-async def get_pubg_report(match, names, partis, r_map, bot, chan):
+async def get_pubg_report(match, names, partis, r_map, chan):
     """
     Constructs and returns a pubg match report
     :param match: Match Object
     :param names: Names to filter for in report
     :param partis: Participant Objects
     :param r_map: PUBG name to Discord name
-    :param bot: Bot to use
     :param chan: channel to send to
     :return: None
     """
@@ -289,8 +285,8 @@ async def get_pubg_report(match, names, partis, r_map, bot, chan):
     url = match.assets[0].url
     if partis[0].win_place <= 10:
         map_file = build_map(url, names)
-        await bot.send_message(chan, out_str)
-        await bot.send_file(chan, map_file)
+        await chan.send(out_str)
+        await chan.send("", file=discord.File(map_file))
         out_str = ""
 
     r = requests.get(url)
@@ -405,7 +401,7 @@ async def get_pubg_report(match, names, partis, r_map, bot, chan):
                 r_data['long_h'] = max(h_dists)
         out_str += "\n"
     del data
-    await bot.send_message(chan, out_str)
+    await chan.send(out_str)
 
 
 async def update_last_10():
@@ -528,23 +524,22 @@ async def update_last_10():
     print("Finished updating last 10.")
 
 
-async def check_pubg_matches(bot):
+async def check_pubg_matches(ctx):
     """
     Checks for new matches
     :return: None
     """
     c_to_send = None
 
-    await bot.wait_until_ready()
+    await ctx.wait_until_ready()
     await asyncio.sleep(60)
-    for channel in bot.get_all_channels():
+    for channel in ctx.get_all_channels():
         if channel.name == 'gen_testing' \
                 or channel.name == c.ARGS['channel']:
             c_to_send = channel
             break
 
     if c.pubg_api_key is None:
-        await bot.say("PUBG not activated.")
         return
 
     if c.pubg_api is None:
@@ -606,7 +601,7 @@ async def check_pubg_matches(bot):
                                 names.append(pp.name)
 
                         # Construct the report
-                        await get_pubg_report(match, names, partis, r_map, bot,
+                        await get_pubg_report(match, names, partis, r_map,
                                               c_to_send)
 
                     c.whos_in.update_db()

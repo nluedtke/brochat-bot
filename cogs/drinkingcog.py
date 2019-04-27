@@ -8,13 +8,9 @@ from discord.ext import commands
 class DrinkBank(commands.Cog):
     """Handles the DrankBank and registering drinks."""
 
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command(name='drink', aliases=['bottomsup', 'drank'],
-                      pass_context=True)
+    @commands.command(name='drink', aliases=['bottomsup', 'drank'])
     @commands.cooldown(1, 60, type=commands.BucketType.user)
-    async def drink(self, ctx):
+    async def drink(ctx):
         """Log a drink taken"""
         author = str(ctx.message.author.display_name)
         if author in common.users:
@@ -30,16 +26,16 @@ class DrinkBank(commands.Cog):
                 output += "You're now banking **{}** dranks.".format(-result)
             else:
                 output += "You now owe {} drinks.".format(result)
-            await self.bot.say(output)
+            await ctx.send(output)
 
         else:
-            await self.bot.say("I don't know you, man.")
+            await ctx.send("I don't know you, man.")
 
         # update the db
         common.whos_in.update_db()
 
     @commands.command(name='drankbank', aliases=['dbank', 'drinkbank'])
-    async def drankbank(self):
+    async def drankbank(ctx):
         """See your *assets and liabilities* with the bank of drank"""
 
         output = ":moneybag: The **drankbank** is now open for business " \
@@ -56,20 +52,20 @@ class DrinkBank(commands.Cog):
                 else:
                     output += "\n**{}** is in clear and good standing with " \
                               "the **drankbank**.".format(name)
-        await self.bot.say(output)
+        await ctx.send(output)
 
-    @commands.command(name='shot-lottery', pass_context=True)
+    @commands.command(name='shot-lottery')
     @commands.cooldown(1, 60 * 5)
-    async def shot_lottery(self, ctx, auto_call=False):
+    async def shot_lottery(ctx, auto_call=False):
         """Runs a shot-lottery"""
 
         shot_lottery_string = run_shot_lottery(ctx, auto_call)
         for x in range(4):
-            await self.bot.say(shot_lottery_string.pop(0))
-            ctx.bot.send_typing(ctx.message.channel)
+            await ctx.send(shot_lottery_string.pop(0))
+            ctx.send_typing(ctx.message.channel)
             await asyncio.sleep(4)
         while len(shot_lottery_string) > 0:
-            await self.bot.say(shot_lottery_string.pop(0))
+            await ctx.send(shot_lottery_string.pop(0))
         common.whos_in.update_db()
 
 
@@ -89,7 +85,7 @@ def run_shot_lottery(ctx, auto_call=False):
 
     if auto_call:
         largest_num_in_voice = 0
-        for channel in ctx.bot.get_all_channels():
+        for channel in ctx.get_all_channels():
             if str(channel.type) == "voice" and len(channel.voice_members) \
                     >= largest_num_in_voice:
                 largest_num_in_voice = len(channel.voice_members)
@@ -98,7 +94,7 @@ def run_shot_lottery(ctx, auto_call=False):
             players.append(m.display_name)
 
     if not auto_call or len(players) < 1:
-        for m in ctx.bot.get_all_members():
+        for m in ctx.get_all_members():
             if str(m.status) == 'online' and str(m.display_name) \
                     != 'brochat-bot':
                 players.append(m.display_name)
@@ -112,7 +108,7 @@ def run_shot_lottery(ctx, auto_call=False):
     winner = randint(0, len(players) - 1)
     if players[winner] != 'SOCIAL!':
         common.add_drink(players[winner])
-        for m in ctx.bot.get_all_members():
+        for m in ctx.get_all_members():
             if str(m.display_name) == players[winner]:
                 tag_id = m.mention
                 break

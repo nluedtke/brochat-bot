@@ -77,7 +77,7 @@ async def on_member_update(before, after):
             common.whos_in.update_db()
 
 
-@bot.command(name='seen', pass_context=True)
+@bot.command(name='seen')
 async def get_last_seen(ctx):
     """Get last seen time for a player"""
     arguments = argument_parser(ctx.message.content)
@@ -92,7 +92,7 @@ async def get_last_seen(ctx):
     else:
         last_time = "unknown"
 
-    await bot.say("{} last seen at {}.".format(name, last_time))
+    await ctx.send("{} last seen at {}.".format(name, last_time))
 
 
 @bot.event
@@ -115,7 +115,7 @@ async def on_message(message):
                 map_disp_to_name = {}
                 for m in members:
                     map_disp_to_name[m.display_name.lower()] = m
-                bot.say("{} play your turn!"
+                ctx.send("{} play your turn!"
                         .format(map_disp_to_name[u].mention))
                 break
 
@@ -170,26 +170,26 @@ async def on_ready():
         for channel in bot.get_all_channels():
             if channel.name == 'gen_testing' or \
                             channel.name == common.ARGS['channel']:
-                await bot.send_message(channel, choice(connect_strings))
+                await channel.send(choice(connect_strings))
                 common.first = False
 
 
-@bot.command(name='battletag', pass_context=True)
+@bot.command(name='battletag')
 async def battletag(ctx):
     """Get your battletag to share!"""
 
     author = str(ctx.message.author.display_name)
     if author in common.users:
         if "battletag" in common.users[author]:
-            await bot.say("Your battletag is: {}"
+            await ctx.send("Your battletag is: {}"
                           .format(common.users[author]["battletag"]))
         else:
-            await bot.say("I couldn\'t find your battletag!")
+            await ctx.send("I couldn\'t find your battletag!")
     else:
-        await bot.say("I couldn\'t find your user info!")
+        await ctx.send("I couldn\'t find your user info!")
 
 
-@bot.command(name='set', pass_context=True)
+@bot.command(name='set')
 async def set_command(ctx):
     """Add some info to the db about you"""
     author = str(ctx.message.author.display_name)
@@ -204,7 +204,7 @@ async def set_command(ctx):
                        'mobile': "Got your digits: {}.",
                        'pubg': "Okay, you pubg name is {}."}
     if len(arguments) != 2:
-        await bot.say("To !set information about yourself, please use:\n\n"
+        await ctx.send("To !set information about yourself, please use:\n\n"
                       "**!set** <name/battletag/mobile/pubg> <value>")
     elif arguments[0] in valid_arguments:
         # Added format check for mobile
@@ -212,18 +212,18 @@ async def set_command(ctx):
                 (len(arguments[1]) != 12 or
                     arguments[1][0] != '+' or not
                     isinstance(int(arguments[1][1:]), int)):
-            await bot.say("You'll need to use the format **+14148888888** for "
+            await ctx.send("You'll need to use the format **+14148888888** for "
                           "your mobile number.")
         else:
             common.users[author][arguments[0]] = arguments[1]
-            await bot.say(valid_arguments[arguments[0]]
+            await ctx.send(valid_arguments[arguments[0]]
                           .format(common.users[author][arguments[0]]))
     # Update database
     common.whos_in.update_db()
 
 
 @bot.command(name='roll')
-async def roll_command(sides, num=1):
+async def roll_command(ctx, sides, num=1):
     """Roll dice
 
     :param sides: Number of sides to the dice
@@ -232,20 +232,20 @@ async def roll_command(sides, num=1):
     try:
         int(sides)
     except ValueError:
-        await bot.say("Invalid Value in arguments.")
+        await ctx.send("Invalid Value in arguments.")
         return
     if num > 20:
-        await bot.say("20 is the max number of rolls at once that I "
+        await ctx.send("20 is the max number of rolls at once that I "
                       "will handle!")
         return
     rolls = []
     for i in range(num):
         rolls.append(randint(1, int(sides)))
-    await bot.say("Your {0}d{1} rolls are: {2}".format(num, sides, rolls))
+    await ctx.send("Your {0}d{1} rolls are: {2}".format(num, sides, rolls))
 
 
 @bot.command(hidden=True)
-async def version():
+async def version(ctx):
     """Prints the version of bot."""
     version_string = "Version: {0}.{1}.{2}.{3}\n" \
                      "Running on: {4}".format(common.VERSION_YEAR,
@@ -253,7 +253,7 @@ async def version():
                                               common.VERSION_DAY,
                                               common.VERSION_REV,
                                               socket.gethostname())
-    await bot.say(version_string)
+    await ctx.send(version_string)
 
 
 def is_me(m):
@@ -264,13 +264,13 @@ def is_command(m):
     return m.content.startswith("!")
 
 
-@bot.command(name='clear', pass_context=True)
+@bot.command(name='clear')
 async def clear(ctx):
     """Clears Bot chat history"""
     channel = ctx.message.channel
     deleted = await bot.purge_from(channel, limit=125, check=is_me)
     c_ds = await bot.purge_from(channel, limit=100, check=is_command)
-    await bot.say('Deleted {} message(s)'.format(len(deleted) + len(c_ds)))
+    await ctx.send('Deleted {} message(s)'.format(len(deleted) + len(c_ds)))
 
 
 # TODO - url validation
@@ -310,7 +310,7 @@ def is_owner():
     return commands.check(predicate)
 
 
-@bot.command(name='reset-cd', hidden=True, pass_context=True)
+@bot.command(name='reset-cd', hidden=True)
 @is_owner()
 async def reset_cmd_cooldown(ctx, cmd):
     """Resets the cooldown of a command
@@ -319,12 +319,12 @@ async def reset_cmd_cooldown(ctx, cmd):
     :param cmd: Command to reset
     """
     bot.get_command(cmd).reset_cooldown(ctx)
-    await bot.say("Cooldown reset.")
+    await ctx.send("Cooldown reset.")
 
 
 @bot.command(name='reset-records', hidden=True)
 @is_owner()
-async def reset_records():
+async def reset_records(ctx):
     """Resets all duel records
     """
     for user in common.users:
@@ -332,12 +332,12 @@ async def reset_records():
             del (common.users[user]['duel_record'])
     # Update database
     common.whos_in.update_db()
-    await bot.say("Records reset.")
+    await ctx.send("Records reset.")
 
 
 @bot.command(name='erase-debt', hidden=True)
 @is_owner()
-async def erase_debt():
+async def erase_debt(ctx):
     """Resets owed/stored drinks
     """
     for user in common.users:
@@ -345,17 +345,17 @@ async def erase_debt():
             del (common.users[user]['drinks_owed'])
     # Update database
     common.whos_in.update_db()
-    await bot.say("Debts erased, slackers.")
+    await ctx.send("Debts erased, slackers.")
 
 
-@bot.command(name='item-giveaway', hidden=True, pass_context=True)
+@bot.command(name='item-giveaway', hidden=True)
 @is_owner()
 async def item_giveaway(ctx):
     """Gives away at least 1 free item.
 
     :param ctx: Context
     """
-    await bot.say("{} started an item giveaway! At least one person will "
+    await ctx.send("{} started an item giveaway! At least one person will "
                   "receive a free item!"
                   .format(ctx.message.author.display_name))
     i_awarded = False
@@ -371,14 +371,14 @@ async def item_giveaway(ctx):
 
 
 @bot.command(name='summary')
-async def summary(url):
+async def summary(ctx, url):
     """Gets a summary of a url
     """
-    await bot.say(get_smmry(url))
+    await ctx.send(get_smmry(url))
 
 
 @bot.command(name='uptime', hidden=True)
-async def get_uptime():
+async def get_uptime(ctx):
     """Prints the uptime"""
 
     total_time = time() - startTime
@@ -393,16 +393,16 @@ async def get_uptime():
                "# of trump twts seen: {}\n" \
         .format(common.duels_conducted, common.items_awarded,
                 common.trump_tweets_seen)
-    await bot.say((ret_str + stat_str))
+    await ctx.send((ret_str + stat_str))
 
 
-@bot.command(name='test', hidden=True, pass_context=True)
+@bot.command(name='test', hidden=True)
 async def run_test(ctx):
     """Runs test"""
-    await bot.send_message(ctx.message.channel, "Test Complete.")
+    await ctx.message.channel.send("Test Complete.")
 
 
-@bot.command(name='me', aliases=['whoami'], pass_context=True)
+@bot.command(name='me', aliases=['whoami'])
 async def whoami(ctx):
     """Tell me about myself"""
     author = str(ctx.message.author.display_name)
@@ -460,33 +460,33 @@ async def whoami(ctx):
                 output = "Your {} is **{}**.".format(k, v)
 
             message_output += "\n" + output
-        await bot.say(message_output)
+        await ctx.send(message_output)
 
     else:
-        await bot.say("You're **{}**, but that's all I know about you."
+        await ctx.send("You're **{}**, but that's all I know about you."
                       .format(author))
 
 
 @bot.command(name='tdelay', hidden=True)
-async def change_trump_delay(num_of_mins: int):
+async def change_trump_delay(ctx, num_of_mins: int):
     """Change the frequency we check for prez tweet."""
 
     common.trump_del = int(num_of_mins)
-    await bot.say("Trump delay set to {} mins.".format(common.trump_del))
+    await ctx.send("Trump delay set to {} mins.".format(common.trump_del))
 
 
 @bot.command(name='ndelay', hidden=True)
-async def change_news_delay(num_of_mins: int):
+async def change_news_delay(ctx, num_of_mins: int):
     """Change the frequency we grab news"""
 
     common.news_del = int(num_of_mins)
-    await bot.say("News delay set to {} mins.".format(common.news_del))
+    await ctx.send("News delay set to {} mins.".format(common.news_del))
 
 
 @bot.event
 async def on_command_error(exception, context):
     if type(exception) == commands.CommandOnCooldown:
-        await bot.send_message(context.message.channel,
+        await context.message.channel.send(
                                "!{} is on cooldown for {:0.2f} seconds.".format(
                                    context.command, exception.retry_after))
     elif type(exception) == commands.CommandNotFound:
@@ -494,26 +494,26 @@ async def on_command_error(exception, context):
         try:
             closest = get_close_matches(cmd.lower(), list(bot.commands))[0]
         except IndexError:
-            await bot.send_message(context.message.channel,
+            await context.message.channel.send(
                                    "!{} is not a known command."
                                    .format(cmd))
         else:
-            await bot.send_message(context.message.channel,
+            await context.message.channel.send(
                                    "!{} is not a command, did you mean !{}?"
                                    .format(cmd, closest))
     elif type(exception) == commands.CheckFailure:
-        await bot.send_message(context.message.channel,
+        await context.message.channel.send(
                                "You failed to meet a requirement for that "
                                "command.")
     elif type(exception) == commands.MissingRequiredArgument:
-        await bot.send_message(context.message.channel,
+        await context.message.channel.send(
                                "You are missing a required argument for that "
                                "command.")
     elif type(exception) == commands.BadArgument:
-        await bot.send_message(context.message.channel,
+        await context.message.channel.send(
                                "Invalid Argument.")
     else:
-        await bot.send_message(context.message.channel,
+        await context.message.channel.send(
                                "Unhandled command error ({})"
                                .format(exception))
 
