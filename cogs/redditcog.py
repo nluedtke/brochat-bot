@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 
-class Reddit:
+class Reddit(commands.Cog):
     """ Reddit Fetchers"""
 
     def __init__(self, bot):

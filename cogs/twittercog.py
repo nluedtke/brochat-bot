@@ -8,7 +8,7 @@ from discord.ext import commands
 from twython import TwythonError
 
 
-class Twitter:
+class Twitter(commands.Cog):
     """ Twitter Fetchers"""
 
     def __init__(self, bot):

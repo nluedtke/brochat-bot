@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 
 
-class Texting:
+class Texting(commands.Cog):
     """ Send Text Handlers"""
 
     def __init__(self, bot):

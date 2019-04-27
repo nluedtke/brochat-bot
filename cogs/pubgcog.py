@@ -28,7 +28,7 @@ with open("objs/damageCauserName.json", 'r') as infile:
 max_mids_records = 20
 
 
-class Puby:
+class Puby(commands.Cog):
     """ Pubg Fetchers"""
 
     def __init__(self, bot):

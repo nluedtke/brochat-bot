@@ -5,7 +5,7 @@ import common
 from discord.ext import commands
 
 
-class DrinkBank:
+class DrinkBank(commands.Cog):
     """Handles the DrankBank and registering drinks."""
 
     def __init__(self, bot):

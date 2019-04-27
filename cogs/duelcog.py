@@ -8,7 +8,7 @@ from objs.duel_item import (DuelItem, PoisonEffect, get_name, get_slot,
                             get_text, get_uses, item_exists)
 
 
-class Duels:
+class Duels(commands.Cog):
     """Handles Dueling commands"""
 
     def __init__(self, bot):

@@ -12,7 +12,7 @@ from objs.duel_item import get_name, get_slot
 from objs.weekend_games import pretty_date
 
 
-class Gametime:
+class Gametime(commands.Cog):
     """ Gametime Commands"""
 
     def __init__(self, bot):
