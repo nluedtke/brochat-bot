@@ -229,7 +229,7 @@ async def print_at_midnight(bot):
                 i_awarded = i_awarded or i
 
         # Drink Debt Enforcement
-        for m in ctx.get_all_members():
+        for m in bot.get_all_members():
             nc = m.display_name
             if nc != 'brochat-bot' and nc in common.users and \
                     'drinks_owed' in common.users[nc] \

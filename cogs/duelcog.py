@@ -60,7 +60,7 @@ class Duels(commands.Cog):
                 await ctx.send('That person is likely already passed out!')
                 self.bot.get_command('duel').reset_cooldown(ctx)
             else:
-                await event_handle_shot_duel(ctx, map_disp_to_name[name])
+                await event_handle_shot_duel(ctx, map_disp_to_name[name], self.bot)
 
     @shot_duel.command(name='ranking', aliases=['ranks'])
     async def get_duel_rankings(self, ctx):
@@ -107,7 +107,7 @@ class Duels(commands.Cog):
                     p != ctx.message.author.display_name and \
                     p != 'brochat-bot' and 'duel_record' in \
                     common.users[map_disp_to_name[p].display_name]:
-                await event_handle_shot_duel(ctx, map_disp_to_name[p])
+                await event_handle_shot_duel(ctx, map_disp_to_name[p], self.bot)
                 return
             else:
                 del(map_disp_to_name[p])
@@ -570,7 +570,7 @@ def add_pos_eff(pos_effects, new_poss_eff):
                 return pos_effects
 
 
-async def event_handle_shot_duel(ctx, victim):
+async def event_handle_shot_duel(ctx, victim, bot):
     """
     Handles a shot_duel should a victim accept.
 

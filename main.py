@@ -488,7 +488,7 @@ async def on_command_error(ctx, exception):
     if type(exception) == commands.CommandOnCooldown:
         await ctx.send(
                                "!{} is on cooldown for {:0.2f} seconds.".format(
-                                   context.command, exception.retry_after))
+                                   ctx.command, exception.retry_after))
     elif type(exception) == commands.CommandNotFound:
         cmd = ctx.message.content.split()[0][1:]
         try:
@@ -517,7 +517,7 @@ async def on_command_error(ctx, exception):
                                "Unhandled command error ({})"
                                .format(exception))
 
-    print('Ignoring exception in command {}'.format(context.command),
+    print('Ignoring exception in command {}'.format(ctx.command),
           file=sys.stderr)
     traceback.print_exception(type(exception), exception,
                               exception.__traceback__, file=sys.stderr)

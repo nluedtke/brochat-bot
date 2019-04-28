@@ -12,6 +12,7 @@ import requests
 from scipy.misc import imread
 
 import common as c
+import discord
 from discord.ext import commands
 from pubg_python import PUBG, Shard
 from pubg_python.exceptions import APIError, NotFoundError
