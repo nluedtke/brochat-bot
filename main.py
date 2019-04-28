@@ -492,7 +492,7 @@ async def on_command_error(ctx, exception):
     elif type(exception) == commands.CommandNotFound:
         cmd = ctx.message.content.split()[0][1:]
         try:
-            closest = get_close_matches(cmd.lower(), list(bot.commands))[0]
+            closest = get_close_matches(cmd.lower(), list(bot.all_commands))[0]
         except IndexError:
             await ctx.send(
                                    "!{} is not a known command."
