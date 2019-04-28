@@ -31,8 +31,11 @@ max_mids_records = 20
 class Puby(commands.Cog):
     """ Pubg Fetchers"""
 
+    def __init__(self, bot):
+        self.bot = bot
+
     @commands.group(name='getmap')
-    async def get_map(ctx):
+    async def get_map(self, ctx):
         """ Gets the Map of your last PUBG Match"""
 
         auth = ctx.message.author.display_name
@@ -44,7 +47,7 @@ class Puby(commands.Cog):
             await ctx.send('I haven\'t see you play a match yet.')
             return
         await ctx.send("Plotting map. One minute.")
-        await ctx.send_typing(ctx.message.channel)
+        await ctx.trigger_typing()
         match_to_get = c.users[auth]['pubg_match'][-1]
         map_file = get_map_byid(match_to_get)
         await ctx.send("", file=discord.File(map_file))

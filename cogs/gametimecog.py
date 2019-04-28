@@ -15,8 +15,11 @@ from objs.weekend_games import pretty_date
 class Gametime(commands.Cog):
     """ Gametime Commands"""
 
+    def __init__(self, bot):
+        self.bot = bot
+
     @commands.group(name='gametime')
-    async def gametime(ctx):
+    async def gametime(self, ctx):
         """Handles gametime actions"""
 
         gametime_help_string = \
@@ -32,27 +35,27 @@ class Gametime(commands.Cog):
             await ctx.send(gametime_help_string)
 
     @gametime.command(name="list")
-    async def list_gametimes(ctx):
+    async def list_gametimes(self, ctx):
         """List current gametimes"""
         await ctx.send(common.whos_in.get_gametimes())
 
     @gametime.command(name="add")
-    async def add_gametime(ctx, day, start_time=None):
+    async def add_gametime(self, ctx, day, start_time=None):
         """Create a new gametime"""
         await ctx.send(common.whos_in.create_gametime(day, start_time))
 
     @gametime.command(name="remove")
-    async def rem_gametime(ctx, index):
+    async def rem_gametime(self, ctx, index):
         """Remove a gametime"""
         await ctx.send(common.whos_in.remove_gametime(index))
 
     @gametime.command(name="set")
-    async def set_gametime(ctx, index, new_time):
+    async def set_gametime(self, ctx, index, new_time):
         """Set a gametime"""
         await ctx.send(common.whos_in.set_gametime(index, new_time))
 
     @commands.group(name='poll')
-    async def poll(ctx):
+    async def poll(self, ctx):
         """Handles Polls actions"""
 
         poll_help_string = \
@@ -65,17 +68,17 @@ class Gametime(commands.Cog):
             await ctx.send(poll_help_string)
 
     @poll.command(name='start')
-    async def start_poll(ctx):
+    async def start_poll(self, ctx):
         """Creates a poll"""
         await ctx.send(common.whos_in.create_poll(ctx.message.content[6:]))
 
     @poll.command(name='stop')
-    async def stop_poll(ctx):
+    async def stop_poll(self, ctx):
         """Stops a poll"""
         await ctx.send(common.whos_in.stop_poll())
 
     @commands.command(name='in')
-    async def in_command(ctx, gt_num=""):
+    async def in_command(self, ctx, gt_num=""):
         """Marks you as in for a gametime"""
 
         if gt_num == "":
@@ -86,7 +89,7 @@ class Gametime(commands.Cog):
                                status="in"))
 
     @commands.command(name='possible')
-    async def possible_command(ctx, gt_num=""):
+    async def possible_command(self, ctx, gt_num=""):
         """Marks you as possible for a gametime"""
         if gt_num == "":
             await ctx.send("When are you possibly in for, though?\n\n{}"
@@ -96,7 +99,7 @@ class Gametime(commands.Cog):
                                status="possible"))
 
     @commands.command(name='late')
-    async def late_command(ctx, gt_num=""):
+    async def late_command(self, ctx, gt_num=""):
         """Marks you as going to be late for a gametime"""
         if gt_num == "":
             await ctx.send("For what session are you going to be late for, "
@@ -107,7 +110,7 @@ class Gametime(commands.Cog):
                                status="going to be late"))
 
     @commands.command(name='out')
-    async def out_command(ctx, gt_num=""):
+    async def out_command(self, ctx, gt_num=""):
         """Removes you from a gametime"""
         if gt_num == "":
             await ctx.send("When are you out for, though?\n\n{}"
@@ -117,12 +120,12 @@ class Gametime(commands.Cog):
                                                      gt_num))
 
     @commands.command(name='whosin')
-    async def whosin_command(ctx):
+    async def whosin_command(self, ctx):
         """See who is in for a gametime"""
         await ctx.send(common.whos_in.whos_in())
 
     @commands.command(name='win')
-    async def record_win(ctx):
+    async def record_win(self, ctx):
         """Add a win to the record books"""
 
         common.whos_in.add_win()
@@ -135,7 +138,7 @@ class Gametime(commands.Cog):
             await ctx.invoke(ctx.get_command('shot-lottery'), True)
 
     @commands.command(name='loss')
-    async def record_loss(ctx):
+    async def record_loss(self, ctx):
         """Add a loss to the record books"""
         common.whos_in.add_loss()
         await ctx.send("You guys are bad!")
@@ -145,7 +148,7 @@ class Gametime(commands.Cog):
             common.whos_in.consecutive = 0
 
     @commands.command(name='draw')
-    async def record_draw(ctx):
+    async def record_draw(self, ctx):
         """Add a draw to the record books"""
         common.whos_in.add_draw()
         await ctx.send("What a waste!")
@@ -155,7 +158,7 @@ class Gametime(commands.Cog):
             common.whos_in.consecutive = 0
 
     @commands.command(name='clear-record')
-    async def record_clear(ctx):
+    async def record_clear(self, ctx):
         """Clears the session record."""
         record_string = "You went: {}".format(common.whos_in.get_record())
         await ctx.send(record_string)
@@ -163,7 +166,7 @@ class Gametime(commands.Cog):
         await ctx.send("Record Cleared!")
 
     @commands.command(name='get-record')
-    async def record_get(ctx):
+    async def record_get(self, ctx):
         """Get the current record."""
         record_string = "Current Record: {}".format(common.whos_in.get_record())
         await ctx.send(record_string)
@@ -172,7 +175,7 @@ class Gametime(commands.Cog):
         await ctx.send(record_string)
 
     @commands.command(name='vote')
-    async def add_vote(ctx, option=""):
+    async def add_vote(self, ctx, option=""):
         """Vote in a poll"""
 
         if common.whos_in.poll is None:

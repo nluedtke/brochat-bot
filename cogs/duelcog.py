@@ -11,26 +11,29 @@ from objs.duel_item import (DuelItem, PoisonEffect, get_name, get_slot,
 class Duels(commands.Cog):
     """Handles Dueling commands"""
 
+    def __init__(self, bot):
+        self.bot = bot
+
     @commands.group(name='duel')
     @commands.cooldown(1, 120)
-    async def shot_duel(ctx):
+    async def shot_duel(self, ctx):
         """ Duel someone"""
 
         if ctx.invoked_subcommand is None:
             if common.shot_duel_running:
                 await ctx.send('There is a duel already running, wait your '
                                    'turn to challenge someone!')
-                ctx.get_command('duel').reset_cooldown(ctx)
+                self.bot.get_command('duel').reset_cooldown(ctx)
                 return
 
             if in_deep_debt(ctx.message.author.display_name):
                 await ctx.send('Hey there, I can\'t let you do that till '
                                    'you pay down some of that friendship you '
                                    'owe.')
-                ctx.get_command('duel').reset_cooldown(ctx)
+                self.bot.get_command('duel').reset_cooldown(ctx)
                 return
 
-            members = ctx.get_all_members()
+            members = self.bot.get_all_members()
             map_disp_to_name = {}
             for m in members:
                 map_disp_to_name[m.display_name.lower()] = m
@@ -39,7 +42,7 @@ class Duels(commands.Cog):
 
             if len(name) < 1:
                 await ctx.send('Who do you want to duel?')
-                ctx.get_command('duel').reset_cooldown(ctx)
+                self.bot.get_command('duel').reset_cooldown(ctx)
                 return
 
             if name == ctx.message.author.display_name.lower() and \
@@ -48,19 +51,19 @@ class Duels(commands.Cog):
                                    "instead of including this channel?")
             elif name not in map_disp_to_name:
                 await ctx.send('That\'s not a real person...')
-                ctx.get_command('duel').reset_cooldown(ctx)
+                self.bot.get_command('duel').reset_cooldown(ctx)
             elif name == 'brochat-bot':
                 await ctx.send('brochat-bot would drink you under the '
                                    'table, try another person!')
-                ctx.get_command('duel').reset_cooldown(ctx)
+                self.bot.get_command('duel').reset_cooldown(ctx)
             elif str(map_disp_to_name[name].status) != 'online':
                 await ctx.send('That person is likely already passed out!')
-                ctx.get_command('duel').reset_cooldown(ctx)
+                self.bot.get_command('duel').reset_cooldown(ctx)
             else:
                 await event_handle_shot_duel(ctx, map_disp_to_name[name])
 
     @shot_duel.command(name='ranking', aliases=['ranks'])
-    async def get_duel_rankings(ctx):
+    async def get_duel_rankings(self, ctx):
         """Display Top 5 dueling rankings"""
 
         duelers = {}
@@ -84,12 +87,12 @@ class Duels(commands.Cog):
             if ranking > 5:
                 break
         await ctx.send(output)
-        ctx.get_command('duel').reset_cooldown(ctx)
+        self.bot.get_command('duel').reset_cooldown(ctx)
 
     @shot_duel.command(name='random', aliases=['rand'])
-    async def duel_random(ctx):
+    async def duel_random(self, ctx):
         """Duel a random person"""
-        members = ctx.get_all_members()
+        members = self.bot.get_all_members()
         map_disp_to_name = {}
         for m in members:
             map_disp_to_name[m.display_name.lower()] = m
@@ -97,7 +100,7 @@ class Duels(commands.Cog):
         while True:
             if len(map_disp_to_name) <= 0:
                 await ctx.send('No one found to duel!')
-                ctx.get_command('duel').reset_cooldown(ctx)
+                self.bot.get_command('duel').reset_cooldown(ctx)
                 return
             p = choice(list(map_disp_to_name.keys()))[:]
             if str(map_disp_to_name[p].status) == 'online' and \
@@ -110,7 +113,7 @@ class Duels(commands.Cog):
                 del(map_disp_to_name[p])
 
     @commands.command(name='accept')
-    async def toggle_accept(ctx):
+    async def toggle_accept(self, ctx):
         """Accept a challenge"""
 
         if common.shot_duel_running and ctx.message.author.display_name == \
@@ -120,7 +123,7 @@ class Duels(commands.Cog):
             await ctx.send("You weren't challenged!")
 
     @commands.command(name='use', aliases=['inv', 'equip'])
-    async def use_command(ctx, item_num=""):
+    async def use_command(self, ctx, item_num=""):
         """ Use an item"""
 
         name = ctx.message.author.display_name
@@ -168,7 +171,7 @@ class Duels(commands.Cog):
                                "**!use**: to view your inventory")
 
     @commands.command(name='unequip')
-    async def unequip_command(ctx, slot: str):
+    async def unequip_command(self, ctx, slot: str):
         """Unequips an item in use"""
 
         name = ctx.message.author.display_name
@@ -708,7 +711,7 @@ async def event_handle_shot_duel(ctx, victim):
                             del common.users[nc]['inventory'][item_take]
                     await ctx.send("The red button disappears but a loud "
                                       "banging noise can be heard!")
-                    await ctx.send_typing(ctx.message.channel)
+                    await ctx.trigger_typing()
                     eff = randint(0, 2)
                     await asyncio.sleep(10)
                     if eff == 0:
@@ -865,7 +868,7 @@ async def event_handle_shot_duel(ctx, victim):
                     break
 
                 # ATTACK PHASE (Both attacks happen at same time!)
-                await ctx.send_typing(ctx.message.channel)
+                await ctx.trigger_typing()
                 await asyncio.sleep(10)
                 c_roll, v_roll = dual_dice_roll()
 
@@ -1076,7 +1079,7 @@ async def event_handle_shot_duel(ctx, victim):
         await item_chance_roll(chal_name, ctx.message.channel, 250)
         await item_chance_roll(common.vict_name,
                                ctx.message.channel, 500)
-        ctx.get_command('duel').reset_cooldown(ctx)
+        bot.get_command('duel').reset_cooldown(ctx)
     common.shot_duel_running = False
     common.accepted = False
     common.vict_name = ""

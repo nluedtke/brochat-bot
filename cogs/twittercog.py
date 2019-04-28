@@ -11,9 +11,11 @@ from twython import TwythonError
 class Twitter(commands.Cog):
     """ Twitter Fetchers"""
 
+    def __init__(self, bot):
+        self.bot = bot
 
     @commands.command(name="trump")
-    async def get_trump(ctx):
+    async def get_trump(self, ctx):
         """Get Trump's latest Yuge success!"""
 
         if common.twitter is None:
@@ -42,7 +44,7 @@ class Twitter(commands.Cog):
             common.missed_trumps = 0
 
     @commands.command(name='news')
-    async def get_news(ctx):
+    async def get_news(self, ctx):
         """Grab a news story"""
         if common.twitter is None:
             return
@@ -67,7 +69,7 @@ class Twitter(commands.Cog):
         return
 
     @commands.command(name='toggle-news', hidden=True)
-    async def toggle_news(ctx):
+    async def toggle_news(self, ctx):
         """Toggle the news feed on and off"""
 
         if common.NEWS_FEED_ON:

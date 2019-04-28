@@ -6,9 +6,12 @@ from discord.ext import commands
 class Texting(commands.Cog):
     """ Send Text Handlers"""
 
+    def __init__(self, bot):
+        self.bot = bot
+
     @commands.command(name='text', type=commands.BucketType.user)
     @commands.cooldown(1, 60 * 5)
-    async def dankmeme(ctx, person=""):
+    async def dankmeme(self, ctx, person=""):
         """Get a fool in the loop"""
         if common.twilio_client is None:
             await ctx.send('Text functionality turned off.')

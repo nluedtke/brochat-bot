@@ -8,9 +8,12 @@ from discord.ext import commands
 class DrinkBank(commands.Cog):
     """Handles the DrankBank and registering drinks."""
 
+    def __init__(self, bot):
+        self.bot = bot
+
     @commands.command(name='drink', aliases=['bottomsup', 'drank'])
     @commands.cooldown(1, 60, type=commands.BucketType.user)
-    async def drink(ctx):
+    async def drink(self, ctx):
         """Log a drink taken"""
         author = str(ctx.message.author.display_name)
         if author in common.users:
@@ -35,7 +38,7 @@ class DrinkBank(commands.Cog):
         common.whos_in.update_db()
 
     @commands.command(name='drankbank', aliases=['dbank', 'drinkbank'])
-    async def drankbank(ctx):
+    async def drankbank(self, ctx):
         """See your *assets and liabilities* with the bank of drank"""
 
         output = ":moneybag: The **drankbank** is now open for business " \
@@ -56,13 +59,13 @@ class DrinkBank(commands.Cog):
 
     @commands.command(name='shot-lottery')
     @commands.cooldown(1, 60 * 5)
-    async def shot_lottery(ctx, auto_call=False):
+    async def shot_lottery(self, ctx, auto_call=False):
         """Runs a shot-lottery"""
 
         shot_lottery_string = run_shot_lottery(ctx, auto_call)
         for x in range(4):
             await ctx.send(shot_lottery_string.pop(0))
-            ctx.send_typing(ctx.message.channel)
+            ctx.trigger_typing()
             await asyncio.sleep(4)
         while len(shot_lottery_string) > 0:
             await ctx.send(shot_lottery_string.pop(0))

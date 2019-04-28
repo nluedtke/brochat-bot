@@ -111,12 +111,12 @@ async def on_message(message):
             if 'civ_name' not in common.users[u]:
                 continue
             elif civ_name == common.users[u]['civ_name']:
-                members = self.bot.get_all_members()
+                members = bot.get_all_members()
                 map_disp_to_name = {}
                 for m in members:
                     map_disp_to_name[m.display_name.lower()] = m
-                ctx.send("{} play your turn!"
-                        .format(map_disp_to_name[u].mention))
+                await message.channel.send("{} play your turn!"
+                        .format(map_disp_to_name[u.lower()].mention))
                 break
 
     if message.author.display_name not in common.users:
@@ -268,8 +268,8 @@ def is_command(m):
 async def clear(ctx):
     """Clears Bot chat history"""
     channel = ctx.message.channel
-    deleted = await bot.purge_from(channel, limit=125, check=is_me)
-    c_ds = await bot.purge_from(channel, limit=100, check=is_command)
+    deleted = await channel.purge(limit=125, check=is_me)
+    c_ds = await channel.purge(limit=100, check=is_command)
     await ctx.send('Deleted {} message(s)'.format(len(deleted) + len(c_ds)))
 
 
@@ -484,36 +484,36 @@ async def change_news_delay(ctx, num_of_mins: int):
 
 
 @bot.event
-async def on_command_error(exception, context):
+async def on_command_error(ctx, exception):
     if type(exception) == commands.CommandOnCooldown:
-        await context.message.channel.send(
+        await ctx.send(
                                "!{} is on cooldown for {:0.2f} seconds.".format(
                                    context.command, exception.retry_after))
     elif type(exception) == commands.CommandNotFound:
-        cmd = context.message.content.split()[0][1:]
+        cmd = ctx.message.content.split()[0][1:]
         try:
             closest = get_close_matches(cmd.lower(), list(bot.commands))[0]
         except IndexError:
-            await context.message.channel.send(
+            await ctx.send(
                                    "!{} is not a known command."
                                    .format(cmd))
         else:
-            await context.message.channel.send(
+            await ctx.send(
                                    "!{} is not a command, did you mean !{}?"
                                    .format(cmd, closest))
     elif type(exception) == commands.CheckFailure:
-        await context.message.channel.send(
+        await ctx.send(
                                "You failed to meet a requirement for that "
                                "command.")
     elif type(exception) == commands.MissingRequiredArgument:
-        await context.message.channel.send(
+        await ctx.send(
                                "You are missing a required argument for that "
                                "command.")
     elif type(exception) == commands.BadArgument:
-        await context.message.channel.send(
+        await ctx.send(
                                "Invalid Argument.")
     else:
-        await context.message.channel.send(
+        await ctx.send(
                                "Unhandled command error ({})"
                                .format(exception))
 
