@@ -193,21 +193,21 @@ class Gametime(commands.Cog):
                 await ctx.send("Not a valid option!")
 
 
-async def print_at_midnight(ctx):
+async def print_at_midnight(bot):
     """
     Prints list at midnight
     :return:
     """
     c_to_send = None
 
-    await ctx.wait_until_ready()
-    for channel in ctx.get_all_channels():
+    await bot.wait_until_ready()
+    for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' or \
                 channel.name == common.ARGS['channel']:
             c_to_send = channel
             break
 
-    while not ctx.is_closed:
+    while not bot.is_closed():
         now = datetime.now(pytz.timezone('US/Eastern'))
         midnight = now.replace(hour=23, minute=59, second=59, microsecond=59)
         if now > midnight:
@@ -221,7 +221,7 @@ async def print_at_midnight(ctx):
         i_awarded = False
         i = False
         while not i_awarded:
-            for m in ctx.get_all_members():
+            for m in bot.get_all_members():
                 if m.display_name != 'brochat-bot' and m.display_name in \
                         common.users and \
                         'duel_record' in common.users[m.display_name]:

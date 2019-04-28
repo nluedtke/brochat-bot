@@ -77,7 +77,7 @@ class Twitter(commands.Cog):
             await ctx.send("News Feed turned off.")
         else:
             if not common.NEWS_FEED_CREATED:
-                ctx.loop.create_task(handle_news(ctx))
+                ctx.loop.create_task(handle_news(ctx, self.bot))
                 common.NEWS_FEED_CREATED = True
             common.NEWS_FEED_ON = True
             await ctx.send("News Feed turned on.")
@@ -119,7 +119,7 @@ async def get_last_tweet(_id, tweet_text, rt_text, ctx, c=1):
                                           str(last_tweet[i]['id'])))
 
 
-async def check_trumps_mouth(ctx):
+async def check_trumps_mouth(bot):
     """
     Waits for an update from the prez
     :return: None
@@ -127,8 +127,8 @@ async def check_trumps_mouth(ctx):
     c_to_send = None
     decay = 0
 
-    await ctx.wait_until_ready()
-    for channel in ctx.get_all_channels():
+    await bot.wait_until_ready()
+    for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' \
                 or channel.name == common.ARGS['channel']:
             c_to_send = channel
@@ -142,7 +142,7 @@ async def check_trumps_mouth(ctx):
 
     delay = common.trump_del * 60
 
-    while not ctx.is_closed:
+    while not bot.is_closed():
         await asyncio.sleep(delay)
         print("Checked trump at {}".format(datetime.now()))
         try:
@@ -168,17 +168,15 @@ async def check_trumps_mouth(ctx):
                 common.missed_trumps += 1
 
 
-async def handle_news(ctx):
+async def handle_news(ctx, bot):
     """
     Handles the news feed
     :return:
     """
-
-    c_to_send = ctx.message.channel
     shuffle(common.news_handles)
 
-    await ctx.wait_until_ready()
-    for channel in ctx.get_all_channels():
+    await bot.wait_until_ready()
+    for channel in bot.get_all_channels():
         if channel.name == 'gen_testing' or channel.name == 'newsfeed':
             c_to_send = channel
             break
@@ -188,7 +186,7 @@ async def handle_news(ctx):
         return
 
     delay = (common.news_del * 60) + (randint(0, 10) * 60)
-    while not ctx.is_closed:
+    while not bot.is_closed():
         next_source = common.news_handles.pop(0)
         common.news_handles.append(next_source)
         print("Next news source will be {}".format(next_source))
