@@ -103,7 +103,7 @@ async def on_message(message):
     :param message:
     :return:
     """
-
+    global game_name, skip_one
     if message.author == bot.user:
         return
     elif message.author.display_name == 'Captain Hook':
@@ -120,9 +120,11 @@ async def on_message(message):
                                            .format(map_disp_to_name[u.lower()].mention))
                 break
         game_name = message.content.split('game')[1].strip()
+        print("Clearing {} from hooks".format(game_name))
         """Clears Bot chat history of related hook messages"""
         skip_one = True
         deleted = await message.channel.purge(limit=125, check=is_game)
+        return
 
     if message.author.display_name not in common.users:
         common.users[message.author.display_name] = {}
@@ -266,6 +268,7 @@ def is_me(m):
 
 
 def is_game(m):
+    global game_name, skip_one
     if m.author.display_name != 'Captain Hook':
         return False
     g_name = m.content.split('game')[1].strip()
