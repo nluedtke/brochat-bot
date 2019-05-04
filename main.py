@@ -33,7 +33,8 @@ startup_extensions = ['cogs.redditcog', 'cogs.gametimecog', 'cogs.twittercog',
                       'cogs.pubgcog']
 
 bot = commands.Bot(command_prefix='!', description=description)
-
+game_name = ""
+skip_one = True
 
 @bot.event
 async def on_message_edit(before, after):
@@ -116,8 +117,12 @@ async def on_message(message):
                 for m in members:
                     map_disp_to_name[m.display_name.lower()] = m
                 await message.channel.send("{} play your turn!"
-                        .format(map_disp_to_name[u.lower()].mention))
+                                           .format(map_disp_to_name[u.lower()].mention))
                 break
+        game_name = message.content.split('game')[1].strip()
+        """Clears Bot chat history of related hook messages"""
+        skip_one = True
+        deleted = await channel.purge(limit=125, check=is_game)
 
     if message.author.display_name not in common.users:
         common.users[message.author.display_name] = {}
@@ -258,6 +263,16 @@ async def version(ctx):
 
 def is_me(m):
     return m.author == bot.user
+
+
+def is_game(m):
+    if m.author.display_name != 'Captain Hook':
+        return False
+    g_name = m.content.split('game')[1].strip()
+    if g_name == game_name and skip_one:
+        skip_one = False
+        return False
+    return g_name == game_name
 
 
 def is_command(m):
