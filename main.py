@@ -122,7 +122,7 @@ async def on_message(message):
         game_name = message.content.split('game')[1].strip()
         """Clears Bot chat history of related hook messages"""
         skip_one = True
-        deleted = await channel.purge(limit=125, check=is_game)
+        deleted = await message.channel.purge(limit=125, check=is_game)
 
     if message.author.display_name not in common.users:
         common.users[message.author.display_name] = {}
