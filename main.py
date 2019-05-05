@@ -120,7 +120,6 @@ async def on_message(message):
                                            .format(map_disp_to_name[u.lower()].mention))
                 break
         game_name = message.content.split('game')[1].strip()
-        print("Clearing {} from hooks".format(game_name))
         """Clears Bot chat history of related hook messages"""
         skip_one = True
         deleted = await message.channel.purge(limit=125, check=is_game)
@@ -321,15 +320,8 @@ def get_smmry(message):
         return "Something went wrong... I'm sorry for letting you down, bro."
 
 
-def is_owner():
-    def predicate(ctx):
-        return ctx.message.author.id == "277173844467384321"
-
-    return commands.check(predicate)
-
-
 @bot.command(name='reset-cd', hidden=True)
-@is_owner()
+@commands.is_owner()
 async def reset_cmd_cooldown(ctx, cmd):
     """Resets the cooldown of a command
 
@@ -341,7 +333,7 @@ async def reset_cmd_cooldown(ctx, cmd):
 
 
 @bot.command(name='reset-records', hidden=True)
-@is_owner()
+@commands.is_owner()
 async def reset_records(ctx):
     """Resets all duel records
     """
@@ -354,7 +346,7 @@ async def reset_records(ctx):
 
 
 @bot.command(name='erase-debt', hidden=True)
-@is_owner()
+@commands.is_owner()
 async def erase_debt(ctx):
     """Resets owed/stored drinks
     """
@@ -367,7 +359,7 @@ async def erase_debt(ctx):
 
 
 @bot.command(name='item-giveaway', hidden=True)
-@is_owner()
+@commands.is_owner()
 async def item_giveaway(ctx):
     """Gives away at least 1 free item.
 
