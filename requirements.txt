@@ -1,5 +1,4 @@
 matplotlib
-scipy
 pillow
 pytz>=2017.2
 requests>=2.10.0

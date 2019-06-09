@@ -9,7 +9,6 @@ from json import JSONDecodeError
 import matplotlib
 import matplotlib.pyplot as plt
 import requests
-from scipy.misc import imread
 
 import common as c
 import discord
@@ -73,7 +72,7 @@ def build_map(url, names):
             map_name = t['mapName']
             break
 
-    img = imread("objs/{0}.jpg".format(map_name))
+    img = plt.imread("objs/{0}.jpg".format(map_name))
 
     if "Savage" in map_name:
         scale = 50
