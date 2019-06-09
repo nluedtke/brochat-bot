@@ -117,7 +117,8 @@ async def on_message(message):
                 for m in members:
                     map_disp_to_name[m.display_name.lower()] = m
                 await message.channel.send("{} play your turn!"
-                                           .format(map_disp_to_name[u.lower()].mention))
+                                           .format(map_disp_to_name[u.lower()].mention),
+                                           delete_after=60*60*12)
                 break
         game_name = message.content.split('game')[1].strip()
         """Clears Bot chat history of related hook messages"""

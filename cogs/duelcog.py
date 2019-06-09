@@ -949,28 +949,26 @@ async def event_handle_shot_duel(ctx, victim, bot):
                    c_roll < 0:
                     c_heal = True
                     c_heal_amt = abs(c_roll)
-                    if (c_life_start - c_life) < c_heal_amt:
-                        c_heal_amt = c_life_start - c_life
-                    v_total.append(-c_heal_amt)
+                    if (c_life_start - c_life - max(0, v_roll)) < c_heal_amt:
+                        c_heal_amt = c_life_start - c_life - max(0, v_roll)
                     v_total.append(-c_heal_amt)
                 if v_item is not None and 'p_effect' in v_item.type and \
                    v_roll < 0:
                     v_heal = True
                     v_heal_amt = abs(v_roll)
-                    if (v_life_start - v_life) < v_heal_amt:
-                        v_heal_amt = v_life_start - v_life
-                    c_total.append(-v_heal_amt)
+                    if (v_life_start - v_life - max(0, c_roll)) < v_heal_amt:
+                        v_heal_amt = v_life_start - v_life - max(0, c_roll)
                     c_total.append(-v_heal_amt)
 
                 # DAMAGE APPLIED HERE
                 if c_roll >= 0:
                     c_total.append(c_roll)
-                else:
+                elif not c_heal:
                     v_total.append(abs(c_roll))
 
                 if v_roll >= 0:
                     v_total.append(v_roll)
-                else:
+                elif not v_heal:
                     c_total.append(abs(v_roll))
 
                 c_life = c_life_start - sum(v_total)
