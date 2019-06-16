@@ -22,14 +22,16 @@ class Duels(commands.Cog):
         if ctx.invoked_subcommand is None:
             if common.shot_duel_running:
                 await ctx.send('There is a duel already running, wait your '
-                                   'turn to challenge someone!')
+                               'turn to challenge someone!',
+                               delete_after=60*60*1)
                 self.bot.get_command('duel').reset_cooldown(ctx)
                 return
 
             if in_deep_debt(ctx.message.author.display_name):
                 await ctx.send('Hey there, I can\'t let you do that till '
-                                   'you pay down some of that friendship you '
-                                   'owe.')
+                               'you pay down some of that friendship you '
+                               'owe.',
+                               delete_after=60*60*1)
                 self.bot.get_command('duel').reset_cooldown(ctx)
                 return
 
@@ -41,26 +43,32 @@ class Duels(commands.Cog):
             name = ctx.message.content[6:].lower()
 
             if len(name) < 1:
-                await ctx.send('Who do you want to duel?')
+                await ctx.send('Who do you want to duel?',
+                               delete_after=60*60*1)
                 self.bot.get_command('duel').reset_cooldown(ctx)
                 return
 
             if name == ctx.message.author.display_name.lower() and \
                     ctx.message.channel.name != 'gen_testing':
                 await ctx.send("Why not just drink your tears away, "
-                                   "instead of including this channel?")
+                               "instead of including this channel?",
+                               delete_after=60*60*1)
             elif name not in map_disp_to_name:
-                await ctx.send('That\'s not a real person...')
+                await ctx.send('That\'s not a real person...',
+                               delete_after=60*60*1)
                 self.bot.get_command('duel').reset_cooldown(ctx)
             elif name == 'brochat-bot':
                 await ctx.send('brochat-bot would drink you under the '
-                                   'table, try another person!')
+                               'table, try another person!',
+                               delete_after=60*60*1)
                 self.bot.get_command('duel').reset_cooldown(ctx)
             elif str(map_disp_to_name[name].status) != 'online':
-                await ctx.send('That person is likely already passed out!')
+                await ctx.send('That person is likely already passed out!',
+                               delete_after=60*60*1)
                 self.bot.get_command('duel').reset_cooldown(ctx)
             else:
-                await event_handle_shot_duel(ctx, map_disp_to_name[name], self.bot)
+                await event_handle_shot_duel(ctx, map_disp_to_name[name],
+                                             self.bot)
 
     @shot_duel.command(name='ranking', aliases=['ranks'])
     async def get_duel_rankings(self, ctx):
@@ -72,7 +80,8 @@ class Duels(commands.Cog):
             if 'duel_record' in common.users[player]:
                 duelers[player] = common.users[player]['duel_record']
         if len(duelers) < 1:
-            await ctx.send("Ain't nobody been duelin' round these parts.")
+            await ctx.send("Ain't nobody been duelin' round these parts.",
+                           delete_after=60*60*1)
             return
         duelers_sorted = sorted(duelers.items(), reverse=True,
                                 key=lambda x: (x[1][0], -x[1][1]))
@@ -86,7 +95,7 @@ class Duels(commands.Cog):
             ranking += 1
             if ranking > 5:
                 break
-        await ctx.send(output)
+        await ctx.send(output, delete_after=60*60*1)
         self.bot.get_command('duel').reset_cooldown(ctx)
 
     @shot_duel.command(name='random', aliases=['rand'])
@@ -99,7 +108,7 @@ class Duels(commands.Cog):
 
         while True:
             if len(map_disp_to_name) <= 0:
-                await ctx.send('No one found to duel!')
+                await ctx.send('No one found to duel!', delete_after=60*60*1)
                 self.bot.get_command('duel').reset_cooldown(ctx)
                 return
             p = choice(list(map_disp_to_name.keys()))[:]
@@ -107,7 +116,8 @@ class Duels(commands.Cog):
                     p != ctx.message.author.display_name and \
                     p != 'brochat-bot' and 'duel_record' in \
                     common.users[map_disp_to_name[p].display_name]:
-                await event_handle_shot_duel(ctx, map_disp_to_name[p], self.bot)
+                await event_handle_shot_duel(ctx, map_disp_to_name[p],
+                                             self.bot)
                 return
             else:
                 del(map_disp_to_name[p])
@@ -120,7 +130,7 @@ class Duels(commands.Cog):
                 common.vict_name:
             common.accepted = True
         else:
-            await ctx.send("You weren't challenged!")
+            await ctx.send("You weren't challenged!", delete_after=60*60*1)
 
     @commands.command(name='use', aliases=['inv', 'equip'])
     async def use_command(self, ctx, item_num=""):
@@ -132,7 +142,7 @@ class Duels(commands.Cog):
         equip = common.users[name]['equip']
         if item_num == "":
             if len(inv) == 0:
-                await ctx.send("You have no items!")
+                await ctx.send("You have no items!", delete_after=60*60*1)
             else:
                 inv_string = "Item_ID: Item_Name (Description)\n"
                 for it in inv:
@@ -154,21 +164,24 @@ class Duels(commands.Cog):
                                               (get_uses(item_num)
                                                - used_amount))
 
-                await ctx.send(inv_string)
+                await ctx.send(inv_string, delete_after=60*60*1)
         elif item_exists(item_num) and item_num in inv and \
                 get_slot(item_num) in equip:
             slot = get_slot(item_num)
             await ctx.send("You already have the {} equipped in the {} "
-                               "slot.".format(get_name(equip[slot]), slot))
+                           "slot.".format(get_name(equip[slot]), slot),
+                           delete_after=60*60*1)
         elif item_exists(item_num) and item_num not in inv:
-            await ctx.send("You don't have that item!")
+            await ctx.send("You don't have that item!", delete_after=60*60*1)
         elif item_exists(item_num) and item_num in inv:
             await ctx.send("Item \"{}\" will be active starting with your "
-                               "next duel.".format(get_name(item_num)))
+                           "next duel.".format(get_name(item_num)),
+                           delete_after=60*60*1)
             common.users[name]['equip'][get_slot(item_num)] = item_num
         else:
             await ctx.send("**!use <item_id>**: To use an item \n"
-                               "**!use**: to view your inventory")
+                           "**!use**: to view your inventory",
+                           delete_after=60*60*1)
 
     @commands.command(name='unequip')
     async def unequip_command(self, ctx, slot: str):
@@ -177,12 +190,13 @@ class Duels(commands.Cog):
         name = ctx.message.author.display_name
 
         if 'equip' not in common.users[name] or len(common.users[name]) < 1:
-            await ctx.send("You have no items equipped!")
+            await ctx.send("You have no items equipped!", delete_after=60*60*1)
         elif slot == "all":
             for s in common.users[name]['equip']:
                 item_num = common.users[name]['equip'][s]
                 await ctx.send("You have unquipped the {}."
-                                   .format(get_name(item_num)))
+                               .format(get_name(item_num)),
+                               delete_after=60*60*1)
             common.users[name]['equip'] = {}
             return
         elif slot not in common.users[name]['equip']:
@@ -190,14 +204,17 @@ class Duels(commands.Cog):
                 if common.users[name]['equip'][s] == slot:
                     item_num = common.users[name]['equip'][s]
                     await ctx.send("You have unquipped the {}"
-                                       .format(get_name(item_num)))
+                                   .format(get_name(item_num)),
+                                   delete_after=60*60*1)
                     del (common.users[name]['equip'][s])
                     return
-            await ctx.send("You don't have an item equipped in that slot!")
+            await ctx.send("You don't have an item equipped in that slot!",
+                           delete_after=60*60*1)
         else:
             item_num = common.users[name]['equip'][slot]
             await ctx.send("You have unquipped the {}"
-                               .format(get_name(item_num)))
+                           .format(get_name(item_num)),
+                           delete_after=60*60*1)
             del(common.users[name]['equip'][slot])
 
 
@@ -215,11 +232,11 @@ async def item_chance_roll(player, channel, max_roll=90):
     if item.name is not None:
         common.items_awarded += 1
         await channel.send("Congratulations {}! You received "
-                                        "the \"{}\"."
-                                        .format(player, item.name))
+                           "the \"{}\".".format(player, item.name),
+                           delete_after=60*60*1)
         if item.item_id in common.users[player]['inventory']:
             await channel.send("You already have that item, its "
-                                            "uses have been reset!")
+                               "uses have been reset!", delete_after=60*60*1)
         common.users[player]['inventory'][item.item_id] = 0
         return True
     return False
@@ -256,7 +273,8 @@ def item_eff_str(item):
     if hasattr(item, 'spec_text'):
         return item.spec_text
     if "roll_effect" in item.type:
-        ret_str += "    All damage increased by {}.\n".format(item.prop['roll'])
+        ret_str += "    All damage increased by {}.\n"
+                   .format(item.prop['roll'])
     if 'life_effect' in item.type:
         ret_str += "    Life increased by {}.\n".format(item.prop['life'])
     if 'regen_effect' in item.type:
@@ -370,7 +388,7 @@ async def item_disarm_check(ctx, c_item, v_item, c_name, v_name):
                 c_item_ret = DuelItem(0, item_to_disarm)
                 return_item(c_item_ret, c_name)
 
-    await ctx.send(notif_str)
+    await ctx.send(notif_str, delete_after=60*60*1)
     return c_item_ret, v_item_ret
 
 
@@ -456,7 +474,8 @@ async def death_check(ctx, chal, c_life, vict, v_life, c_res, v_res):
     # Chal death
     elif c_life < 1:
         death_string = "\n{} has died!\n{} wins the duel!\n" \
-                       "{} drinks!".format(chal.display_name, vict.display_name,
+                       "{} drinks!".format(chal.display_name,
+                                           vict.display_name,
                                            chal.mention)
         # Chal Res
         if c_res:
@@ -471,7 +490,7 @@ async def death_check(ctx, chal, c_life, vict, v_life, c_res, v_res):
             death = True
 
     if len(death_string) > 1:
-        await ctx.send(death_string)
+        await ctx.send(death_string, delete_after=60*60*1)
     return cres, vres, death
 
 
@@ -587,10 +606,11 @@ async def event_handle_shot_duel(ctx, victim, bot):
     chal_name = ctx.message.author.display_name
 
     await ctx.send('.\nThe challenge has been laid down!\n'
-                      '{}, {} has asked you to duel!\n'
-                      'Do you accept?!?!?! (!accept)\n'
-                      'You have 90 seconds to decide.'
-                      .format(victim.mention, chal_name))
+                   '{}, {} has asked you to duel!\n'
+                   'Do you accept?!?!?! (!accept)\n'
+                   'You have 90 seconds to decide.'
+                   .format(victim.mention, chal_name),
+                   delete_after=60*60*1)
 
     waited = 5
     while waited < 90:
@@ -604,12 +624,13 @@ async def event_handle_shot_duel(ctx, victim, bot):
             life = 13
             common.duels_conducted += 1
             await ctx.send(".\nDuel Accepted! Here we go!\n"
-                              "{} is {} - {} - {}\n"
-                              "{} is {} - {} - {}\n"
-                              "Good Luck!!!"
-                              .format(chal_name, c_rec[0], c_rec[1], c_rec[2],
-                                      common.vict_name, v_rec[0], v_rec[1],
-                                      v_rec[2]))
+                           "{} is {} - {} - {}\n"
+                           "{} is {} - {} - {}\n"
+                           "Good Luck!!!"
+                           .format(chal_name, c_rec[0], c_rec[1], c_rec[2],
+                                   common.vict_name, v_rec[0], v_rec[1],
+                                   v_rec[2]),
+                           delete_after=60*60*1)
             c_total = []
             v_total = []
             c_pos_eff, v_pos_eff = [], []
@@ -639,7 +660,7 @@ async def event_handle_shot_duel(ctx, victim, bot):
                             [c_item.item_id])
                         crem_list.append(c_item.slot)
                         notif_str += "    This is the last use for this item!\n"
-                await ctx.send(notif_str)
+                await ctx.send(notif_str, delete_after=60*60*1)
 
             if len(common.users[vict_name]['equip']) > 0:
                 notif_str = "{} is using the following items:\n"\
@@ -659,7 +680,7 @@ async def event_handle_shot_duel(ctx, victim, bot):
                              [v_item.item_id])
                         vrem_list.append(v_item.slot)
                         notif_str += "    This is the last use for this item!\n"
-                await ctx.send(notif_str)
+                await ctx.send(notif_str, delete_after=60*60*1)
 
             # PRE COMBAT START PHASE (ADD SPEC_EFFECT CHECKS HERE)
             await asyncio.sleep(5)
@@ -668,23 +689,26 @@ async def event_handle_shot_duel(ctx, victim, bot):
             # fog
             if e_roll == 20:
                 await ctx.send("A dense fog rolls in. "
-                                  "(Chance to miss increased)")
+                               "(Chance to miss increased)",
+                               delete_after=60*60*1)
                 fog = True
             # damper
             elif e_roll == 19:
                 await ctx.send("A weird pink glow surrounds the battlefield."
-                                  " (Damage is capped)")
+                               " (Damage is capped)", delete_after=60*60*1)
                 cap = True
             # PoisonDarts
             elif e_roll == 17:
                 await ctx.send("Darts begin flying across the battlefield. "
-                                  "One striking each dueler!")
+                               "One striking each dueler!",
+                               delete_after=60*60*1)
                 c_pos_eff.append(PoisonEffect(DuelItem(100, 9999), "env"))
                 v_pos_eff.append(PoisonEffect(DuelItem(100, 9999), "env"))
             elif e_roll == 16:
                 targ = choice([vict_name, chal_name])
                 await ctx.send("Darts begin flying across the battlefield. "
-                                  "One striking {}!".format(targ))
+                               "One striking {}!".format(targ),
+                               delete_after=60*60*1)
                 if chal_name == targ:
                     c_pos_eff.append(PoisonEffect(DuelItem(100, 9999), "env"))
                 elif vict_name == targ:
@@ -692,16 +716,19 @@ async def event_handle_shot_duel(ctx, victim, bot):
             # red button event
             elif e_roll == 18:
                 await ctx.send("A big red button appears. Would you like "
-                                  "to press it? (If you want to type \"$press\""
-                                  ". You have 10 seconds to decide.)")
+                               "to press it? (If you want to type \"$press\""
+                               ". You have 10 seconds to decide.)",
+                               delete_after=60*60*1)
                 msg = await ctx.wait_for_message(timeout=10.0,
-                                                     content='$press')
+                                                 content='$press')
                 if msg is not None:
                     nc = msg.author.display_name
-                    await ctx.send("{} pressed the button!".format(nc))
+                    await ctx.send("{} pressed the button!".format(nc),
+                                   delete_after=60*60*1)
                     if nc not in [chal_name, vict_name]:
                         await ctx.send("{} is not in this duel and suddenly "
-                                          "feels less burdened.".format(nc))
+                                       "feels less burdened.".format(nc),
+                                       delete_after=60*60*1)
                         if len(list(common.users[nc]['inventory'].keys())) > 0:
                             item_take = choice(
                                 list(common.users[nc]['inventory'].keys()))
@@ -710,22 +737,23 @@ async def event_handle_shot_duel(ctx, victim, bot):
                                      [get_slot(item_take)])
                             del common.users[nc]['inventory'][item_take]
                     await ctx.send("The red button disappears but a loud "
-                                      "banging noise can be heard!")
+                                   "banging noise can be heard!",
+                                   delete_after=60*60*1)
                     await ctx.trigger_typing()
                     eff = randint(0, 2)
                     await asyncio.sleep(10)
                     if eff == 0:
                         h_life = choice([vict_name, chal_name])
                         await ctx.send("{} will start at half life."
-                                          .format(h_life))
+                                       .format(h_life), delete_after=60*60*1)
                     elif eff == 1:
                         h_dam = choice([vict_name, chal_name])
                         await ctx.send("{} will do half damage."
-                                          .format(h_dam))
+                                       .format(h_dam), delete_after=60*60*1)
                     elif eff == 2:
                         targ = choice([vict_name, chal_name])
-                        await ctx.send(
-                            "A dart strikes {}!".format(targ))
+                        await ctx.send("A dart strikes {}!".format(targ),
+                                       delete_after=60*60*1)
                         if chal_name == targ:
                             c_pos_eff.append(
                                 PoisonEffect(DuelItem(100, 9999), "env"))
@@ -733,14 +761,16 @@ async def event_handle_shot_duel(ctx, victim, bot):
                             v_pos_eff.append(
                                 PoisonEffect(DuelItem(100, 9999), "env"))
                 elif msg is None:
-                    await ctx.send("Unpressed, the button disappears.")
+                    await ctx.send("Unpressed, the button disappears.",
+                                   delete_after=60*60*1)
 
             # spec_effect check (disarm_effect)
             if (c_wep is not None and 'disarm_effect' in c_wep.type) \
                     or (v_wep is not None and 'disarm_effect' in v_wep.type):
                 # If a player losses an item, remove it from active list
                 ci_to_rem, vi_to_rem = await item_disarm_check(ctx, c_wep,
-                                                               v_wep, chal_name,
+                                                               v_wep,
+                                                               chal_name,
                                                                vict_name)
                 if ci_to_rem is not None:
                     if ci_to_rem.slot in crem_list:
@@ -805,15 +835,17 @@ async def event_handle_shot_duel(ctx, victim, bot):
                                        (100 - luck_mod)*(i+1))
 
             await ctx.send(".\n{} has {} life.\n{} has {} life."
-                              .format(chal_name, c_life_start,
-                                      vict_name, v_life_start))
+                           .format(chal_name, c_life_start, vict_name,
+                                   v_life_start),
+                           delete_after=60*60*1)
             c_life = c_life_start
             v_life = v_life_start
             # COMBAT PHASE
             _round = 1
 
             while True:
-                await ctx.send("Round {}!".format(_round))
+                await ctx.send("Round {}!".format(_round),
+                               delete_after=60*60*1)
                 # PRE ATTACK PHASE (spec_effect check here)
                 # Poison Damage check
                 if len(c_pos_eff) > 0:
@@ -829,8 +861,9 @@ async def event_handle_shot_duel(ctx, victim, bot):
                     v_total.append(pos_dam)
                     c_life = c_life_start - sum(v_total)
                     await ctx.send("{} takes {} poison damage and is now at "
-                                      "{} life.".format(chal_name, pos_dam,
-                                                        c_life))
+                                   "{} life.".format(chal_name, pos_dam,
+                                                     c_life),
+                                   delete_after=60*60*1)
                 if len(v_pos_eff) > 0:
                     pos_dam = 0
                     e_effects = []
@@ -844,8 +877,9 @@ async def event_handle_shot_duel(ctx, victim, bot):
                     c_total.append(pos_dam)
                     v_life = v_life_start - sum(c_total)
                     await ctx.send("{} takes {} poison damage and is now at "
-                                      "{} life.".format(common.vict_name,
-                                                        pos_dam, v_life))
+                                   "{} life.".format(common.vict_name,
+                                                     pos_dam, v_life),
+                                   delete_after=60*60*1)
 
                 cres, vres, death = \
                     await death_check(ctx, ctx.message.author,
@@ -1009,7 +1043,7 @@ async def event_handle_shot_duel(ctx, victim, bot):
                     elif v_roll < 0:
                         v_pos_eff = add_pos_eff(v_pos_eff, p_e)
 
-                await ctx.send(duel_string)
+                await ctx.send(duel_string, delete_after=60*60*1)
 
                 _round += 1
                 cres, vres, death = \
@@ -1042,8 +1076,8 @@ async def event_handle_shot_duel(ctx, victim, bot):
                         reg_tot = c_item.prop['regen']
                     v_total.append(-reg_tot)
                     await ctx.send("{} has regen'd {} life and is now at {}."
-                                      .format(chal_name, reg_tot, (c_life +
-                                              reg_tot)))
+                                   .format(chal_name, reg_tot, (c_life +
+                                           reg_tot)), delete_after=60*60*1)
 
                 if v_item is not None and "regen_effect" in v_item.type \
                         and v_life < v_life_start:
@@ -1053,8 +1087,9 @@ async def event_handle_shot_duel(ctx, victim, bot):
                         reg_tot = v_item.prop['regen']
                     c_total.append(-reg_tot)
                     await ctx.send("{} has regen'd {} life and is now at {}."
-                                      .format(common.vict_name, reg_tot,
-                                              (v_life + reg_tot)))
+                                   .format(common.vict_name, reg_tot,
+                                           (v_life + reg_tot)),
+                                   delete_after=60*60*1)
 
                 # end of round drop chance
                 luck_mod = 0
@@ -1073,7 +1108,8 @@ async def event_handle_shot_duel(ctx, victim, bot):
 
     if not common.accepted:
         await ctx.send("Shot duel not accepted! Clearly {} is better than "
-                          "{}.".format(chal_name, common.vict_name))
+                       "{}.".format(chal_name, common.vict_name),
+                       delete_after=60*60*1)
         await item_chance_roll(chal_name, ctx.message.channel, 250)
         await item_chance_roll(common.vict_name,
                                ctx.message.channel, 500)

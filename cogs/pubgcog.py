@@ -40,17 +40,19 @@ class Puby(commands.Cog):
 
         auth = ctx.message.author.display_name
         if auth not in c.users or 'pubg' not in c.users[auth]:
-            await ctx.send('I don\'t know your PUBG name')
+            await ctx.send('I don\'t know your PUBG name',
+                           delete_after=60*60*6)
             return
         elif 'pubg_match' not in c.users[auth] or \
-                        len(c.users[auth]['pubg_match']) < 1:
-            await ctx.send('I haven\'t see you play a match yet.')
+             len(c.users[auth]['pubg_match']) < 1:
+            await ctx.send('I haven\'t see you play a match yet.',
+                           delete_after=60*60*6)
             return
-        await ctx.send("Plotting map. One minute.")
+        await ctx.send("Plotting map. One minute.", delete_after=60*60*6)
         await ctx.trigger_typing()
         match_to_get = c.users[auth]['pubg_match'][-1]
         map_file = get_map_byid(match_to_get)
-        await ctx.send("", file=discord.File(map_file))
+        await ctx.send("", file=discord.File(map_file), delete_after=60*60*6)
 
 
 def build_map(url, names):
@@ -288,8 +290,8 @@ async def get_pubg_report(match, names, partis, r_map, chan):
     url = match.assets[0].url
     if partis[0].win_place <= 10:
         map_file = build_map(url, names)
-        await chan.send(out_str)
-        await chan.send("", file=discord.File(map_file))
+        await chan.send(out_str, delete_after=60*60*6)
+        await chan.send("", file=discord.File(map_file), delete_after=60*60*6)
         out_str = ""
 
     r = requests.get(url)
@@ -404,7 +406,7 @@ async def get_pubg_report(match, names, partis, r_map, chan):
                 r_data['long_h'] = max(h_dists)
         out_str += "\n"
     del data
-    await chan.send(out_str)
+    await chan.send(out_str, delete_after=60*60*6)
 
 
 async def update_last_10():
