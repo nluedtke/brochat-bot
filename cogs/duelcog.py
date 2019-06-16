@@ -273,8 +273,7 @@ def item_eff_str(item):
     if hasattr(item, 'spec_text'):
         return item.spec_text
     if "roll_effect" in item.type:
-        ret_str += "    All damage increased by {}.\n"
-                   .format(item.prop['roll'])
+        ret_str += "    All damage increased by {}.\n".format(item.prop['roll'])
     if 'life_effect' in item.type:
         ret_str += "    Life increased by {}.\n".format(item.prop['life'])
     if 'regen_effect' in item.type:
