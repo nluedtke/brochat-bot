@@ -589,7 +589,7 @@ def add_pos_eff(pos_effects, new_poss_eff):
 
 
 def pred(m):
-    return m.content.contains("$press')
+    return m.content.contains("$press")
 
 
 async def event_handle_shot_duel(ctx, victim, bot):
