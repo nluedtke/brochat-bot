@@ -233,7 +233,7 @@ async def item_chance_roll(player, channel, max_roll=90):
         common.items_awarded += 1
         await channel.send("Congratulations {}! You received "
                            "the \"{}\".".format(player, item.name),
-                           delete_after=60*60*1)
+                           delete_after=60*60*24)
         if item.item_id in common.users[player]['inventory']:
             await channel.send("You already have that item, its "
                                "uses have been reset!", delete_after=60*60*1)
@@ -588,6 +588,10 @@ def add_pos_eff(pos_effects, new_poss_eff):
                 return pos_effects
 
 
+def pred(m):
+    return m.content.contains("$press')
+
+
 async def event_handle_shot_duel(ctx, victim, bot):
     """
     Handles a shot_duel should a victim accept.
@@ -718,9 +722,13 @@ async def event_handle_shot_duel(ctx, victim, bot):
                                "to press it? (If you want to type \"$press\""
                                ". You have 10 seconds to decide.)",
                                delete_after=60*60*1)
-                msg = await ctx.wait_for_message(timeout=10.0,
-                                                 content='$press')
-                if msg is not None:
+                try:
+                    msg = await ctx.wait_for('message', timeout=10.0,
+                                             check=pred)
+                except asyncio.TimeoutError:
+                    await ctx.send("Unpressed, the button disappears.",
+                                   delete_after=60*60*1)
+                else:
                     nc = msg.author.display_name
                     await ctx.send("{} pressed the button!".format(nc),
                                    delete_after=60*60*1)
@@ -759,9 +767,6 @@ async def event_handle_shot_duel(ctx, victim, bot):
                         elif vict_name == targ:
                             v_pos_eff.append(
                                 PoisonEffect(DuelItem(100, 9999), "env"))
-                elif msg is None:
-                    await ctx.send("Unpressed, the button disappears.",
-                                   delete_after=60*60*1)
 
             # spec_effect check (disarm_effect)
             if (c_wep is not None and 'disarm_effect' in c_wep.type) \
