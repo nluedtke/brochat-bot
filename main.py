@@ -29,8 +29,7 @@ startTime = 0
 
 # this specifies what extensions to load when the bot starts up
 startup_extensions = ['cogs.redditcog', 'cogs.gametimecog', 'cogs.twittercog',
-                      'cogs.duelcog', 'cogs.textcog', 'cogs.drinkingcog',
-                      'cogs.pubgcog']
+                      'cogs.duelcog', 'cogs.textcog', 'cogs.drinkingcog']
 
 bot = commands.Bot(command_prefix='!', description=description)
 game_name = ""
