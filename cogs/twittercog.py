@@ -212,4 +212,4 @@ async def handle_news(ctx, bot):
 
 def setup(bot):
     bot.add_cog(Twitter(bot))
-    bot.loop.create_task(check_trumps_mouth(bot))
+    # bot.loop.create_task(check_trumps_mouth(bot))
